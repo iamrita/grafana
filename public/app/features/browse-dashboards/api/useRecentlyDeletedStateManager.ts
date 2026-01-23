@@ -1,11 +1,14 @@
 import { SelectableValue, store } from '@grafana/data';
 import { t } from '@grafana/i18n';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { TermCount } from 'app/core/components/TagFilter/TagFilter';
 import { SEARCH_SELECTED_SORT } from 'app/features/search/constants';
 import { SearchState } from 'app/features/search/types';
 
 import { deletedDashboardsCache } from '../../search/service/deletedDashboardsCache';
 import { initialState, SearchStateManager } from '../../search/state/SearchStateManager';
+
+const logger = createMonitoringLogger('browse-dashboards.trash');
 
 // Subclass SearchStateManager to customize the setStateAndDoSearch behavior.
 // We want to clear the search results when the user clears any search input
@@ -65,7 +68,7 @@ export class TrashStateManager extends SearchStateManager {
 
       return termCounts.sort((a, b) => b.count - a.count);
     } catch (error) {
-      console.error('Failed to get tags from deleted dashboards:', error);
+      logger.logError(error instanceof Error ? error : new Error('Failed to get tags from deleted dashboards'), { context: 'getTagOptions' });
       return [];
     }
   };

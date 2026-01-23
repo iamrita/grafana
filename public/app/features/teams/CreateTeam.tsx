@@ -3,7 +3,9 @@ import { useForm } from 'react-hook-form';
 
 import { NavModelItem } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { locationService } from '@grafana/runtime';
+import { createMonitoringLogger, locationService } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('teams.create');
 import { Button, Field, Input, FieldSet, Stack } from '@grafana/ui';
 import { extractErrorMessage } from 'app/api/utils';
 import { Page } from 'app/core/components/Page/Page';
@@ -58,7 +60,7 @@ const CreateTeam = (): JSX.Element => {
       }
     } catch (e) {
       notifyApp.error(t('teams.create-team.failed-to-create', 'Failed to create team'));
-      console.error(e);
+      logger.logError(e instanceof Error ? e : new Error('Failed to create team'), { context: 'createTeam' });
     }
   };
 

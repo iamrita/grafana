@@ -1,7 +1,10 @@
 import { Subscription } from 'rxjs';
 
+import { createMonitoringLogger } from '@grafana/runtime';
 import { ScopedResourceClient } from 'app/features/apiserver/client';
 import { ListOptions, GeneratedResourceList as ResourceList } from 'app/features/apiserver/types';
+
+const logger = createMonitoringLogger('provisioning.cache');
 
 /**
  * Creates a cache entry handler for RTK Query that watches for changes to a resource
@@ -57,7 +60,7 @@ export function createOnCacheEntryAdded<Spec, Status>(resourceName: string) {
         });
       });
     } catch (error) {
-      console.error('Error in onCacheEntryAdded:', error);
+      logger.logError(error instanceof Error ? error : new Error('Error in onCacheEntryAdded'), { resourceName });
       return;
     }
 

@@ -2,6 +2,10 @@
 // Since much of Grafana depends on it in includes side effects at import time,
 // we delay loading the rest of the app using import() until the boot data is ready.
 
+import { createMonitoringLogger } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('app.bootstrap');
+
 // Check if we are hosting files on cdn and set webpack public path
 if (window.public_cdn_path) {
   __webpack_public_path__ = window.public_cdn_path;
@@ -29,6 +33,6 @@ async function bootstrapWindowData() {
 }
 
 bootstrapWindowData().catch((error) => {
-  console.error('Error bootstrapping Grafana', error);
+  logger.logError(error instanceof Error ? error : new Error('Error bootstrapping Grafana'), { context: 'bootstrap' });
   window.__grafana_load_failed();
 });

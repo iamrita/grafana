@@ -10,7 +10,9 @@ import {
   type Status,
 } from '@grafana/api-clients/rtkq/provisioning/v0alpha1';
 import { t } from '@grafana/i18n';
-import { isFetchError } from '@grafana/runtime';
+import { createMonitoringLogger, isFetchError } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('provisioning.api');
 import { clearFolders } from 'app/features/browse-dashboards/state/slice';
 import { getState } from 'app/store/store';
 import { ThunkDispatch } from 'app/types/store';
@@ -248,7 +250,7 @@ export const provisioningAPIv0alpha1 = generatedAPI.enhanceEndpoints({
             dispatch(clearFolders(childrenKeys));
           }
         } catch (e) {
-          console.error('Error in getRepositoryJobsWithPath:', e);
+          logger.logError(e instanceof Error ? e : new Error('Error in getRepositoryJobsWithPath'), { context: 'getRepositoryJobsWithPath' });
         }
       },
     },
