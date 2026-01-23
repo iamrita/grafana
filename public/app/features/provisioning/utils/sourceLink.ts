@@ -1,5 +1,5 @@
 import { t } from '@grafana/i18n';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 import { DashboardLink } from '@grafana/schema';
 import { provisioningAPIv0alpha1, RepositoryView } from 'app/api/clients/provisioning/v0alpha1';
 import {
@@ -15,6 +15,8 @@ import { RepoTypeDisplay } from '../Wizard/types';
 import { isValidRepoType } from '../guards';
 
 import { getHasTokenInstructions, getRepoFileUrl } from './git';
+
+const logger = createMonitoringLogger('provisioning.sourceLink');
 
 /**
  * Find and remove existing source links from the links array.
@@ -83,7 +85,7 @@ export async function buildSourceLink(annotations: ObjectMeta['annotations']): P
       keepTime: false,
     };
   } catch (e) {
-    console.warn('Failed to fetch repository info for source link:', e);
+    logger.logWarning('Failed to fetch repository info for source link', { error: e });
     return undefined;
   }
 }
