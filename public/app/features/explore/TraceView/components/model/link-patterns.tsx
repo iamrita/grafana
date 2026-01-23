@@ -15,8 +15,12 @@
 import { uniq as _uniq } from 'lodash';
 import memoize from 'lru-memoize';
 
+import { createMonitoringLogger } from '@grafana/runtime';
+
 import { Trace } from '../types/trace';
 import { getConfigValue } from '../utils/config/get-config';
+
+const logger = createMonitoringLogger('explore.traceview.linkpatterns');
 
 const parameterRegExp = /#\{([^{}]*)\}/g;
 
@@ -111,8 +115,10 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | null {
       parameters: _uniq(url.parameters.concat(text.parameters)),
     };
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error(`Ignoring invalid link pattern: ${error}`, pattern);
+    logger.logError(error instanceof Error ? error : new Error(String(error)), {
+      context: 'processLinkPattern',
+      patternUrl: pattern?.url,
+    });
     return null;
   }
 }

@@ -21,7 +21,7 @@ import {
   TraceToLogsTag,
 } from '@grafana/o11y-ds-frontend';
 import { PromQuery } from '@grafana/prometheus';
-import { getTemplateSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getTemplateSrv } from '@grafana/runtime';
 import { DataQuery } from '@grafana/schema';
 import { Icon } from '@grafana/ui';
 import { getDatasourceSrv } from 'app/features/plugins/datasource_srv';
@@ -31,6 +31,8 @@ import { ExploreFieldLinkModel, getFieldLinksForExplore, getVariableUsageInfo } 
 
 import { SpanLinkDef, SpanLinkFunc, SpanLinkType } from './components/types/links';
 import { Trace, TraceSpan, TraceSpanReference } from './components/types/trace';
+
+const logger = createMonitoringLogger('explore.traceview.spanlink');
 
 /**
  * This is a factory for the link creator. It returns the function mainly so it can return undefined in which case
@@ -123,7 +125,9 @@ export function createSpanLinkFactory({
         spanLinks.push.apply(spanLinks, newSpanLinks);
       } catch (error) {
         // It's fairly easy to crash here for example if data source defines wrong interpolation in the data link
-        console.error(error);
+        logger.logError(error instanceof Error ? error : new Error(String(error)), {
+          context: 'createSpanLinks.fieldLinks',
+        });
         return spanLinks;
       }
     }

@@ -18,7 +18,14 @@ import {
   PanelData,
   TimeRange,
 } from '@grafana/data';
-import { config, isMigrationHandler, migrateRequest, toDataQueryError, isExpressionReference } from '@grafana/runtime';
+import {
+  config,
+  createMonitoringLogger,
+  isExpressionReference,
+  isMigrationHandler,
+  migrateRequest,
+  toDataQueryError,
+} from '@grafana/runtime';
 import { backendSrv } from 'app/core/services/backend_srv';
 import { queryIsEmpty } from 'app/core/utils/query';
 import { dataSource as expressionDatasource } from 'app/features/expressions/ExpressionDatasource';
@@ -28,6 +35,8 @@ import { queryLogger } from '../utils';
 
 import { cancelNetworkRequestsOnUnsubscribe } from './processing/canceler';
 import { emitDataRequestEvent } from './queryAnalytics';
+
+const logger = createMonitoringLogger('query.state.runrequest');
 
 type MapOfResponsePackets = { [str: string]: DataQueryResponse };
 
@@ -163,7 +172,7 @@ export function runRequest(
     }),
     // handle errors
     catchError((err) => {
-      console.error('runRequest.catchError', err);
+      logger.logError(err instanceof Error ? err : new Error(String(err)), { context: 'runRequest.catchError' });
       queryLogger.logError(err);
       return of({
         ...state.panelData,
