@@ -30,12 +30,12 @@ import {
   StreamingFrameOptions,
 } from '@grafana/runtime';
 
-const logger = createMonitoringLogger('live.centrifuge.service');
-
 import { StreamingResponseData } from '../data/utils';
 
 import { LiveDataStream } from './LiveDataStream';
 import { CentrifugeLiveChannel } from './channel';
+
+const logger = createMonitoringLogger('live.centrifuge.service');
 
 export type CentrifugeSrvDeps = {
   grafanaAuthToken: string | null;

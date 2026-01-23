@@ -3,10 +3,10 @@ import { map } from 'rxjs';
 import { toLiveChannelId, StreamingDataFrame } from '@grafana/data';
 import { BackendSrv, createMonitoringLogger, GrafanaLiveSrv } from '@grafana/runtime';
 
-const logger = createMonitoringLogger('live.service');
-
 import { CentrifugeSrv, StreamingDataQueryResponse } from './centrifuge/service';
 import { isStreamingResponseData, StreamingResponseDataType } from './data/utils';
+
+const logger = createMonitoringLogger('live.service');
 
 type GrafanaLiveServiceDeps = {
   centrifugeSrv: CentrifugeSrv;

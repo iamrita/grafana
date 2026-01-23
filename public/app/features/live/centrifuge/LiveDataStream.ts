@@ -21,11 +21,11 @@ import {
   toDataQueryError,
 } from '@grafana/runtime';
 
-const logger = createMonitoringLogger('live.centrifuge.datastream');
-
 import { StreamingResponseDataType } from '../data/utils';
 
 import { DataStreamSubscriptionKey, StreamingDataQueryResponse } from './service';
+
+const logger = createMonitoringLogger('live.centrifuge.datastream');
 
 const bufferIfNot =
   (canEmitObservable: Observable<boolean>) =>
