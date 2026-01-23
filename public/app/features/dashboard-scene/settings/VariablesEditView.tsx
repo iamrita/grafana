@@ -25,6 +25,8 @@ import {
   getVariableScene,
 } from './variables/utils';
 
+const logger = createMonitoringLogger('dashboard-scene.variables-edit-view');
+
 export interface VariablesEditViewState extends DashboardEditViewState {
   editIndex?: number | undefined;
 }

@@ -74,7 +74,10 @@ export const optionPickerFactory = <Model extends VariableWithOptions | Variable
       this.props.openOptions(toKeyedVariableIdentifier(this.props.variable), this.props.onVariableChange);
     onHideOptions = () => {
       if (!this.props.variable.rootStateKey) {
-        console.error('Variable has no rootStateKey');
+        logger.logError(new Error('Variable has no rootStateKey'), {
+          component: 'OptionsPickerUnconnected',
+          method: 'onHideOptions',
+        });
         return;
       }
 
@@ -108,7 +111,10 @@ export const optionPickerFactory = <Model extends VariableWithOptions | Variable
 
     onNavigate = (key: NavigationKey, clearOthers: boolean) => {
       if (!this.props.variable.rootStateKey) {
-        console.error('Variable has no rootStateKey');
+        logger.logError(new Error('Variable has no rootStateKey'), {
+          component: 'OptionsPickerUnconnected',
+          method: 'onNavigate',
+        });
         return;
       }
 
