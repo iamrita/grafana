@@ -1,6 +1,8 @@
 import { lastValueFrom } from 'rxjs';
 
-import { getBackendSrv, isFetchError } from '@grafana/runtime';
+import { createMonitoringLogger, getBackendSrv, isFetchError } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('authConfig.state.actions');
 import { contextSrv } from 'app/core/services/context_srv';
 import { AccessControlAction } from 'app/types/accessControl';
 import { Settings, UpdateSettingsQuery } from 'app/types/settings';

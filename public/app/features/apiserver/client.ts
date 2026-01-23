@@ -1,7 +1,9 @@
 import { Observable, from, retry, catchError, filter, map, mergeMap } from 'rxjs';
 
 import { isLiveChannelMessageEvent, LiveChannelScope } from '@grafana/data';
-import { config, getBackendSrv, getGrafanaLiveSrv } from '@grafana/runtime';
+import { config, createMonitoringLogger, getBackendSrv, getGrafanaLiveSrv } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('apiserver.client');
 import { contextSrv } from 'app/core/services/context_srv';
 
 import { getAPINamespace } from '../../api/utils';

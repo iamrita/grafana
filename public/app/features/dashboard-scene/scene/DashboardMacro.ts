@@ -1,6 +1,9 @@
+import { createMonitoringLogger } from '@grafana/runtime';
 import { FormatVariable, SceneObject, sceneUtils } from '@grafana/scenes';
 
 import { getDashboardSceneFor } from '../utils/utils';
+
+const logger = createMonitoringLogger('dashboard-scene.dashboard-macro');
 
 /**
  * Handles expressions like ${__dashboard.uid}

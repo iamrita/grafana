@@ -9,6 +9,7 @@ import {
   VariableRefresh,
   VariableSort,
 } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { QueryVariableEditorForm } from 'app/features/dashboard-scene/settings/variables/components/QueryVariableForm';
 import { StoreState } from 'app/types/store';
 

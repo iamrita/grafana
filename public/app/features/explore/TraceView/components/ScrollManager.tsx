@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createMonitoringLogger } from '@grafana/runtime';
+
 import TNil from './types/TNil';
 import { TraceSpan, TraceSpanReference, Trace } from './types/trace';
+
+const logger = createMonitoringLogger('explore.traceview.scrollmanager');
 
 /**
  * `Accessors` is necessary because `ScrollManager` needs to be created by
@@ -105,8 +109,7 @@ export default class ScrollManager {
     const isUp = direction < 0;
     const position = xrs.getRowPosition(rowIndex);
     if (!position) {
-      // eslint-disable-next-line no-console
-      console.warn('Invalid row index');
+      logger.logWarning('Invalid row index', { rowIndex });
       return;
     }
     let { y } = position;

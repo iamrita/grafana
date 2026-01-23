@@ -16,7 +16,7 @@ import { Subscription } from 'rxjs';
 
 import { DataHoverEvent, PanelData, PanelProps } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 import { PanelContext, PanelContextRoot } from '@grafana/ui';
 import { appEvents } from 'app/core/app_events';
 import { VariablesChanged } from 'app/features/variables/types';
@@ -44,6 +44,8 @@ import {
   hasLayerData,
 } from './utils/utils';
 import { centerPointRegistry, MapCenterID } from './view';
+
+const logger = createMonitoringLogger('panel.geomap');
 
 // Allows multiple panels to share the same view instance
 let sharedView: View | undefined = undefined;

@@ -1,6 +1,9 @@
 import { DataFrame, formattedValueToString } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 
 import { instantQueryRawVirtualizedListData } from '../RawListContainer';
+
+const logger = createMonitoringLogger('explore.prometheus.listview');
 
 type instantQueryMetricList = { [index: string]: { [index: string]: instantQueryRawVirtualizedListData } };
 
@@ -51,7 +54,7 @@ export const getRawPrometheusListItemsFromDataFrame = (dataFrame: DataFrame): in
             }
           }
         } else {
-          console.warn('Field display method is missing!');
+          logger.logWarning('Field display method is missing', { fieldName: label });
         }
       }
     }

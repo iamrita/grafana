@@ -20,7 +20,7 @@ import {
   VariableRefresh,
   VariableWithOptions,
 } from '@grafana/data';
-import { config, locationService, logWarning } from '@grafana/runtime';
+import { config, createMonitoringLogger, locationService } from '@grafana/runtime';
 import { notifyApp } from 'app/core/reducers/appNotification';
 import { contextSrv } from 'app/core/services/context_srv';
 import { getTimeSrv } from 'app/features/dashboard/services/TimeSrv';
@@ -81,6 +81,8 @@ import {
 } from './transactionReducer';
 import { KeyedVariableIdentifier } from './types';
 import { cleanVariables } from './variablesReducer';
+
+const logger = createMonitoringLogger('variables.state.actions');
 
 // process flow queryVariable
 // thunk => processVariables
@@ -585,8 +587,9 @@ export const createGraph = (variables: TypedVariableModel[]) => {
           g.link(v1.name, v2.name);
         } catch (error) {
           // Catch the exception and return partially linked graph. The caller will handle the case of partial linking and display errors
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logWarning('Error linking variables', { error: errorMessage });
+          logger.logWarning('Error linking variables', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
         }
       }
     });
@@ -808,7 +811,9 @@ export const onTimeRangeUpdated =
       await Promise.all(promises);
       dependencies.events.publish(new VariablesTimeRangeProcessDone({ variableIds }));
     } catch (error) {
-      console.error(error);
+      logger.logError(error instanceof Error ? error : new Error(String(error)), {
+        context: 'onTimeRangeUpdated',
+      });
       dispatch(notifyApp(createVariableErrorNotification('Template variable service failed', error)));
     }
   };
@@ -962,7 +967,9 @@ export const initVariablesTransaction =
       dispatch(toKeyedAction(uid, variablesCompleteTransaction({ uid })));
     } catch (err) {
       dispatch(notifyApp(createVariableErrorNotification('Templating init failed', err)));
-      console.error(err);
+      logger.logError(err instanceof Error ? err : new Error(String(err)), {
+        context: 'initVariablesTransaction',
+      });
     }
   };
 
@@ -1033,7 +1040,10 @@ export const updateOptions =
       dispatch(toKeyedAction(rootStateKey, variableStateFailed(toVariablePayload(identifier, { error }))));
 
       if (!rethrow) {
-        console.error(error);
+        logger.logError(error instanceof Error ? error : new Error(String(error)), {
+          context: 'updateOptions',
+          variableId: identifier.id,
+        });
         dispatch(notifyApp(createVariableErrorNotification('Error updating options:', error, identifier)));
       }
 
@@ -1113,7 +1123,10 @@ export function upgradeLegacyQueries(
       );
     } catch (err) {
       dispatch(notifyApp(createVariableErrorNotification('Failed to upgrade legacy queries', err)));
-      console.error(err);
+      logger.logError(err instanceof Error ? err : new Error(String(err)), {
+        context: 'upgradeLegacyQueries',
+        variableId: id,
+      });
     }
   };
 }

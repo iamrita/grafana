@@ -32,7 +32,7 @@ import {
   transformDataFrame,
 } from '@grafana/data';
 import { Trans } from '@grafana/i18n';
-import { config, getAppEvents } from '@grafana/runtime';
+import { config, createMonitoringLogger, getAppEvents } from '@grafana/runtime';
 import { ScrollContainer, usePanelContext, useStyles2 } from '@grafana/ui';
 import { getDashboardSrv } from 'app/features/dashboard/services/DashboardSrv';
 import { getFieldLinksForExplore } from 'app/features/explore/utils/links';
@@ -50,6 +50,9 @@ import { LogRows } from '../../../features/logs/components/LogRows';
 import { COMMON_LABELS, dataFrameToLogsModel, dedupLogRows } from '../../../features/logs/logsModel';
 
 import type { Options } from './panelcfg.gen';
+
+const logger = createMonitoringLogger('panel.logs');
+
 import {
   GetFieldLinksFn,
   isCoreApp,
@@ -483,7 +486,7 @@ export const LogsPanel = ({
           newSeries = await lastValueFrom(transformDataFrame(panel?.transformations, newSeries));
         }
       } catch (e) {
-        console.error(e);
+        logger.logError(e instanceof Error ? e : new Error(String(e)), { context: 'loadMoreLogs' });
       } finally {
         setInfiniteScrolling(false);
         loadingRef.current = false;
@@ -804,7 +807,7 @@ function getLogsPanelState(): LogsPermalinkUrlState | undefined {
     try {
       return JSON.parse(panelStateEncoded[0]);
     } catch (e) {
-      console.error('error parsing logsPanelState', e);
+      logger.logError(e instanceof Error ? e : new Error('Error parsing logsPanelState'), { panelStateEncoded: panelStateEncoded[0] });
     }
   }
 
@@ -864,7 +867,7 @@ export async function requestMoreLogs(
   for (const uid in targetGroups) {
     const dataSource = dataSourcesMap.get(panelData.request.targets[0].refId);
     if (!dataSource) {
-      console.warn(`Could not resolve data source for target ${panelData.request.targets[0].refId}`);
+      logger.logWarning('Could not resolve data source for target', { refId: panelData.request.targets[0].refId });
       continue;
     }
     dataRequests.push(

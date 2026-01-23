@@ -1,6 +1,9 @@
+import { createMonitoringLogger } from '@grafana/runtime';
 import impressionSrv from 'app/core/services/impression_srv';
 import { getGrafanaSearcher } from 'app/features/search/service/searcher';
 import { DashboardQueryResult } from 'app/features/search/service/types';
+
+const logger = createMonitoringLogger('browseDashboards.recentlyViewed');
 
 /**
  * Returns dashboard search results ordered the same way the user opened them.

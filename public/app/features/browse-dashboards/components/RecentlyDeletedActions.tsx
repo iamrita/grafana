@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 
 import { Trans } from '@grafana/i18n';
-import { reportInteraction } from '@grafana/runtime';
+import { createMonitoringLogger, reportInteraction } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('browseDashboards.recentlyDeletedActions');
 import { Button, Stack } from '@grafana/ui';
 import { appEvents } from 'app/core/app_events';
 import { AnnoKeyFolder } from 'app/features/apiserver/types';
