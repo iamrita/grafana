@@ -12,7 +12,9 @@ import {
   ScopeSpecFilter,
   TimeRange,
 } from '@grafana/data';
-import { BackendSrvRequest } from '@grafana/runtime';
+import { BackendSrvRequest, createMonitoringLogger } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('prometheus.languageProvider');
 
 import { buildCacheHeaders, getDaysToCacheMetadata, getDefaultCacheHeaders } from './caching';
 import { PrometheusDatasource } from './datasource';
@@ -132,7 +134,7 @@ export class PrometheusLanguageProvider implements PrometheusLanguageProviderInt
       return res.data.data;
     } catch (error) {
       if (!isCancelledError(error)) {
-        console.error(error);
+        logger.logError(error instanceof Error ? error : new Error(String(error)), { context: 'metadata request' });
       }
     }
 

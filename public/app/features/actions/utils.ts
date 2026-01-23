@@ -16,7 +16,7 @@ import {
   textUtil,
   ValueLinkConfig,
 } from '@grafana/data';
-import { BackendSrvRequest, config as grafanaConfig, getBackendSrv } from '@grafana/runtime';
+import { BackendSrvRequest, config as grafanaConfig, createMonitoringLogger, getBackendSrv } from '@grafana/runtime';
 import { appEvents } from 'app/core/app_events';
 
 import { HttpRequestMethod } from '../../plugins/panel/canvas/panelcfg.gen';
@@ -25,6 +25,8 @@ import { getTimeSrv } from '../dashboard/services/TimeSrv';
 import { getNextRequestId } from '../query/state/PanelQueryRunner';
 
 import { reportActionTrigger } from './analytics';
+
+const logger = createMonitoringLogger('features.actions');
 
 /** @internal */
 export const isInfinityActionWithAuth = (action: Action): boolean => {
@@ -120,7 +122,7 @@ export const getActions = (
                   appEvents.emit(AppEvents.alertError, [
                     'An error has occurred. Check console output for more details.',
                   ]);
-                  console.error(error);
+                  logger.logError(error instanceof Error ? error : new Error('Action fetch error'), { actionTitle: action.title });
                 },
                 complete: () => {
                   appEvents.emit(AppEvents.alertSuccess, ['API call was successful']);
@@ -128,7 +130,7 @@ export const getActions = (
               });
           } catch (error) {
             appEvents.emit(AppEvents.alertError, ['An error has occurred. Check console output for more details.']);
-            console.error(error);
+            logger.logError(error instanceof Error ? error : new Error('Action execution error'), { actionTitle: action.title });
             return;
           }
         },
