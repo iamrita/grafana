@@ -1,6 +1,7 @@
 // @ts-ignore
 
 import type { AdHocVariableModel, TextBoxVariableModel, TypedVariableModel } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { Dashboard, Panel, VariableOption } from '@grafana/schema';
 import {
   AdHocFilterWithLabels,
@@ -15,6 +16,8 @@ import { DashboardDataDTO, DashboardDTO } from 'app/types/dashboard';
 
 import { validateFiltersOrigin } from '../serialization/sceneVariablesSetToVariables';
 import { jsonDiff } from '../settings/version-history/utils';
+
+const logger = createMonitoringLogger('dashboard-scene.dashboard-changes');
 
 export function get(obj: any, keys: string[]) {
   try {
@@ -144,12 +147,12 @@ export function getHasTimeChanged(
 
 export function adHocVariableFiltersEqual(filtersA?: AdHocFilterWithLabels[], filtersB?: AdHocFilterWithLabels[]) {
   if (filtersA === undefined && filtersB === undefined) {
-    console.warn('Adhoc variable filter property is undefined');
+    logger.logWarning('Adhoc variable filter property is undefined');
     return true;
   }
 
   if ((filtersA === undefined && filtersB !== undefined) || (filtersB === undefined && filtersA !== undefined)) {
-    console.warn('Adhoc variable filter property is undefined');
+    logger.logWarning('Adhoc variable filter property is undefined');
     return false;
   }
 

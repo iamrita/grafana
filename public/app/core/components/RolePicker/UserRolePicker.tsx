@@ -2,8 +2,11 @@ import { useEffect } from 'react';
 import { useAsyncFn } from 'react-use';
 
 import { OrgRole } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { contextSrv } from 'app/core/services/context_srv';
 import { Role, AccessControlAction } from 'app/types/accessControl';
+
+const logger = createMonitoringLogger('rolepicker.user');
 
 import { RolePicker } from './RolePicker';
 import { fetchUserRoles, updateUserRoles } from './api';
@@ -67,7 +70,7 @@ export const UserRolePicker = ({
           return await fetchUserRoles(userId, orgId);
         }
       } catch (e) {
-        console.error('Error fetching user roles');
+        logger.logError(new Error('Error fetching user roles'), {});
       }
       return [];
     },

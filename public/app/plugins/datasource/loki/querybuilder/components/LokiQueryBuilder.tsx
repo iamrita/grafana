@@ -15,6 +15,7 @@ import {
   QueryBuilderLabelFilter,
   QueryBuilderOperation,
 } from '@grafana/plugin-ui';
+import { createMonitoringLogger } from '@grafana/runtime';
 
 import { testIds } from '../../components/LokiQueryEditor';
 import { LokiDatasource } from '../../datasource';
@@ -28,6 +29,8 @@ import { LokiOperationId, LokiVisualQuery } from '../types';
 
 import { EXPLAIN_LABEL_FILTER_CONTENT } from './LokiQueryBuilderExplained';
 import { NestedQueryList } from './NestedQueryList';
+
+const logger = createMonitoringLogger('datasource.loki.querybuilder.builder');
 
 export const TIME_SPAN_TO_TRIGGER_SAMPLES = 5 * 60 * 1000;
 export interface Props {
@@ -126,7 +129,9 @@ export const LokiQueryBuilder = memo<Props>(({ datasource, query, onChange, onRu
         Math.abs(timeRange.from.valueOf() - prevTimeRange.from.valueOf()) > TIME_SPAN_TO_TRIGGER_SAMPLES);
     const updateBasedOnChangedQuery = !isEqual(prevQuery, query);
     if (updateBasedOnChangedTimeRange || updateBasedOnChangedQuery) {
-      onGetSampleData().catch(console.error);
+      onGetSampleData().catch((error) => {
+        logger.logError(error instanceof Error ? error : new Error(String(error)), { context: 'onGetSampleData' });
+      });
     }
   }, [datasource, query, timeRange, prevQuery, prevTimeRange]);
 

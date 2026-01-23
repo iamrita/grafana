@@ -2,8 +2,10 @@ import { ChangeEvent } from 'react';
 
 import { PageLayoutType } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 import { SceneComponentProps, SceneObjectBase, behaviors, sceneGraph } from '@grafana/scenes';
+
+const logger = createMonitoringLogger('dashboard-scene.general-settings');
 import { TimeZone } from '@grafana/schema';
 import {
   Box,
@@ -149,7 +151,7 @@ export class GeneralSettingsEditView
       const liveNow = this.getLiveNowTimer();
       enable ? liveNow.enable() : liveNow.disable();
     } catch (err) {
-      console.error(err);
+      logger.logError(err instanceof Error ? err : new Error(String(err)), { action: 'onLiveNowChange', enable });
     }
   };
 

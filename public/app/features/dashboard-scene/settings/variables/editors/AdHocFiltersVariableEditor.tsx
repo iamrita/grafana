@@ -3,9 +3,11 @@ import { FormEvent } from 'react';
 import { useAsync } from 'react-use';
 
 import { DataSourceInstanceSettings, MetricFindValue, getDataSourceRef } from '@grafana/data';
-import { getDataSourceSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
 import { AdHocFiltersVariable, SceneVariable } from '@grafana/scenes';
 import { OptionsPaneItemDescriptor } from 'app/features/dashboard/components/PanelEditor/OptionsPaneItemDescriptor';
+
+const logger = createMonitoringLogger('dashboard-scene.adhoc-filters-variable-editor');
 
 import { AdHocVariableForm } from '../components/AdHocVariableForm';
 
@@ -63,7 +65,9 @@ export function AdHocFiltersVariableEditor(props: AdHocFiltersVariableEditorProp
 
 export function getAdHocFilterOptions(variable: SceneVariable): OptionsPaneItemDescriptor[] {
   if (!(variable instanceof AdHocFiltersVariable)) {
-    console.warn('getAdHocFilterOptions: variable is not an AdHocFiltersVariable');
+    logger.logWarning('getAdHocFilterOptions: variable is not an AdHocFiltersVariable', {
+      variableType: variable.constructor.name,
+    });
     return [];
   }
 

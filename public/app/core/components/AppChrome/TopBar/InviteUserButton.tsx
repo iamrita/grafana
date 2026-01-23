@@ -1,10 +1,13 @@
 import { t } from '@grafana/i18n';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { ToolbarButton } from '@grafana/ui';
 import { useMediaQueryMinWidth } from 'app/core/hooks/useMediaQueryMinWidth';
 
 import { NavToolbarSeparator } from '../NavToolbar/NavToolbarSeparator';
 
 import { performInviteUserClick, shouldRenderInviteUserButton } from './InviteUserButtonUtils';
+
+const logger = createMonitoringLogger('topbar.inviteuser');
 
 export function InviteUserButton() {
   const isLargeScreen = useMediaQueryMinWidth('lg');
@@ -13,7 +16,7 @@ export function InviteUserButton() {
     try {
       performInviteUserClick('top_bar_right', 'invite-user-top-bar');
     } catch (error) {
-      console.error('Failed to handle invite user click:', error);
+      logger.logError(new Error('Failed to handle invite user click'), { error: String(error) });
     }
   };
 

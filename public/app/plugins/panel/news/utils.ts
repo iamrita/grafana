@@ -1,6 +1,9 @@
 import { FieldType, DataFrame, dateTime } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 
 import { Feed } from './types';
+
+const logger = createMonitoringLogger('panel.news.utils');
 
 export function feedToDataFrame(feed: Feed): DataFrame {
   const date: number[] = [];
@@ -23,7 +26,7 @@ export function feedToDataFrame(feed: Feed): DataFrame {
         content.push(body);
       }
     } catch (err) {
-      console.warn('Error reading news item:', err, item);
+      logger.logWarning('Error reading news item', { error: String(err), itemTitle: item.title });
     }
   }
 

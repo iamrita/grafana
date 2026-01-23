@@ -1,8 +1,10 @@
 import { Subscription } from 'rxjs';
 
 import { AnnotationQuery, DashboardCursorSync, dateTimeFormat, DateTimeInput, EventBusSrv } from '@grafana/data';
-import { TimeRangeUpdatedEvent } from '@grafana/runtime';
+import { createMonitoringLogger, TimeRangeUpdatedEvent } from '@grafana/runtime';
 import { behaviors, sceneGraph, SceneObject, VizPanel } from '@grafana/scenes';
+
+const logger = createMonitoringLogger('dashboard-scene.compatibility-wrapper');
 
 import { DashboardDataLayerSet } from '../scene/DashboardDataLayerSet';
 import { DashboardScene } from '../scene/DashboardScene';
@@ -163,7 +165,7 @@ export class DashboardModelCompatibilityWrapper {
   public removePanel(panel: PanelModelCompatibilityWrapper) {
     const vizPanel = findVizPanelByKey(this._scene, getVizPanelKeyForPanelId(panel.id));
     if (!vizPanel) {
-      console.error('Trying to remove a panel that was not found in scene', panel);
+      logger.logError(new Error('Trying to remove a panel that was not found in scene'), { panelId: panel.id });
       return;
     }
 

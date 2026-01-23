@@ -2,7 +2,7 @@ import React from 'react';
 
 import { store } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { logWarning } from '@grafana/runtime';
+import { createMonitoringLogger } from '@grafana/runtime';
 import {
   sceneGraph,
   SceneObject,
@@ -40,6 +40,8 @@ import { useEditOptions } from './RowItemEditor';
 import { RowItemRenderer } from './RowItemRenderer';
 import { RowItems } from './RowItems';
 import { RowsLayoutManager } from './RowsLayoutManager';
+
+const logger = createMonitoringLogger('dashboard-scene.row-item');
 
 export interface RowItemState extends SceneObjectState {
   layout: DashboardLayoutManager;
@@ -214,9 +216,7 @@ export class RowItem
         const newChildren = layout.state.children.filter((child) => child !== gridItem);
         layout.setState({ children: newChildren });
       } else {
-        const warningMessage = 'Grid item has unexpected parent type';
-        console.warn(warningMessage);
-        logWarning(warningMessage);
+        logger.logWarning('Grid item has unexpected parent type');
       }
     }
     this.setIsDropTarget(false);
@@ -228,9 +228,7 @@ export class RowItem
     if (isDashboardLayoutGrid(layout)) {
       layout.addGridItem(gridItem);
     } else {
-      const warningMessage = 'Layout manager does not support addGridItem';
-      console.warn(warningMessage);
-      logWarning(warningMessage);
+      logger.logWarning('Layout manager does not support addGridItem');
     }
     this.setIsDropTarget(false);
   }

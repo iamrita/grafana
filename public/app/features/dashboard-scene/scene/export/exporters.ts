@@ -1,7 +1,7 @@
 import { defaults, each, sortBy } from 'lodash';
 
 import { DataSourceRef, PanelPluginMeta, VariableOption, VariableRefresh } from '@grafana/data';
-import { getDataSourceSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
 import { Panel } from '@grafana/schema';
 import {
   Spec as DashboardV2Spec,
@@ -26,6 +26,8 @@ import { isPanelModelLibraryPanel } from '../../../library-panels/guard';
 import { LibraryElementKind } from '../../../library-panels/types';
 import { DashboardJson } from '../../../manage-dashboards/types';
 import { isConstant } from '../../../variables/guard';
+
+const logger = createMonitoringLogger('dashboard-scene.exporters');
 
 export interface InputUsage {
   libraryPanels?: LibraryPanelRef[];
@@ -348,7 +350,7 @@ export async function makeExportableV1(dashboard: DashboardModel) {
 
     return newObj;
   } catch (err) {
-    console.error('Export failed:', err);
+    logger.logError(err instanceof Error ? err : new Error('Export failed'), { context: 'makeExportableV1' });
     return {
       error: err,
     };
@@ -370,7 +372,9 @@ async function convertLibraryPanelToInlinePanel(libraryPanelElement: LibraryPane
     inlinePanel.spec.id = id;
     return inlinePanel;
   } catch (error) {
-    console.error(`Failed to load library panel ${libraryPanel.uid}:`, error);
+    logger.logError(error instanceof Error ? error : new Error('Failed to load library panel'), {
+      libraryPanelUid: libraryPanel.uid,
+    });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     dispatch(
@@ -493,7 +497,7 @@ export async function makeExportableV2(dashboard: DashboardV2Spec, isSharingExte
 
     return dashboard;
   } catch (err) {
-    console.error('Export failed:', err);
+    logger.logError(err instanceof Error ? err : new Error('Export failed'), { context: 'makeExportableV2' });
     return {
       error: err,
     };

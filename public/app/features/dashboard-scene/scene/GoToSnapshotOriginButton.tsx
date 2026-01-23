@@ -2,11 +2,13 @@ import { css } from '@emotion/css';
 
 import { textUtil } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { config, locationService } from '@grafana/runtime';
+import { config, createMonitoringLogger, locationService } from '@grafana/runtime';
 import { ConfirmModal, ToolbarButton } from '@grafana/ui';
 
 import { appEvents } from '../../../core/app_events';
 import { ShowModalReactEvent } from '../../../types/events';
+
+const logger = createMonitoringLogger('dashboard-scene.snapshot-origin');
 
 export function GoToSnapshotOriginButton(props: { originalURL: string }) {
   return (
@@ -59,6 +61,8 @@ export const onOpenSnapshotOriginalDashboard = (originalUrl: string) => {
       locationService.push(sanitizedRelativeURL);
     }
   } catch (err) {
-    console.error('Failed to open original dashboard', err);
+    logger.logError(err instanceof Error ? err : new Error('Failed to open original dashboard'), {
+      originalUrl: originalUrl,
+    });
   }
 };

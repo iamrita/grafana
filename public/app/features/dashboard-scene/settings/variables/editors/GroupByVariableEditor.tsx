@@ -3,9 +3,11 @@ import { FormEvent } from 'react';
 import { useAsync } from 'react-use';
 
 import { DataSourceInstanceSettings, MetricFindValue, getDataSourceRef } from '@grafana/data';
-import { getDataSourceSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
 import { GroupByVariable, SceneVariable } from '@grafana/scenes';
 import { OptionsPaneItemDescriptor } from 'app/features/dashboard/components/PanelEditor/OptionsPaneItemDescriptor';
+
+const logger = createMonitoringLogger('dashboard-scene.groupby-variable-editor');
 
 import { GroupByVariableForm } from '../components/GroupByVariableForm';
 
@@ -61,7 +63,9 @@ export function GroupByVariableEditor(props: GroupByVariableEditorProps) {
 
 export function getGroupByVariableOptions(variable: SceneVariable): OptionsPaneItemDescriptor[] {
   if (!(variable instanceof GroupByVariable)) {
-    console.warn('getAdHocFilterOptions: variable is not an AdHocFiltersVariable');
+    logger.logWarning('getGroupByVariableOptions: variable is not a GroupByVariable', {
+      variableType: variable.constructor.name,
+    });
     return [];
   }
 

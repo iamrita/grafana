@@ -3,7 +3,9 @@ import { useCallback } from 'react';
 import { CoreApp, DataSourceApi, DataSourceInstanceSettings, getDataSourceRef } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
 import { t, Trans } from '@grafana/i18n';
-import { config, getDataSourceSrv, reportInteraction } from '@grafana/runtime';
+import { config, createMonitoringLogger, getDataSourceSrv, reportInteraction } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('dashboard-scene.panel-data-queries-tab');
 import {
   SceneObjectBase,
   SceneComponentProps,
@@ -145,7 +147,7 @@ export class PanelDataQueriesTab extends SceneObjectBase<PanelDataQueriesTabStat
         });
       }
 
-      console.error(err);
+      logger.logError(err instanceof Error ? err : new Error(String(err)), { action: 'loadDataSource' });
     }
   }
 
