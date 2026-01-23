@@ -15,9 +15,11 @@ import {
   type PluginExtensionAddedLinkConfig,
   urlUtil,
 } from '@grafana/data';
-import { reportInteraction, config } from '@grafana/runtime';
+import { reportInteraction, config, createMonitoringLogger } from '@grafana/runtime';
 import { getAppPluginMetas } from '@grafana/runtime/internal';
 import { Modal } from '@grafana/ui';
+
+const logger = createMonitoringLogger('plugins.extensions.utils');
 import { appEvents } from 'app/core/app_events';
 import { getPluginSettings } from 'app/features/plugins/pluginSettings';
 import {
@@ -49,7 +51,7 @@ export function handleErrorsInFn(fn: Function, errorMessagePrefix = '') {
       return fn(...args);
     } catch (e) {
       if (e instanceof Error) {
-        console.warn(`${errorMessagePrefix}${e.message}`);
+        logger.logWarning(`${errorMessagePrefix}${e.message}`, { error: e.message, stack: e.stack ?? '' });
       }
     }
   };

@@ -2,9 +2,11 @@ import { createAction, createAsyncThunk, Update } from '@reduxjs/toolkit';
 import { from, forkJoin, timeout, lastValueFrom, catchError, of } from 'rxjs';
 
 import { PanelPlugin, PluginError } from '@grafana/data';
-import { config, getBackendSrv, isFetchError } from '@grafana/runtime';
+import { config, getBackendSrv, isFetchError, createMonitoringLogger } from '@grafana/runtime';
 import { importPanelPlugin } from 'app/features/plugins/importPanelPlugin';
 import { StoreState, ThunkResult } from 'app/types/store';
+
+const logger = createMonitoringLogger('plugins.admin.actions');
 
 import { clearPluginInfoInCache } from '../../loader/pluginInfoCache';
 import {
@@ -38,7 +40,7 @@ export const fetchAll = createAsyncThunk(`${STATE_PREFIX}/fetchAll`, async (_, t
     const remote$ = from(getRemotePlugins()).pipe(
       catchError((err) => {
         thunkApi.dispatch({ type: `${STATE_PREFIX}/fetchRemote/rejected` });
-        console.error(err);
+        logger.logError(new Error('Failed to fetch remote plugins'), { error: String(err) });
         return of([]);
       })
     );
@@ -113,7 +115,7 @@ export const fetchAll = createAsyncThunk(`${STATE_PREFIX}/fetchAll`, async (_, t
           }
         },
         (error) => {
-          console.log(error);
+          logger.logError(new Error('Failed to fetch plugins'), { error: String(error) });
           thunkApi.dispatch({ type: `${STATE_PREFIX}/fetchLocal/rejected` });
           thunkApi.dispatch({ type: `${STATE_PREFIX}/fetchRemote/rejected` });
           return thunkApi.rejectWithValue('Unknown error.');
@@ -227,7 +229,7 @@ export const install = createAsyncThunk<
 
     return { id, changes };
   } catch (e) {
-    console.error(e);
+    logger.logError(new Error('Failed to install plugin'), { pluginId: id, error: String(e) });
     if (isFetchError(e)) {
       // add id to identify errors in multiple requests
       e.data.id = id;
@@ -254,7 +256,7 @@ export const uninstall = createAsyncThunk<Update<CatalogPlugin, string>, string>
         changes: { isInstalled: false, installedVersion: undefined, isFullyInstalled: false },
       };
     } catch (e) {
-      console.error(e);
+      logger.logError(new Error('Failed to uninstall plugin'), { pluginId: id, error: String(e) });
 
       return thunkApi.rejectWithValue('Unknown error.');
     }

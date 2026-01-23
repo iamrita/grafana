@@ -4,8 +4,10 @@ import { useLocation } from 'react-router-dom-v5-compat';
 
 import { SelectableValue, GrafanaTheme2, PluginType } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { locationSearchToObject } from '@grafana/runtime';
+import { locationSearchToObject, createMonitoringLogger } from '@grafana/runtime';
 import { Select, RadioButtonGroup, useStyles2, Tooltip, Field, TextLink } from '@grafana/ui';
+
+const logger = createMonitoringLogger('plugins.admin.Browse');
 import { Page } from 'app/core/components/Page/Page';
 import { getNavModel } from 'app/core/selectors/navModel';
 import { AdvisorRedirectNotice } from 'app/features/connections/components/AdvisorRedirectNotice/AdvisorRedirectNotice';
@@ -72,7 +74,7 @@ export default function Browse() {
 
   // How should we handle errors?
   if (error) {
-    console.error(error.message);
+    logger.logError(new Error('Failed to load plugins'), { errorMessage: error.message });
     return null;
   }
 
