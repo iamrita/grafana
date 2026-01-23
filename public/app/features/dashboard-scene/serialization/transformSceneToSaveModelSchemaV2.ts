@@ -1,7 +1,7 @@
 import { omit } from 'lodash';
 
 import { AnnotationQuery, isEmptyObject, TimeRange } from '@grafana/data';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 import {
   behaviors,
   dataLayers,
@@ -61,6 +61,8 @@ import { DSReferencesMapping } from './DashboardSceneSerializer';
 import { transformV1ToV2AnnotationQuery } from './annotations';
 import { sceneVariablesSetToSchemaV2Variables } from './sceneVariablesSetToVariables';
 import { colorIdEnumToColorIdV2, transformCursorSynctoEnum } from './transformToV2TypesUtils';
+
+const logger = createMonitoringLogger('dashboard-scene.transform-to-v2');
 
 // FIXME: This is temporary to avoid creating partial types for all the new schema, it has some performance implications, but it's fine for now
 type DeepPartial<T> = T extends object
@@ -150,7 +152,7 @@ export function transformSceneToSaveModelSchemaV2(scene: DashboardScene, isSnaps
     // should never reach this point, validation should throw an error
     throw new Error('Error we could transform the dashboard to schema v2: ' + dashboardSchemaV2);
   } catch (reason) {
-    console.error('Error transforming dashboard to schema v2: ' + reason, dashboardSchemaV2);
+    logger.logError(reason instanceof Error ? reason : new Error('Error transforming dashboard to schema v2'), { dashboardTitle: dashboardSchemaV2.title ?? '' });
     throw new Error('Error transforming dashboard to schema v2: ' + reason);
   }
 }
@@ -534,11 +536,7 @@ function getAnnotations(state: DashboardSceneState, dsReferencesMapping?: DSRefe
       // for layers created for v2 schema. See transform transformSaveModelSchemaV2ToScene.ts.
       // In this case we will resolve default data source
       layerDs = getDefaultDataSourceRef();
-      console.error(
-        'Misconfigured AnnotationsDataLayer: Data source is required for annotations. Resolving default data source',
-        layer,
-        layerDs
-      );
+      logger.logError(new Error('Misconfigured AnnotationsDataLayer: Data source is required for annotations'), { resolvedDatasourceType: layerDs.type ?? '', resolvedDatasourceUid: layerDs.uid ?? '' });
     }
 
     const result = transformV1ToV2AnnotationQuery(layer.state.query, layerDs.type!, layerDs.uid!, {

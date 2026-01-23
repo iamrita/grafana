@@ -61,7 +61,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
 
     if (!variable) {
       // Handle the case where the variable is not found
-      logger.logError(new Error('Variable not found'), { context: 'replaceEditVariable', variableIndex });
+      logger.logError(new Error('Variable not found'), { context: 'replaceEditVariable', variableIndex: String(variableIndex) });
       return;
     }
 
@@ -132,7 +132,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
     }
     // check the index are within the variables array
     if (fromIndex < 0 || fromIndex >= variables.length || toIndex < 0 || toIndex >= variables.length) {
-      console.error('Invalid index');
+      logger.logError(new Error('Invalid index'), { context: 'onOrderChanged', fromIndex: String(fromIndex), toIndex: String(toIndex), variablesLength: String(variables.length) });
       return;
     }
     const updatedVariables = [...variables];
@@ -146,7 +146,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
   public onEdit = (identifier: string) => {
     const variableIndex = this.getVariableIndex(identifier);
     if (variableIndex === -1) {
-      console.error('Variable not found');
+      logger.logError(new Error('Variable not found'), { context: 'onEdit', identifier });
       return;
     }
     this.setState({ editIndex: variableIndex });
@@ -170,7 +170,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
 
     if (!variable) {
       // Handle the case where the variable is not found
-      console.error('Variable not found');
+      logger.logError(new Error('Variable not found'), { context: 'onTypeChange', variableIndex: String(variableIndex) });
       return;
     }
 

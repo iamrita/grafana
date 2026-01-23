@@ -1,6 +1,6 @@
 import { uniqueId } from 'lodash';
 
-import { config, getDataSourceSrv } from '@grafana/runtime';
+import { config, createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
 import {
   AdHocFiltersVariable,
   behaviors,
@@ -87,6 +87,8 @@ import {
   transformVariableRefreshToEnumV1,
 } from './transformToV1TypesUtils';
 import { LEGACY_STRING_VALUE_KEY } from './transformToV2TypesUtils';
+
+const logger = createMonitoringLogger('dashboard-scene.transform-from-v2');
 
 const DEFAULT_DATASOURCE = 'default';
 
@@ -287,7 +289,7 @@ function createVariablesForDashboard(dashboard: DashboardV2Spec) {
       try {
         return createSceneVariableFromVariableModel(v);
       } catch (err) {
-        console.error(err);
+        logger.logError(err instanceof Error ? err : new Error('Error creating scene variable'), { variableKind: v.kind, variableName: v.spec.name });
         return null;
       }
     })
@@ -561,7 +563,7 @@ export function createVariablesForSnapshot(dashboard: DashboardV2Spec): SceneVar
         // for other variable types we are using the SnapshotVariable
         return createSnapshotVariable(v);
       } catch (err) {
-        console.error(err);
+        logger.logError(err instanceof Error ? err : new Error('Error creating snapshot variable'), { variableKind: v.kind, variableName: v.spec.name });
         return null;
       }
     })
