@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import { firstValueFrom } from 'rxjs';
 
 import { onUpdateDatasourceJsonDataOptionSelect, onUpdateDatasourceOption } from '@grafana/data';
-import { getBackendSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getBackendSrv } from '@grafana/runtime';
 import {
   Box,
   CollapsableSection,
@@ -30,6 +30,8 @@ import {
 } from './tracking';
 import { Props } from './types';
 import { INFLUXDB_VERSION_MAP, InfluxDBProduct } from './versions';
+
+const logger = createMonitoringLogger('datasource.influxdb.config');
 
 const getQueryLanguageOptions = (productName: string): Array<{ value: string }> => {
   const product = INFLUXDB_VERSION_MAP.find(({ name }) => name === productName);
@@ -104,7 +106,7 @@ export const UrlAndAuthenticationSection = (props: Props) => {
         }
       }
     } catch (err) {
-      console.error('Failed to get InfluxDB version:', err);
+      logger.logError(new Error('Failed to get InfluxDB version'), { error: String(err) });
     }
 
     return { product: undefined, version: undefined };

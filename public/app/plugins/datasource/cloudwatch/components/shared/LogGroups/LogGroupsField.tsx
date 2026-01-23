@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { useEffect, useState } from 'react';
 
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 
 import { LogGroup } from '../../../dataquery.gen';
 import { CloudWatchDatasource } from '../../../datasource';
@@ -12,6 +12,8 @@ import { isTemplateVariable } from '../../../utils/templateVariableUtils';
 import { LegacyLogGroupSelection } from './LegacyLogGroupNamesSelection';
 import { LogGroupsSelector } from './LogGroupsSelector';
 import { SelectedLogGroups } from './SelectedLogGroups';
+
+const logger = createMonitoringLogger('datasource.cloudwatch.loggroups');
 
 type Props = {
   datasource: CloudWatchDatasource;
@@ -72,7 +74,7 @@ export const LogGroupsField = ({
           onChange([...logGroups, ...variables.map((v) => ({ name: v, arn: v }))]);
         })
         .catch((err) => {
-          console.error(err);
+          logger.logError(err instanceof Error ? err : new Error(String(err)), { context: 'fetching log groups' });
         });
     }
   }, [datasource, legacyLogGroupNames, logGroups, onChange, region, loadingLogGroupsStarted]);
