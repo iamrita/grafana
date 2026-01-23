@@ -1,3 +1,5 @@
+import { logInfo } from '@grafana/runtime';
+
 export class Edge {
   inputNode?: Node;
   outputNode?: Node;
@@ -268,7 +270,7 @@ export const printGraph = (g: Graph) => {
     if (!inputEdges) {
       inputEdges = '<none>';
     }
-    console.log(`${n.name}:\n - links to:   ${outputEdges}\n - links from: ${inputEdges}`);
+    logInfo('Graph node connections', { nodeName: n.name, linksTo: outputEdges, linksFrom: inputEdges });
   });
 };
 

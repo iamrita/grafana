@@ -1,5 +1,5 @@
 import { CoreApp, DashboardLoadedEvent, DataQueryRequest, DataQueryResponse } from '@grafana/data';
-import { config, reportInteraction } from '@grafana/runtime';
+import { config, reportInteraction, createMonitoringLogger } from '@grafana/runtime';
 
 import { ElasticsearchDataQuery } from './dataquery.gen';
 import { REF_ID_STARTER_LOG_VOLUME } from './datasource';

@@ -1,7 +1,8 @@
 import { NavModel, NavModelItem } from '@grafana/data';
+import { logError } from '@grafana/runtime';
 
 export function getExceptionNav(error: unknown): NavModel {
-  console.error(error);
+  logError(error instanceof Error ? error : new Error(String(error)), { context: 'navigation.getExceptionNav' });
   return getWarningNav('Exception thrown', 'See console for details');
 }
 

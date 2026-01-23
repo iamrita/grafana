@@ -1,7 +1,7 @@
 import { memo, useState, useCallback, type JSX } from 'react';
 
 import { t } from '@grafana/i18n';
-import { FetchError, getBackendSrv, isFetchError, locationService } from '@grafana/runtime';
+import { FetchError, getBackendSrv, isFetchError, locationService, logError } from '@grafana/runtime';
 import config from 'app/core/config';
 
 import { LoginDTO, AuthNRedirectDTO } from './types';
@@ -107,7 +107,7 @@ export const LoginCtrl = memo(({ resetCode, children }: Props) => {
           .then(() => {
             toGrafana();
           })
-          .catch((err) => console.error(err));
+          .catch((err) => logError(err instanceof Error ? err : new Error(String(err)), { action: 'changePassword' }));
       }
     },
     [resetCode, toGrafana]

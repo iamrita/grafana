@@ -1,5 +1,8 @@
 import { store } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { performanceUtils, writePerformanceLog } from '@grafana/scenes';
+
+const logger = createMonitoringLogger('dashboard.performance');
 
 /**
  * Utility function to register a performance observer with the global tracker
@@ -117,7 +120,10 @@ export function createPerformanceMark(name: string, timestamp?: number): void {
       }
     }
   } catch (error) {
-    console.error(`❌ Failed to create performance mark: ${name}`, { timestamp, error });
+    logger.logError(error instanceof Error ? error : new Error('Failed to create performance mark'), {
+      name,
+      timestamp,
+    });
   }
 }
 
@@ -134,6 +140,10 @@ export function createPerformanceMeasure(name: string, startMark: string, endMar
       }
     }
   } catch (error) {
-    console.error(`❌ Failed to create performance measure: ${name}`, { startMark, endMark, error });
+    logger.logError(error instanceof Error ? error : new Error('Failed to create performance measure'), {
+      name,
+      startMark,
+      endMark,
+    });
   }
 }

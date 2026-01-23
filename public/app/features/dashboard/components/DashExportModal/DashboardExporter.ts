@@ -1,7 +1,9 @@
 import { defaults, each, sortBy } from 'lodash';
 
 import { DataSourceRef, PanelPluginMeta, VariableOption, VariableRefresh } from '@grafana/data';
-import { getDataSourceSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('dashboard.exporter');
 import config from 'app/core/config';
 import { PanelModel } from 'app/features/dashboard/state/PanelModel';
 import { getLibraryPanel } from 'app/features/library-panels/state/api';
@@ -318,7 +320,7 @@ export class DashboardExporter {
 
       return newObj;
     } catch (err) {
-      console.error('Export failed:', err);
+      logger.logError(err instanceof Error ? err : new Error('Export failed'), {});
       return {
         error: err,
       };

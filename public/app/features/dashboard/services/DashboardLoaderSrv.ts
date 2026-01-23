@@ -3,7 +3,7 @@ import _, { isFunction } from 'lodash'; // eslint-disable-line lodash/import-sco
 import moment from 'moment'; // eslint-disable-line no-restricted-imports
 
 import { AppEvents, dateMath, UrlQueryMap, UrlQueryValue } from '@grafana/data';
-import { getBackendSrv, isFetchError, locationService } from '@grafana/runtime';
+import { createMonitoringLogger, getBackendSrv, isFetchError, locationService } from '@grafana/runtime';
 import { Spec as DashboardV2Spec } from '@grafana/schema/dist/esm/schema/dashboard/v2';
 import { backendSrv } from 'app/core/services/backend_srv';
 import impressionSrv from 'app/core/services/impression_srv';
@@ -19,6 +19,8 @@ import { DashboardVersionError, DashboardWithAccessInfo } from '../api/types';
 
 import { getDashboardSrv } from './DashboardSrv';
 import { getDashboardSnapshotSrv } from './SnapshotSrv';
+
+const logger = createMonitoringLogger('dashboard.loader');
 
 interface DashboardLoaderSrvLike<T> {
   loadDashboard(
@@ -58,7 +60,7 @@ abstract class DashboardLoaderSrvBase<T> implements DashboardLoaderSrvLike<T> {
           };
         },
         (err) => {
-          console.error('Script dashboard error ' + err);
+          logger.logError(new Error('Script dashboard error'), { error: String(err) });
           appEvents.emit(AppEvents.alertError, [
             'Script Error',
             'Please make sure it exists and returns a valid dashboard',
@@ -145,7 +147,7 @@ export class DashboardLoaderSrv extends DashboardLoaderSrvBase<DashboardDTO> {
         })
         .catch((e) => {
           if (isFetchError(e) && !(e instanceof DashboardVersionError)) {
-            console.error('Failed to load dashboard', e);
+            logger.logError(e instanceof Error ? e : new Error('Failed to load dashboard'), { status: e.status });
             e.isHandled = true;
             if (e.status === 404) {
               appEvents.emit(AppEvents.alertError, ['Dashboard not found']);
@@ -211,7 +213,7 @@ export class DashboardLoaderSrvV2 extends DashboardLoaderSrvBase<DashboardWithAc
         })
         .catch((e) => {
           if (isFetchError(e) && !(e instanceof DashboardVersionError)) {
-            console.error('Failed to load dashboard', e);
+            logger.logError(e instanceof Error ? e : new Error('Failed to load dashboard'), { status: e.status });
             e.isHandled = true;
             if (e.status === 404) {
               appEvents.emit(AppEvents.alertError, ['Dashboard not found']);

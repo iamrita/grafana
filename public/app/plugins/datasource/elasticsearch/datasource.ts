@@ -47,6 +47,7 @@ import {
   TemplateSrv,
   getTemplateSrv,
   config,
+  createMonitoringLogger,
 } from '@grafana/runtime';
 
 import { IndexPattern, intervalMap } from './IndexPattern';
@@ -87,6 +88,8 @@ import { getScriptValue, isTimeSeriesQuery } from './utils';
 
 export const REF_ID_STARTER_LOG_VOLUME = 'log-volume-';
 export const REF_ID_STARTER_LOG_SAMPLE = 'log-sample-';
+
+const logger = createMonitoringLogger('elasticsearch.datasource');
 
 // Those are metadata fields as defined in https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-fields.html#_identity_metadata_fields.
 // custom fields can start with underscores, therefore is not safe to exclude anything that starts with one.
@@ -1172,12 +1175,16 @@ export class ElasticDatasource
         try {
           return new SemVer(versionNumber);
         } catch (error) {
-          console.error(error);
+          logger.logError(error instanceof Error ? error : new Error(String(error)), {
+            context: 'getDatabaseVersion - parsing version',
+          });
           return null;
         }
       },
       (error) => {
-        console.error(error);
+        logger.logError(error instanceof Error ? error : new Error(String(error)), {
+          context: 'getDatabaseVersion - fetching version',
+        });
         return null;
       }
     );

@@ -13,7 +13,7 @@ import {
   store,
   TimeRange,
 } from '@grafana/data';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 
 import { LokiQueryType, LokiQueryDirection } from './dataquery.gen';
 import { LokiDatasource } from './datasource';
@@ -24,6 +24,8 @@ import { addQueryLimitsContext, isLogsQuery, isQueryWithRangeVariable } from './
 import { isRetriableError } from './responseUtils';
 import { trackGroupedQueries } from './tracking';
 import { LokiGroupedRequest, LokiQuery } from './types';
+
+const logger = createMonitoringLogger('loki.query-splitting');
 
 export function partitionTimeRange(
   isLogsQuery: boolean,
@@ -173,7 +175,7 @@ export function runSplitGroupedQueries(
           return false;
         }
       } catch (e) {
-        console.error(e);
+        logger.logError(e instanceof Error ? e : new Error(String(e)), { context: 'retry check' });
         shouldStop = true;
         return false;
       }

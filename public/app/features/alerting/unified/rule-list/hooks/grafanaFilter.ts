@@ -1,5 +1,6 @@
 import { attempt, isError } from 'lodash';
 
+import { logWarning } from '@grafana/runtime';
 import { PromRuleDTO, PromRuleGroupDTO } from 'app/types/unified-alerting-dto';
 
 import { GrafanaPromRulesOptions } from '../../api/prometheusApi';
@@ -151,7 +152,7 @@ function labelMatchersToBackendFormat(labels: string[]): string[] {
     const result = attempt(() => JSON.stringify(parseMatcher(label)));
 
     if (isError(result)) {
-      console.warn('Failed to parse label matcher:', label, result);
+      logWarning('Failed to parse label matcher', { label, error: result.message });
     } else {
       acc.push(result);
     }

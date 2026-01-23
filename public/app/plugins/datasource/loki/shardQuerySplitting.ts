@@ -3,7 +3,7 @@ import { Observable, Subscriber, Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
 import { DataQueryRequest, DataQueryResponse, LoadingState, QueryResultMetaStat } from '@grafana/data';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 
 import { LokiDatasource } from './datasource';
 import { combineResponses, replaceResponses } from './mergeResponses';
@@ -16,6 +16,9 @@ import {
 } from './queryUtils';
 import { isRetriableError } from './responseUtils';
 import { LokiQuery } from './types';
+
+const logger = createMonitoringLogger('loki.shard-query-splitting');
+
 /**
  * Query splitting by stream shards.
  * Query splitting was introduced in Loki to optimize querying for long intervals and high volume of data,
@@ -130,7 +133,7 @@ function splitQueriesByStreamShard(
           return false;
         }
       } catch (e) {
-        console.error(e);
+        logger.logError(e instanceof Error ? e : new Error(String(e)), { context: 'retry check' });
         shouldStop = true;
         return false;
       }
@@ -155,7 +158,7 @@ function splitQueriesByStreamShard(
 
       retryTimer = setTimeout(
         () => {
-          console.warn(`Retrying ${group} ${cycle} (${retries + 1})`);
+          logger.logWarning(`Retrying shard query`, { group: String(group), cycle: String(cycle), attempt: String(retries + 1) });
           runNextRequest(subscriber, group, groups);
           retryTimer = null;
         },
@@ -224,7 +227,7 @@ function splitQueriesByStreamShard(
         nextRequest();
       },
       error: (error: unknown) => {
-        console.error(error, { msg: 'failed to shard' });
+        logger.logError(error instanceof Error ? error : new Error(String(error)), { context: 'failed to shard' });
         subscriber.next(mergedResponse);
         if (retry()) {
           return;
@@ -293,7 +296,9 @@ async function groupTargetsByQueryType(
         cycle: 0,
       });
     } catch (error) {
-      console.error(error, { msg: 'failed to fetch label values for __stream_shard__' });
+      logger.logError(error instanceof Error ? error : new Error(String(error)), {
+        context: 'failed to fetch label values for __stream_shard__',
+      });
       groups.push({
         targets: selectorPartition[selector],
       });
@@ -375,5 +380,5 @@ function debug(message: string) {
   if (!DEBUG_ENABLED) {
     return;
   }
-  console.log(message);
+  logger.logDebug(message);
 }
