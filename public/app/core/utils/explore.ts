@@ -25,11 +25,11 @@ import {
   urlUtil,
 } from '@grafana/data';
 import { createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('core.explore');
 import { RefreshPicker } from '@grafana/ui';
 import { ExpressionDatasourceUID } from 'app/features/expressions/types';
 import { QueryOptions, QueryTransaction } from 'app/types/explore';
+
+const logger = createMonitoringLogger('core.explore');
 
 export const DEFAULT_UI_STATE = {
   dedupStrategy: LogsDedupStrategy.none,

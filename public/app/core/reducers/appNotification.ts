@@ -1,7 +1,6 @@
 import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { createMonitoringLogger } from '@grafana/runtime';
-
 import { AppNotification, AppNotificationSeverity, AppNotificationsState } from 'app/types/appNotifications';
 
 const logger = createMonitoringLogger('core.appNotification');

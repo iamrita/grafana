@@ -3,8 +3,6 @@ import memoizeOne from 'memoize-one';
 import { AbsoluteTimeRange, LogRowModel, UrlQueryMap } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { createMonitoringLogger, getBackendSrv, config, locationService } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('core.shortLinks');
 import { sceneGraph, SceneTimeRangeLike, VizPanel } from '@grafana/scenes';
 import { shortURLAPIv1beta1 } from 'app/api/clients/shorturl/v1beta1';
 import { createErrorNotification, createSuccessNotification } from 'app/core/copy/appNotification';
@@ -18,6 +16,8 @@ import { ShareLinkConfiguration } from '../../features/dashboard-scene/sharing/S
 import { notifyApp } from '../reducers/appNotification';
 
 import { copyStringToClipboard } from './explore';
+
+const logger = createMonitoringLogger('core.shortLinks');
 
 function buildHostUrl() {
   return `${window.location.protocol}//${window.location.host}${config.appSubUrl}`;
