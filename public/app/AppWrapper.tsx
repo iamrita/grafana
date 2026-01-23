@@ -6,8 +6,6 @@ import { Provider } from 'react-redux';
 import { Route, Routes } from 'react-router-dom-v5-compat';
 
 import { config, createMonitoringLogger, navigationLogger, reportInteraction } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('app.wrapper');
 import { ErrorBoundaryAlert, getPortalContainer, GlobalStyles, PortalContainer, TimeRangeProvider } from '@grafana/ui';
 import { getAppRoutes } from 'app/routes/routes';
 import { store } from 'app/store/store';
@@ -23,6 +21,8 @@ import { ExtensionRegistriesProvider } from './features/plugins/extensions/Exten
 import { pluginExtensionRegistries } from './features/plugins/extensions/registry/setup';
 import { ScopesContextProvider } from './features/scopes/ScopesContextProvider';
 import { RouterWrapper } from './routes/RoutesWrapper';
+
+const logger = createMonitoringLogger('app.wrapper');
 
 interface AppWrapperProps {
   app: GrafanaApp;

@@ -43,8 +43,6 @@ import {
   setPluginFunctionsHook,
   setMegaMenuOpenHook,
 } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('app.init');
 import {
   initOpenFeature,
   setGetObservablePluginComponents,
@@ -122,6 +120,8 @@ import { createQueryVariableAdapter } from './features/variables/query/adapter';
 import { createSystemVariableAdapter } from './features/variables/system/adapter';
 import { createTextBoxVariableAdapter } from './features/variables/textbox/adapter';
 import { configureStore } from './store/configureStore';
+
+const logger = createMonitoringLogger('app.init');
 
 // import symlinked extensions
 const extensionsIndex = require.context('.', true, /extensions\/index.ts/);

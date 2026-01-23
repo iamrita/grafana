@@ -4,8 +4,6 @@ import { useForm } from 'react-hook-form';
 import { NavModelItem } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { createMonitoringLogger, locationService } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('teams.create');
 import { Button, Field, Input, FieldSet, Stack } from '@grafana/ui';
 import { extractErrorMessage } from 'app/api/utils';
 import { Page } from 'app/core/components/Page/Page';
@@ -17,6 +15,8 @@ import { Role } from 'app/types/accessControl';
 import { TeamDTO } from 'app/types/teams';
 
 import { useCreateTeam } from './hooks';
+
+const logger = createMonitoringLogger('teams.create');
 
 const pageNav: NavModelItem = {
   icon: 'users-alt',

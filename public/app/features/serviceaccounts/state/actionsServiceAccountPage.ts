@@ -1,6 +1,4 @@
 import { createMonitoringLogger, getBackendSrv, locationService } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('serviceaccounts.actions');
 import { accessControlQueryParam } from 'app/core/utils/accessControl';
 import { ServiceAccountDTO } from 'app/types/serviceaccount';
 import { ThunkResult } from 'app/types/store';
@@ -13,6 +11,8 @@ import {
   serviceAccountLoaded,
   serviceAccountTokensLoaded,
 } from './reducers';
+
+const logger = createMonitoringLogger('serviceaccounts.actions');
 
 const BASE_URL = `/api/serviceaccounts`;
 

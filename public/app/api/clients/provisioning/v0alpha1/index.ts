@@ -11,8 +11,6 @@ import {
 } from '@grafana/api-clients/rtkq/provisioning/v0alpha1';
 import { t } from '@grafana/i18n';
 import { createMonitoringLogger, isFetchError } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('provisioning.api');
 import { clearFolders } from 'app/features/browse-dashboards/state/slice';
 import { getState } from 'app/store/store';
 import { ThunkDispatch } from 'app/types/store';
@@ -23,6 +21,8 @@ import { PAGE_SIZE } from '../../../../features/browse-dashboards/api/services';
 import { refetchChildren } from '../../../../features/browse-dashboards/state/actions';
 import { handleError } from '../../../utils';
 import { createOnCacheEntryAdded } from '../utils/createOnCacheEntryAdded';
+
+const logger = createMonitoringLogger('provisioning.api');
 
 const handleProvisioningFormError = (e: unknown, dispatch: ThunkDispatch, title: string) => {
   if (typeof e === 'object' && e && 'error' in e && isFetchError(e.error)) {

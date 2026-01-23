@@ -4,8 +4,6 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { OrgRole } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { config, createMonitoringLogger, getBackendSrv, locationService } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('serviceaccounts.create');
 import { Button, Input, Field, FieldSet } from '@grafana/ui';
 import { Form } from 'app/core/components/Form/Form';
 import { Page } from 'app/core/components/Page/Page';
@@ -17,6 +15,8 @@ import { Role, AccessControlAction } from 'app/types/accessControl';
 import { ServiceAccountDTO, ServiceAccountCreateApiResponse } from 'app/types/serviceaccount';
 
 import { OrgRolePicker } from '../admin/OrgRolePicker';
+
+const logger = createMonitoringLogger('serviceaccounts.create');
 
 export interface Props {}
 
