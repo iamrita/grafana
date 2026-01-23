@@ -372,8 +372,9 @@ function getInitialGroupSize(shards: number[]) {
 // Enable to output debugging logs
 const DEBUG_ENABLED = Boolean(localStorage.getItem(`loki.sharding_debug_enabled`));
 function debug(message: string) {
-  if (!DEBUG_ENABLED) {
+  if (!DEBUG_ENABLED || process.env.NODE_ENV === 'production') {
     return;
   }
-  console.log(message);
+  // eslint-disable-next-line no-console
+  console.log(`[Loki Sharding]: ${message}`);
 }

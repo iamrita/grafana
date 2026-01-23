@@ -8,6 +8,7 @@ import { generatedAPI as legacyUserAPI } from '@grafana/api-clients/rtkq/legacy/
 import { DataFrame, DataFrameView, getDisplayProcessor, SelectableValue, toDataFrame } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { config, getBackendSrv } from '@grafana/runtime';
+import { createLogger } from '@grafana/ui';
 import { generatedAPI, ListStarsApiResponse } from 'app/api/clients/collections/v1alpha1';
 import { getAPIBaseURL } from 'app/api/utils';
 import { TermCount } from 'app/core/components/TagFilter/TagFilter';
@@ -24,6 +25,8 @@ import {
   SearchQuery,
   SearchResultMeta,
 } from './types';
+
+const logger = createLogger('unifiedSearch');
 import { filterSearchResults, replaceCurrentFolderQuery } from './utils';
 
 // The backend returns an empty frame with a special name to indicate that the indexing engine is being rebuilt,
@@ -193,11 +196,11 @@ export class UnifiedSearcher implements GrafanaSearcher {
         const resp = await this.fetchResponse(nextPageUrl);
         const frame = toDashboardResults(resp, query.sort ?? '');
         if (!frame) {
-          console.log('no results', frame);
+          logger.logger('noResults', false, 'No results returned from search', { frame });
           return;
         }
         if (frame.fields.length !== view.dataFrame.fields.length) {
-          console.log('invalid shape', frame, view.dataFrame);
+          logger.logger('invalidShape', false, 'Invalid frame shape', { frameFields: frame.fields.length, viewFields: view.dataFrame.fields.length });
           return;
         }
 

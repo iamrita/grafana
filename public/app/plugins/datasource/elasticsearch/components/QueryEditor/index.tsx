@@ -37,8 +37,8 @@ function useElasticVersion(datasource: ElasticDatasource): SemVer | null {
         }
       },
       (error) => {
-        // we do nothing
-        console.log(error);
+        // Silently ignore version fetch errors - not critical for functionality
+        console.error('Failed to get Elasticsearch version:', error);
       }
     );
 

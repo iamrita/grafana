@@ -16,6 +16,7 @@ import {
   Threshold,
   ThresholdsMode,
 } from '@grafana/data';
+import { createLogger } from '@grafana/ui';
 import {
   LegendDisplayMode,
   TooltipDisplayMode,
@@ -45,6 +46,7 @@ import { GrafanaQuery, GrafanaQueryType } from 'app/plugins/datasource/grafana/t
 import { defaultGraphConfig } from './config';
 import { Options } from './panelcfg.gen';
 
+const logger = createLogger('timeseriesMigrations');
 let dashboardRefreshDebouncer: ReturnType<typeof setTimeout> | null = null;
 
 /**
@@ -283,7 +285,7 @@ export function graphToTimeseriesOptions(angular: any): {
             });
             break;
           default:
-            console.log('Ignore override migration:', seriesOverride.alias, p, v);
+            logger.logger('ignoreMigration', false, 'Ignoring override migration', { alias: seriesOverride.alias, property: p, value: v });
         }
       }
       if (dashOverride) {

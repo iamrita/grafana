@@ -165,7 +165,7 @@ export function loadLibraryPanelAndUpdate(panel: PanelModel): ThunkResult<void> 
 
       await dispatch(initPanelState(panel));
     } catch (ex) {
-      console.log('ERROR: ', ex);
+      console.error('Failed to load library panel:', uid, ex);
       dispatch(
         panelModelAndPluginReady({
           key: panel.key,

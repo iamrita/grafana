@@ -5,6 +5,7 @@ import ReactGridLayout, { ItemCallback } from 'react-grid-layout';
 import { Subscription } from 'rxjs';
 
 import { config } from '@grafana/runtime';
+import { createLogger } from '@grafana/ui';
 import { appEvents } from 'app/core/app_events';
 import { GRID_CELL_HEIGHT, GRID_CELL_VMARGIN, GRID_COLUMN_COUNT } from 'app/core/constants';
 import { contextSrv } from 'app/core/services/context_srv';
@@ -20,6 +21,7 @@ import DashboardEmpty from './DashboardEmpty/DashboardEmpty';
 import { DashboardPanel } from './DashboardPanel';
 
 export const PANEL_FILTER_VARIABLE = 'systemPanelFilterVar';
+const logger = createLogger('DashboardGrid');
 
 export interface Props {
   dashboard: DashboardModel;
@@ -115,7 +117,7 @@ export class DashboardGrid extends PureComponent<Props, State> {
       this.panelMap[panel.key] = panel;
 
       if (!panel.gridPos) {
-        console.log('panel without gridpos');
+        logger.logger('missingGridPos', false, 'Panel without gridPos', { panelId: panel.id, panelTitle: panel.title });
         continue;
       }
 

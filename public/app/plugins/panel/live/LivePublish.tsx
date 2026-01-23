@@ -3,9 +3,11 @@ import { useMemo } from 'react';
 import { LiveChannelAddress, isValidLiveChannelAddress } from '@grafana/data';
 import { Trans } from '@grafana/i18n';
 import { getBackendSrv, getGrafanaLiveSrv } from '@grafana/runtime';
-import { CodeEditor, Button } from '@grafana/ui';
+import { CodeEditor, Button, createLogger } from '@grafana/ui';
 
 import { MessagePublishMode } from './types';
+
+const logger = createLogger('LivePublish');
 
 interface Props {
   height: number;
@@ -46,7 +48,7 @@ export function LivePublish({ height, mode, body, addr, onSave }: Props) {
     }
 
     const rsp = await getGrafanaLiveSrv().publish(addr, body);
-    console.log('onPublishClicked (response from publish)', rsp);
+    logger.logger('publish', false, 'Publish response received', { rsp });
   };
 
   return (

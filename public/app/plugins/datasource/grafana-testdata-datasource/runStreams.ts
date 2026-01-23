@@ -19,9 +19,12 @@ import {
   createTheme,
 } from '@grafana/data';
 import { getBackendSrv } from '@grafana/runtime';
+import { createLogger } from '@grafana/ui';
 
 import { getRandomLine } from './LogIpsum';
 import { TestDataDataQuery, StreamingQuery } from './dataquery';
+
+const logger = createLogger('testDataStreams');
 
 export const defaultStreamQuery: StreamingQuery = {
   type: 'signal',
@@ -125,7 +128,7 @@ export function runSignalStream(
     setTimeout(pushNextEvent, 5);
 
     return () => {
-      console.log('unsubscribing to stream ' + streamId);
+      logger.logger('unsubscribe', false, 'Unsubscribing from signal stream', { streamId });
       clearTimeout(timeoutId);
     };
   });
@@ -171,7 +174,7 @@ export function runLogsStream(
     setTimeout(pushNextEvent, 5);
 
     return () => {
-      console.log('unsubscribing to stream ' + streamId);
+      logger.logger('unsubscribe', false, 'Unsubscribing from logs stream', { streamId });
       clearTimeout(timeoutId);
     };
   });
@@ -254,7 +257,7 @@ export function runWatchStream(
       });
 
     return () => {
-      console.log('unsubscribing to stream', streamId);
+      logger.logger('unsubscribe', false, 'Unsubscribing from watch stream', { streamId });
       sub.unsubscribe();
     };
   });
@@ -314,7 +317,7 @@ export function runFetchStream(
       });
 
       if (value.done) {
-        console.log('Finished stream');
+        logger.logger('finished', false, 'Stream finished', { streamId });
         subscriber.complete(); // necessary?
         return;
       }
@@ -335,7 +338,7 @@ export function runFetchStream(
 
     return () => {
       // Cancel fetch?
-      console.log('unsubscribing to stream ' + streamId);
+      logger.logger('unsubscribe', false, 'Unsubscribing from fetch stream', { streamId });
     };
   });
 }
@@ -368,7 +371,7 @@ export function runTracesStream(
     setTimeout(pushNextEvent, 5);
 
     return () => {
-      console.log('unsubscribing to stream ' + streamId);
+      logger.logger('unsubscribe', false, 'Unsubscribing from traces stream', { streamId });
       clearTimeout(timeoutId);
     };
   });

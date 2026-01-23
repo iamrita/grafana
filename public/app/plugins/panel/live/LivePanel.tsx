@@ -20,9 +20,11 @@ import {
 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { config, getGrafanaLiveSrv } from '@grafana/runtime';
-import { Alert, stylesFactory, JSONFormatter, CustomScrollbar } from '@grafana/ui';
+import { Alert, stylesFactory, JSONFormatter, CustomScrollbar, createLogger } from '@grafana/ui';
 
 import { TablePanel } from '../table/TablePanel';
+
+const logger = createLogger('LivePanel');
 
 import { LivePublish } from './LivePublish';
 import { LivePanelOptions, MessageDisplayMode, MessagePublishMode } from './types';
@@ -72,7 +74,7 @@ export class LivePanel extends PureComponent<Props, State> {
       } else if (isLiveChannelMessageEvent(event)) {
         this.setState({ message: event.message, changed: Date.now() });
       } else {
-        console.log('ignore', event);
+        logger.logger('ignoreEvent', true, 'Ignoring unhandled event type', { eventType: event.type });
       }
     },
   };
@@ -87,7 +89,7 @@ export class LivePanel extends PureComponent<Props, State> {
   async loadChannel() {
     const addr = this.props.options?.channel;
     if (!isValidLiveChannelAddress(addr)) {
-      console.log('INVALID', addr);
+      logger.logger('invalidAddr', false, 'Invalid channel address', { addr });
       this.unsubscribe();
       this.setState({
         addr: undefined,
@@ -96,13 +98,13 @@ export class LivePanel extends PureComponent<Props, State> {
     }
 
     if (isEqual(addr, this.state.addr)) {
-      console.log('Same channel', this.state.addr);
+      logger.logger('sameChannel', false, 'Same channel, skipping reload', { addr: this.state.addr });
       return;
     }
 
     const live = getGrafanaLiveSrv();
     if (!live) {
-      console.log('INVALID', addr);
+      logger.logger('noLiveSrv', false, 'Live service not available', { addr });
       this.unsubscribe();
       this.setState({
         addr: undefined,
@@ -111,7 +113,7 @@ export class LivePanel extends PureComponent<Props, State> {
     }
     this.unsubscribe();
 
-    console.log('LOAD', addr);
+    logger.logger('load', false, 'Loading channel', { addr });
 
     // Subscribe to new events
     try {

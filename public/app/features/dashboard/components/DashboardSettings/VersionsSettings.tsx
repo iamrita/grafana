@@ -76,7 +76,7 @@ export class VersionsSettings extends PureComponent<Props, State> {
         // Update the continueToken for the next request, if available
         this.continueToken = res.continueToken ?? '';
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error('Failed to fetch versions:', err))
       .finally(() => this.setState({ isAppending: false }));
   };
 

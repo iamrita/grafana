@@ -257,7 +257,24 @@ export class Graph {
   }
 }
 
+/**
+ * Debug utility to print graph structure.
+ * Enable debug logging by setting `grafana.debug=true` in localStorage.
+ */
 export const printGraph = (g: Graph) => {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+
+  let loggingEnabled = false;
+  if (typeof window !== 'undefined') {
+    loggingEnabled = window.localStorage.getItem('grafana.debug') === 'true';
+  }
+
+  if (!loggingEnabled) {
+    return;
+  }
+
   Object.keys(g.nodes).forEach((name) => {
     const n = g.nodes[name];
     let outputEdges = n.outputEdges.map((e: Edge) => e.outputNode?.name).join(', ');
@@ -268,7 +285,8 @@ export const printGraph = (g: Graph) => {
     if (!inputEdges) {
       inputEdges = '<none>';
     }
-    console.log(`${n.name}:\n - links to:   ${outputEdges}\n - links from: ${inputEdges}`);
+    // eslint-disable-next-line no-console
+    console.log(`[Graph: ${n.name}]: links to: ${outputEdges}, links from: ${inputEdges}`);
   });
 };
 

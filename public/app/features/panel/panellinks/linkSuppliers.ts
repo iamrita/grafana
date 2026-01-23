@@ -13,10 +13,13 @@ import {
 } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { VizPanel } from '@grafana/scenes';
+import { createLogger } from '@grafana/ui';
 import { PanelModel } from 'app/features/dashboard/state/PanelModel';
 import { dashboardSceneGraph } from 'app/features/dashboard-scene/utils/dashboardSceneGraph';
 
 import { getLinkSrv } from './link_srv';
+
+const logger = createLogger('linkSuppliers');
 
 interface SeriesVars {
   name?: string;
@@ -124,7 +127,7 @@ export const getFieldLinksSupplier = (value: FieldDisplay): LinkModelSupplier<Fi
           };
         }
       } else {
-        console.log('VALUE', value);
+        logger.logger('unexpectedValue', false, 'Unexpected value type in field link supplier', { value });
       }
 
       const replace: InterpolateFunction = (value: string, vars: ScopedVars | undefined, fmt?: string | Function) => {

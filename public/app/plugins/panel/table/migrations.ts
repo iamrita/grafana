@@ -12,8 +12,11 @@ import {
   ByNamesMatcherMode,
 } from '@grafana/data';
 import { ReduceTransformerOptions } from '@grafana/data/internal';
+import { createLogger } from '@grafana/ui';
 
 import { Options } from './panelcfg.gen';
+
+const logger = createLogger('tableMigrations');
 
 /**
  * At 7.0, the `table` panel was swapped from an angular implementation to a react one.
@@ -23,7 +26,7 @@ import { Options } from './panelcfg.gen';
 export const tableMigrationHandler = (panel: PanelModel<Options>): Partial<Options> => {
   // Table was saved as an angular table, lets just swap to the 'table-old' panel
   if (!panel.pluginVersion && 'columns' in panel) {
-    console.log('Was angular table', panel);
+    logger.logger('angularTable', false, 'Migrating from angular table', { panelId: panel.id, panelTitle: panel.title });
   }
 
   migrateTextWrapToFieldLevel(panel);

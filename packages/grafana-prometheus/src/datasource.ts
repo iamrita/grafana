@@ -172,8 +172,9 @@ export class PrometheusDatasource
         this.ruleMappings = extractRuleMappingFromGroups(ruleGroups);
       }
     } catch (err) {
-      console.log('Rules API is experimental. Ignore next error.');
-      console.error(err);
+      // Rules API may not be available on all Prometheus instances
+      // This is expected for older versions or configurations without rules
+      console.warn('Failed to load Prometheus rules (experimental API):', err);
     }
   }
 
