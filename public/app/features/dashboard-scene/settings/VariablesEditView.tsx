@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { NavModel, NavModelItem, PageLayoutType } from '@grafana/data';
+import { createMonitoringLogger } from '@grafana/runtime';
 import { SceneComponentProps, SceneObjectBase, SceneVariable, SceneVariables, sceneGraph } from '@grafana/scenes';
 import { Page } from 'app/core/components/Page/Page';
 

@@ -6,7 +6,7 @@ import WebGLPointsLayer from 'ol/layer/WebGLPoints';
 import { Subject } from 'rxjs';
 
 import { getFrameMatchers, MapLayerHandler, MapLayerOptions, PanelData, textUtil } from '@grafana/data';
-import { config } from '@grafana/runtime';
+import { config, createMonitoringLogger } from '@grafana/runtime';
 
 import { GeomapPanel } from '../GeomapPanel';
 import { MARKERS_LAYER_ID } from '../layers/data/markersLayer';
@@ -14,6 +14,8 @@ import { DEFAULT_BASEMAP_CONFIG, geomapLayerRegistry } from '../layers/registry'
 import { MapLayerState } from '../types';
 
 import { getNextLayerName } from './utils';
+
+const logger = createMonitoringLogger('panel.geomap.layers');
 
 const layerStateMap = new WeakMap<BaseLayer, MapLayerState>();
 
@@ -91,7 +93,7 @@ export async function updateLayer(panel: GeomapPanel, uid: string, newOptions: M
     // initialize with new data
     applyLayerFilter(info.handler, newOptions, panel.props.data);
   } catch (err) {
-    console.warn('ERROR', err); // eslint-disable-line no-console
+    logger.logWarning('Error updating layer', { error: String(err) });
     return false;
   }
 

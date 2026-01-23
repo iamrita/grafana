@@ -17,8 +17,6 @@ import {
 } from '@grafana/data';
 import { t } from '@grafana/i18n';
 import { createMonitoringLogger, reportInteraction } from '@grafana/runtime';
-
-const logger = createMonitoringLogger('explore.logs.tablewrap');
 import { getDragStyles, InlineField, Select, useStyles2 } from '@grafana/ui';
 import {
   getFieldSelectorWidth,
@@ -31,6 +29,8 @@ import { parseLogsFrame } from '../../logs/logsFrame';
 
 import { LogsTable } from './LogsTable';
 import { SETTING_KEY_ROOT } from './utils/logs';
+
+const logger = createMonitoringLogger('explore.logs.tablewrap');
 
 interface Props {
   logsFrames: DataFrame[];

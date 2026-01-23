@@ -23,10 +23,14 @@ import { toKeyedVariableIdentifier } from '../utils';
 
 import { changeQueryVariableDataSource, changeQueryVariableQuery, initQueryVariableEditor } from './actions';
 
+const logger = createMonitoringLogger('variables.query.editor');
+
 const mapStateToProps = (state: StoreState, ownProps: OwnProps) => {
   const { rootStateKey } = ownProps.variable;
   if (!rootStateKey) {
-    console.error('QueryVariableEditor: variable has no rootStateKey');
+    logger.logError(new Error('QueryVariableEditor: variable has no rootStateKey'), {
+      component: 'QueryVariableEditor',
+    });
     return {
       extended: getQueryVariableEditorState(initialVariableEditorState),
     };

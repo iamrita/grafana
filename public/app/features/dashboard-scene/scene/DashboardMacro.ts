@@ -42,7 +42,7 @@ export function registerDashboardMacro() {
 
     return () => unregister();
   } catch (e) {
-    console.error('Error registering dashboard macro', e);
+    logger.logError(e instanceof Error ? e : new Error('Error registering dashboard macro'));
     return () => {};
   }
 }

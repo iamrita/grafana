@@ -87,14 +87,14 @@ export class ScopedResourceClient<T = object, S = object, K = string> implements
           try {
             return JSON.parse(line);
           } catch (e) {
-            console.warn('Invalid JSON in watch stream:', e, line);
+            logger.logWarning('Invalid JSON in watch stream', { error: e instanceof Error ? e.message : String(e), line });
             return null;
           }
         }),
         filter((event): event is ResourceEvent<T, S, K> => event !== null),
         retry({ count: 3, delay: 1000 }),
         catchError((error) => {
-          console.error('Watch stream error:', error);
+          logger.logError(error instanceof Error ? error : new Error('Watch stream error'), { context: 'watch' });
           throw error;
         })
       );

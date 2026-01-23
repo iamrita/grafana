@@ -262,7 +262,7 @@ export class GeomapPanel extends Component<Props, State> {
         layers.push(await initLayer(this, map, lyr, false));
       }
     } catch (ex) {
-      console.error('error loading layers', ex);
+      logger.logError(ex instanceof Error ? ex : new Error('Error loading layers'), { context: 'initMapAsync' });
     }
 
     for (const lyr of layers) {

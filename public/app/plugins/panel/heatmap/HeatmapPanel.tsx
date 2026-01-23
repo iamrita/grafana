@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import { useMemo, useRef, useState } from 'react';
 
 import { DashboardCursorSync, PanelProps, TimeRange } from '@grafana/data';
-import { PanelDataErrorView } from '@grafana/runtime';
+import { createMonitoringLogger, PanelDataErrorView } from '@grafana/runtime';
 import { ScaleDistributionConfig } from '@grafana/schema';
 import {
   TooltipPlugin2,
@@ -30,6 +30,8 @@ import { quantizeScheme } from './palettes';
 import { Options } from './types';
 import { calculateYSizeDivisor, prepConfig } from './utils';
 
+const logger = createMonitoringLogger('panel.heatmap');
+
 interface HeatmapPanelProps extends PanelProps<Options> {}
 
 type HeatmapDataForViz = Required<Pick<HeatmapData, 'heatmap'>> & Omit<HeatmapData, 'warning' | 'heatmap'>;
@@ -54,7 +56,7 @@ export const HeatmapPanel = (props: HeatmapPanelProps) => {
         timeRange,
       });
     } catch (ex) {
-      console.error(ex);
+      logger.logError(ex instanceof Error ? ex : new Error(String(ex)), { context: 'prepareHeatmapData' });
       return { warning: `${ex}` };
     }
   }, [data.series, data.annotations, options, palette, theme, replaceVariables, timeRange]);

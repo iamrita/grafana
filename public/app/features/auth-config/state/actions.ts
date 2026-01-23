@@ -80,7 +80,7 @@ export function saveSettings(data: UpdateSettingsQuery): ThunkResult<Promise<boo
         dispatch(resetError());
         return true;
       } catch (error) {
-        console.log(error);
+        logger.logInfo('Failed to save settings', { error: error instanceof Error ? error.message : String(error) });
         if (isFetchError(error)) {
           error.isHandled = true;
           const updateErr: SettingsError = {

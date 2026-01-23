@@ -464,7 +464,7 @@ export const browseDashboardsAPI = createApi({
           } catch (error) {
             if (isFetchError(error)) {
               if (error.status !== 404) {
-                console.error('Error fetching dashboard', error);
+                logger.logError(error instanceof Error ? error : new Error('Error fetching dashboard'), { dashboardUid: dashboard.uid });
               } else {
                 // Do not show the error alert if the dashboard does not exist
                 // this is expected when importing a new dashboard

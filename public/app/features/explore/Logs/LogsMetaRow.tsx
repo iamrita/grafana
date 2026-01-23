@@ -13,9 +13,9 @@ import {
 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { config, createMonitoringLogger, reportInteraction } from '@grafana/runtime';
+import { Button, Dropdown, Menu, ToolbarButton, useStyles2 } from '@grafana/ui';
 
 const logger = createMonitoringLogger('explore.logs.metarow');
-import { Button, Dropdown, Menu, ToolbarButton, useStyles2 } from '@grafana/ui';
 
 import { LogLabels, LogLabelsList, Props as LogLabelsProps } from '../../logs/components/LogLabels';
 import { DownloadFormat, downloadLogs } from '../../logs/utils';

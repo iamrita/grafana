@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs';
 
 import { DataSourceRef } from '@grafana/data';
-import { getDataSourceSrv, toDataQueryError } from '@grafana/runtime';
+import { createMonitoringLogger, getDataSourceSrv, toDataQueryError } from '@grafana/runtime';
 import { ThunkResult } from 'app/types/store';
 
 import { getVariableQueryEditor } from '../editor/getVariableQueryEditor';
@@ -16,6 +16,8 @@ import { hasOngoingTransaction, toKeyedVariableIdentifier, toVariablePayload } f
 
 import { getVariableQueryRunner } from './VariableQueryRunner';
 import { variableQueryObserver } from './variableQueryObserver';
+
+const logger = createMonitoringLogger('variables.query.actions');
 
 export const updateQueryVariableOptions = (
   identifier: KeyedVariableIdentifier,
@@ -109,7 +111,9 @@ export const changeQueryVariableDataSource = (
         )
       );
     } catch (err) {
-      console.error(err);
+      logger.logError(err instanceof Error ? err : new Error(String(err)), {
+        context: 'changeQueryVariableDataSource',
+      });
     }
   };
 };
