@@ -15,7 +15,7 @@ export class PanelModelCompatibilityWrapper implements PanelModel {
 
     if (isNaN(id)) {
       logger.logError(new Error('VizPanel key could not be translated to a legacy numeric panel id'), {
-        vizPanelKey: this._vizPanel.state.key,
+        vizPanelKey: this._vizPanel.state.key ?? 'unknown',
       });
       return 0;
     }

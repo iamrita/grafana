@@ -61,7 +61,7 @@ export class AnnotationsEditView extends SceneObjectBase<AnnotationsEditViewStat
     // check for an annotation flag in the plugin json to see if it supports annotations
     if (!defaultInstanceDS || !defaultInstanceDS.meta.annotations) {
       logger.logError(new Error('Default datasource does not support annotations'), {
-        datasourceType: defaultInstanceDS?.type,
+        datasourceType: defaultInstanceDS?.type ?? 'unknown',
       });
       return undefined;
     }

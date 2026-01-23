@@ -157,7 +157,10 @@ export class InspectJsonTab extends SceneObjectBase<InspectJsonTabState> {
       const newState = sceneUtils.cloneSceneObjectState(gridItem.state);
 
       if (!(panel.parent instanceof DashboardGridItem)) {
-        console.error('Cannot update state of panel', panel, gridItem);
+        logger.logError(new Error('Cannot update state of panel'), {
+          panelKey: panel.state.key ?? 'unknown',
+          gridItemType: gridItem?.constructor.name ?? 'unknown',
+        });
         return;
       }
 

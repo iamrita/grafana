@@ -165,7 +165,7 @@ export class DashboardModelCompatibilityWrapper {
   public removePanel(panel: PanelModelCompatibilityWrapper) {
     const vizPanel = findVizPanelByKey(this._scene, getVizPanelKeyForPanelId(panel.id));
     if (!vizPanel) {
-      logger.logError(new Error('Trying to remove a panel that was not found in scene'), { panelId: panel.id });
+      logger.logError(new Error('Trying to remove a panel that was not found in scene'), { panelId: String(panel.id) });
       return;
     }
 

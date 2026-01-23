@@ -151,7 +151,7 @@ export class GeneralSettingsEditView
       const liveNow = this.getLiveNowTimer();
       enable ? liveNow.enable() : liveNow.disable();
     } catch (err) {
-      logger.logError(err instanceof Error ? err : new Error(String(err)), { action: 'onLiveNowChange', enable });
+      logger.logError(err instanceof Error ? err : new Error(String(err)), { action: 'onLiveNowChange', enable: String(enable) });
     }
   };
 
