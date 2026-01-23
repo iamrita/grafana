@@ -50,9 +50,6 @@ import { LogRows } from '../../../features/logs/components/LogRows';
 import { COMMON_LABELS, dataFrameToLogsModel, dedupLogRows } from '../../../features/logs/logsModel';
 
 import type { Options } from './panelcfg.gen';
-
-const logger = createMonitoringLogger('panel.logs');
-
 import {
   GetFieldLinksFn,
   isCoreApp,
@@ -71,6 +68,8 @@ import {
   onNewLogsReceivedType,
 } from './types';
 import { useDatasourcesFromTargets } from './useDatasourcesFromTargets';
+
+const logger = createMonitoringLogger('panel.logs');
 
 interface LogsPanelProps extends PanelProps<Options> {
   /**

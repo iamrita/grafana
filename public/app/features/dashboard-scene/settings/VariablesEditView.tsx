@@ -61,7 +61,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
 
     if (!variable) {
       // Handle the case where the variable is not found
-      console.error('Variable not found');
+      logger.logError(new Error('Variable not found'), { context: 'replaceEditVariable', variableIndex });
       return;
     }
 
@@ -77,7 +77,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
     const { variables } = this.getVariableSet().state;
     if (variableIndex === -1) {
       // Handle the case where the variable is not found
-      console.error('Variable not found');
+      logger.logError(new Error('Variable not found'), { context: 'onDelete', identifier });
       return;
     }
 
@@ -99,7 +99,7 @@ export class VariablesEditView extends SceneObjectBase<VariablesEditViewState> i
     const variables = this.getVariableSet().state.variables;
 
     if (variableIndex === -1) {
-      console.error('Variable not found');
+      logger.logError(new Error('Variable not found'), { context: 'onDuplicated', identifier });
       return;
     }
 
