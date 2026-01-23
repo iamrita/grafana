@@ -1,6 +1,6 @@
+import { createMonitoringLogger } from '@grafana/runtime';
 import { formatRegistry } from '@grafana/scenes';
 import { VariableFormatID } from '@grafana/schema';
-import { createMonitoringLogger } from '@grafana/runtime';
 
 import { isAdHoc } from '../variables/guard';
 

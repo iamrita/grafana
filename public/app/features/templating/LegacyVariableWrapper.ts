@@ -1,6 +1,6 @@
+import { createMonitoringLogger } from '@grafana/runtime';
 import { VariableValue, FormatVariable } from '@grafana/scenes';
 import { VariableModel, VariableType } from '@grafana/schema';
-import { createMonitoringLogger } from '@grafana/runtime';
 
 import { ALL_VARIABLE_TEXT, ALL_VARIABLE_VALUE } from '../variables/constants';
 
