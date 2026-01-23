@@ -2,7 +2,9 @@ import pluralize from 'pluralize';
 import * as React from 'react';
 
 import { QueryEditorProps, SelectableValue, rangeUtil, DataQueryRequest, Field } from '@grafana/data';
-import { config, getDataSourceSrv } from '@grafana/runtime';
+import { config, createMonitoringLogger, getDataSourceSrv } from '@grafana/runtime';
+
+const logger = createMonitoringLogger('datasource.grafana.queryEditor');
 import {
   InlineField,
   Select,
@@ -142,7 +144,7 @@ export class UnthemedQueryEditor extends React.PureComponent<Props, State> {
         try {
           buffer = rangeUtil.intervalToSeconds(txt) * 1000;
         } catch (err) {
-          console.warn('ERROR', err);
+          logger.logWarning('Failed to parse buffer interval', { input: txt });
         }
       }
       onChange({

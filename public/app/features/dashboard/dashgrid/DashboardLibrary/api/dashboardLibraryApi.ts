@@ -1,8 +1,10 @@
-import { getBackendSrv } from '@grafana/runtime';
+import { createMonitoringLogger, getBackendSrv } from '@grafana/runtime';
 import { DashboardJson } from 'app/features/manage-dashboards/types';
 import { PluginDashboard } from 'app/types/plugins';
 
 import { GnetDashboard, GnetDashboardsResponse, Link } from '../types';
+
+const logger = createMonitoringLogger('dashboard.library.api');
 
 /**
  * Panel types that are known to allow JavaScript code execution.
@@ -109,7 +111,7 @@ export async function fetchCommunityDashboards(
   }
 
   // Fallback for unexpected response format
-  console.warn('Unexpected API response format from Grafana.com:', result);
+  logger.logWarning('Unexpected API response format from Grafana.com', {});
   return {
     page: params.page,
     pages: 1,
@@ -134,7 +136,9 @@ export async function fetchProvisionedDashboards(datasourceType: string): Promis
     });
     return Array.isArray(dashboards) ? dashboards : [];
   } catch (error) {
-    console.error('Error loading provisioned dashboards', error);
+    logger.logError(error instanceof Error ? error : new Error('Error loading provisioned dashboards'), {
+      datasourceType,
+    });
     return [];
   }
 }
@@ -147,9 +151,13 @@ const filterNonSafeDashboards = (dashboards: GnetDashboard[]): GnetDashboard[] =
     const hasLowDownloads = typeof item.downloads === 'number' && item.downloads < MIN_DOWNLOADS_FILTER;
 
     if (hasUnsafePanelTypes || hasLowDownloads) {
-      console.warn(
-        `Community dashboard ${item.id} ${item.name} filtered out due to low downloads ${item.downloads} or panel types ${item.panelTypeSlugs?.join(', ')} that can embed JavaScript`
-      );
+      logger.logWarning('Community dashboard filtered out', {
+        dashboardId: String(item.id),
+        dashboardName: item.name,
+        downloads: String(item.downloads || 0),
+        panelTypes: item.panelTypeSlugs?.join(', ') || '',
+        reason: hasLowDownloads ? 'low downloads' : 'unsafe panel types',
+      });
       return false;
     }
     return true;

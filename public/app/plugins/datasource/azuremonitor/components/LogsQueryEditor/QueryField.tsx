@@ -1,7 +1,10 @@
 import { EngineSchema, getKustoWorker } from '@kusto/monaco-kusto';
 import { useCallback, useEffect, useState } from 'react';
 
+import { createMonitoringLogger } from '@grafana/runtime';
 import { CodeEditor, Monaco, MonacoEditor } from '@grafana/ui';
+
+const logger = createMonitoringLogger('datasource.azuremonitor.queryField');
 
 import { AzureQueryEditorFieldProps } from '../../types/types';
 
@@ -29,11 +32,13 @@ const QueryField = ({ query, onQueryChange, schema }: AzureQueryEditorFieldProps
           await kustoMode.setSchema(schema);
         }
       } catch (err) {
-        console.error(err);
+        logger.logError(err instanceof Error ? err : new Error(String(err)), { context: 'setupEditor' });
       }
     };
 
-    setupEditor(monaco, schema).catch((err) => console.error(err));
+    setupEditor(monaco, schema).catch((err) =>
+      logger.logError(err instanceof Error ? err : new Error(String(err)), { context: 'setupEditor' })
+    );
   }, [schema, monaco]);
 
   const handleEditorMount = useCallback((editor: MonacoEditor, monaco: Monaco) => {

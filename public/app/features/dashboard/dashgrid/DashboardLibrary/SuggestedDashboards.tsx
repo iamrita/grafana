@@ -5,7 +5,7 @@ import { useAsync, useAsyncFn } from 'react-use';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { getDataSourceSrv, locationService } from '@grafana/runtime';
+import { createMonitoringLogger, getDataSourceSrv, locationService } from '@grafana/runtime';
 import { Button, useStyles2, Grid, Alert } from '@grafana/ui';
 import { PluginDashboard } from 'app/types/plugins';
 
@@ -30,6 +30,8 @@ import {
   COMMUNITY_RESULT_SIZE,
 } from './utils/communityDashboardHelpers';
 import { getProvisionedDashboardImageUrl } from './utils/provisionedDashboardHelpers';
+
+const logger = createMonitoringLogger('dashboard.library.suggested');
 
 interface Props {
   datasourceUid?: string;
@@ -136,7 +138,9 @@ export const SuggestedDashboards = ({ datasourceUid }: Props) => {
 
       return { dashboards: mixed, hasMoreDashboards };
     } catch (error) {
-      console.error('Error loading suggested dashboards', error);
+      logger.logError(error instanceof Error ? error : new Error('Error loading suggested dashboards'), {
+        datasourceUid: datasourceUid || '',
+      });
       return { dashboards: [], hasMoreDashboards: false };
     }
   }, [datasourceUid]);
