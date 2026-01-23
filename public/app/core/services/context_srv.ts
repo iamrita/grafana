@@ -9,12 +9,14 @@ import {
   userHasPermissionInMetadata,
   userHasAnyPermission,
 } from '@grafana/data';
-import { featureEnabled, getBackendSrv } from '@grafana/runtime';
+import { createMonitoringLogger, featureEnabled, getBackendSrv } from '@grafana/runtime';
 import { getSessionExpiry } from 'app/core/utils/auth';
 import { UserPermission, AccessControlAction } from 'app/types/accessControl';
 import { CurrentUserInternal } from 'app/types/config';
 
 import config from '../../core/config';
+
+const logger = createMonitoringLogger('core.context-srv');
 
 // When set to auto, the interval will be based on the query range
 // NOTE: this is defined here rather than TimeSrv so we avoid circular dependencies
@@ -112,7 +114,7 @@ export class ContextSrv {
         reloadcache: true,
       });
     } catch (e) {
-      console.error(e);
+      logger.logError(e instanceof Error ? e : new Error(String(e)));
     }
   }
 
@@ -262,7 +264,7 @@ export class ContextSrv {
         }
       })
       .catch((e) => {
-        console.error(e);
+        logger.logError(e instanceof Error ? e : new Error(String(e)));
       });
   }
 }

@@ -27,7 +27,14 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 import { AppEvents, DataQueryErrorType, deprecationWarning } from '@grafana/data';
-import { BackendSrv as BackendService, BackendSrvRequest, config, FetchError, FetchResponse } from '@grafana/runtime';
+import {
+  BackendSrv as BackendService,
+  BackendSrvRequest,
+  config,
+  createMonitoringLogger,
+  FetchError,
+  FetchResponse,
+} from '@grafana/runtime';
 import { appEvents } from 'app/core/app_events';
 import { getConfig } from 'app/core/config';
 import { getSessionExpiry, hasSessionExpiry } from 'app/core/utils/auth';
@@ -47,6 +54,8 @@ import { FetchQueue } from './FetchQueue';
 import { FetchQueueWorker } from './FetchQueueWorker';
 import { ResponseQueue } from './ResponseQueue';
 import { ContextSrv, contextSrv } from './context_srv';
+
+const logger = createMonitoringLogger('core.backend-srv');
 
 const CANCEL_ALL_REQUESTS_REQUEST_ID = 'cancel_all_requests_request_id';
 
@@ -111,7 +120,7 @@ export class BackendSrv implements BackendService {
       const result = await fp.get();
       this.deviceID = result.visitorId;
     } catch (error) {
-      console.error(error);
+      logger.logError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -236,7 +245,7 @@ export class BackendSrv implements BackendService {
             observer.complete();
           }) // runs in background
           .catch((e) => {
-            console.log(requestId, 'catch', e);
+            logger.logDebug('Chunked request caught error', { requestId, error: String(e) });
             observer.error(e);
           }); // from abort
       },
