@@ -2,7 +2,8 @@ import { faro, LogContext, LogLevel } from '@grafana/faro-web-sdk';
 
 import { config } from '../config';
 
-export { LogLevel, LogContext };
+export { LogLevel };
+export type { LogContext };
 
 /**
  * Check if we're in development mode
@@ -19,6 +20,7 @@ function isConsoleLoggingEnabled(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
+  // eslint-disable-next-line no-restricted-syntax
   return isDevelopment() || window.localStorage?.getItem('grafana.structuredLogging') === 'true';
 }
 
