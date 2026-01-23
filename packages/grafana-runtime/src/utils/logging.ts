@@ -2,7 +2,34 @@ import { faro, LogContext, LogLevel } from '@grafana/faro-web-sdk';
 
 import { config } from '../config';
 
-export { LogLevel };
+export { LogLevel, LogContext };
+
+/**
+ * Check if we're in development mode
+ */
+function isDevelopment(): boolean {
+  return config.buildInfo?.env === 'development';
+}
+
+/**
+ * Check if console logging is enabled for structured logs
+ * Enable via localStorage: localStorage.setItem('grafana.structuredLogging', 'true')
+ */
+function isConsoleLoggingEnabled(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return isDevelopment() || window.localStorage?.getItem('grafana.structuredLogging') === 'true';
+}
+
+/**
+ * Format a structured log message for console output
+ */
+function formatConsoleMessage(level: string, message: string, contexts?: LogContext): string {
+  const timestamp = new Date().toISOString();
+  const contextStr = contexts ? ` ${JSON.stringify(contexts)}` : '';
+  return `[${timestamp}] [${level}] ${message}${contextStr}`;
+}
 
 /**
  * Log a message at INFO level
@@ -14,6 +41,11 @@ export function logInfo(message: string, contexts?: LogContext) {
       level: LogLevel.INFO,
       context: contexts,
     });
+  }
+
+  if (isConsoleLoggingEnabled()) {
+    // eslint-disable-next-line no-console
+    console.info(formatConsoleMessage('INFO', message, contexts));
   }
 }
 
@@ -29,6 +61,11 @@ export function logWarning(message: string, contexts?: LogContext) {
       context: contexts,
     });
   }
+
+  if (isConsoleLoggingEnabled()) {
+    // eslint-disable-next-line no-console
+    console.warn(formatConsoleMessage('WARN', message, contexts));
+  }
 }
 
 /**
@@ -43,6 +80,11 @@ export function logDebug(message: string, contexts?: LogContext) {
       context: contexts,
     });
   }
+
+  if (isConsoleLoggingEnabled()) {
+    // eslint-disable-next-line no-console
+    console.debug(formatConsoleMessage('DEBUG', message, contexts));
+  }
 }
 
 /**
@@ -55,6 +97,11 @@ export function logError(err: Error, contexts?: LogContext) {
     faro.api.pushError(err, {
       context: contexts,
     });
+  }
+
+  if (isConsoleLoggingEnabled()) {
+    // eslint-disable-next-line no-console
+    console.error(formatConsoleMessage('ERROR', err.message, contexts), err);
   }
 }
 
@@ -73,6 +120,13 @@ export function logMeasurement(type: string, values: MeasurementValues, context?
       },
       { context: context }
     );
+  }
+
+  if (isConsoleLoggingEnabled()) {
+    const timestamp = new Date().toISOString();
+    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+    // eslint-disable-next-line no-console
+    console.info(`[${timestamp}] [MEASUREMENT] ${type}: ${JSON.stringify(values)}${contextStr}`);
   }
 }
 

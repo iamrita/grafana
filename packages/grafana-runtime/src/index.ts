@@ -17,6 +17,7 @@ export {
   createMonitoringLogger,
   logMeasurement,
   type MonitoringLogger,
+  type LogContext,
 } from './utils/logging';
 export {
   DataSourceWithBackend,
