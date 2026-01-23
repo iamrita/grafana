@@ -235,7 +235,7 @@ export async function ensureQueries(
           await getDataSourceSrv().get(query.datasource.uid);
         } catch {
           logger.logError(new Error('Datasource no longer available and was removed'), {
-            datasourceUid: query.datasource.uid,
+            datasourceUid: query.datasource.uid ?? 'unknown',
           });
           validDS = false;
         }

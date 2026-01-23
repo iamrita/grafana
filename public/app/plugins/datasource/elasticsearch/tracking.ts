@@ -7,6 +7,8 @@ import pluginJson from './plugin.json';
 import { ElasticsearchAnnotationQuery } from './types';
 import { variableRegex } from './utils';
 
+const logger = createMonitoringLogger('elasticsearch.tracking');
+
 type ElasticSearchOnDashboardLoadedTrackingEvent = {
   grafana_version?: string;
   dashboard_id?: string;
@@ -71,7 +73,9 @@ export const onDashboardLoadedHandler = ({
 
     reportInteraction('grafana_elasticsearch_dashboard_loaded', event);
   } catch (error) {
-    console.error('error in elasticsearch tracking handler', error);
+    logger.logError(error instanceof Error ? error : new Error(String(error)), {
+      context: 'onDashboardLoadedHandler',
+    });
   }
 };
 

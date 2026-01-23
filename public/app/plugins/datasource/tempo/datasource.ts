@@ -32,6 +32,7 @@ import {
   getTemplateSrv,
   reportInteraction,
   TemplateSrv,
+  createMonitoringLogger,
 } from '@grafana/runtime';
 import { BarGaugeDisplayMode, TableCellDisplayMode, VariableFormatID } from '@grafana/schema';
 
@@ -66,6 +67,8 @@ import { TempoVariableSupport } from './variables';
 
 export const DEFAULT_LIMIT = 20;
 export const DEFAULT_SPSS = 3; // spans per span set
+
+const logger = createMonitoringLogger('tempo.datasource');
 
 export enum FeatureName {
   searchStreaming = 'searchStreaming',
@@ -295,7 +298,9 @@ export class TempoDatasource extends DataSourceWithBackend<TempoQuery, TempoJson
 
       return false;
     } catch (error) {
-      console.warn('Failed to check for native histograms:', error);
+      logger.logWarning('Failed to check for native histograms', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return false;
     }
   }

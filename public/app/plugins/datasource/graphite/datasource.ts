@@ -30,6 +30,7 @@ import {
   getBackendSrv,
   getTemplateSrv,
   TemplateSrv,
+  createMonitoringLogger,
 } from '@grafana/runtime';
 import { TimeZone } from '@grafana/schema';
 
@@ -61,6 +62,8 @@ const GRAPHITE_TAG_COMPARATORS = {
   '=~': AbstractLabelOperator.EqualRegEx,
   '!=~': AbstractLabelOperator.NotEqualRegEx,
 };
+
+const logger = createMonitoringLogger('graphite.datasource');
 
 /**
  * Converts Graphite glob-like pattern to a regular expression
@@ -550,7 +553,7 @@ export class GraphiteDatasource
       return this.events({ range: range, tags: tags }).then((results) => {
         const list = [];
         if (!isArray(results.data)) {
-          console.error(`Unable to get annotations.`);
+          logger.logError(new Error('Unable to get annotations'), { context: 'annotationEvents' });
           return [];
         }
         for (let i = 0; i < results.data.length; i++) {
@@ -1034,7 +1037,9 @@ export class GraphiteDatasource
         this.funcDefs = gfunc.parseFuncDefs(functions);
         return this.funcDefs;
       } catch (error) {
-        console.error('Fetching graphite functions error', error);
+        logger.logError(error instanceof Error ? error : new Error(String(error)), {
+          context: 'getFuncDefs - backend mode',
+        });
         this.funcDefs = gfunc.getFuncDefs(this.graphiteVersion);
         return this.funcDefs;
       }
@@ -1053,7 +1058,9 @@ export class GraphiteDatasource
           return this.funcDefs;
         }),
         catchError((error) => {
-          console.error('Fetching graphite functions error', error);
+          logger.logError(error instanceof Error ? error : new Error(String(error)), {
+            context: 'getFuncDefs - frontend mode',
+          });
           this.funcDefs = gfunc.getFuncDefs(this.graphiteVersion);
           return of(this.funcDefs);
         })
