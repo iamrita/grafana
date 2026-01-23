@@ -15,12 +15,16 @@ import { toKeyedVariableIdentifier } from '../utils';
 
 import { initDataSourceVariableEditor } from './actions';
 
+const logger = createMonitoringLogger('variables.datasource.editor');
+
 const mapStateToProps = (state: StoreState, ownProps: OwnProps) => {
   const {
     variable: { rootStateKey },
   } = ownProps;
   if (!rootStateKey) {
-    console.error('DataSourceVariableEditor: variable has no rootStateKey');
+    logger.logError(new Error('DataSourceVariableEditor: variable has no rootStateKey'), {
+      component: 'DataSourceVariableEditor',
+    });
     return {
       extended: getDatasourceVariableEditorState(initialVariableEditorState),
     };
@@ -47,7 +51,10 @@ export class DataSourceVariableEditorUnConnected extends PureComponent<Props> {
   componentDidMount() {
     const { rootStateKey } = this.props.variable;
     if (!rootStateKey) {
-      console.error('DataSourceVariableEditor: variable has no rootStateKey');
+      logger.logError(new Error('DataSourceVariableEditor: variable has no rootStateKey'), {
+        component: 'DataSourceVariableEditorUnConnected',
+        method: 'componentDidMount',
+      });
       return;
     }
 
