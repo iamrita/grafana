@@ -14,11 +14,15 @@
 
 import memoizeOne from 'memoize-one';
 
+import { createLogger } from '@grafana/ui';
+
 import { TraceSpan, CriticalPathSection, Trace } from '../types/trace';
 
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import getChildOfSpans from './utils/getChildOfSpans';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
+
+const criticalPathLogger = createLogger('CriticalPath');
 
 /**
  * Computes the critical path sections of a Jaeger trace.
@@ -103,8 +107,7 @@ function criticalPathForTrace(trace: Trace) {
       const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
       criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
     } catch (error) {
-      /* eslint-disable no-console */
-      console.log('error while computing critical path for a trace', error);
+      criticalPathLogger.logger('error while computing critical path for a trace', { error });
     }
   }
   return criticalPath;
