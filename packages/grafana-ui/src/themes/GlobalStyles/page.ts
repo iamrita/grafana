@@ -106,5 +106,10 @@ export function getPageStyles(theme: GrafanaTheme2) {
     '.page-hidden': {
       display: 'none',
     },
+
+    // Home page green background styling
+    'body.page-home .main-view': {
+      backgroundColor: '#22c55e',
+    },
   });
 }

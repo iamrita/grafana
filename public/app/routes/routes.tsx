@@ -36,7 +36,7 @@ export function getAppRoutes(): RouteDescriptor[] {
     ...getAppPluginRoutes(),
     {
       path: '/',
-      pageClass: 'page-dashboard',
+      pageClass: 'page-dashboard page-home',
       routeName: DashboardRoutes.Home,
       component: SafeDynamicImport(
         () => import(/* webpackChunkName: "DashboardPageProxy" */ '../features/dashboard/containers/DashboardPageProxy')
