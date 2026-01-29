@@ -1,3 +1,4 @@
+import { css } from '@emotion/css';
 import { useEffect, useRef } from 'react';
 import { Params, useParams } from 'react-router-dom-v5-compat';
 import { usePrevious } from 'react-use';
@@ -14,6 +15,16 @@ import { DashboardPageRouteParams, DashboardPageRouteSearchParams } from 'app/fe
 import { getDashboardSceneProfiler } from 'app/features/dashboard/services/DashboardProfiler';
 import { DashboardPreviewBanner } from 'app/features/provisioning/components/Dashboards/DashboardPreviewBanner';
 import { DashboardRoutes } from 'app/types/dashboard';
+
+const homePageStyles = css({
+  backgroundColor: '#22c55e',
+  minHeight: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  flex: '1 1 auto',
+  padding: '16px',
+  borderRadius: '8px',
+});
 
 import { DashboardConversionWarningBanner } from '../components/DashboardConversionWarningBanner';
 import { DashboardPrompt } from '../saving/DashboardPrompt';
@@ -106,11 +117,15 @@ export function DashboardScenePage({ route, queryParams, location }: Props) {
     return null;
   }
 
+  const isHomePage = route.routeName === DashboardRoutes.Home;
+
   return (
     <UrlSyncContextProvider scene={dashboard} updateUrlOnInit={true} createBrowserHistorySteps={true}>
       <DashboardPreviewBanner queryParams={queryParams} route={route.routeName} slug={slug} path={path} />
       <DashboardConversionWarningBanner dashboard={dashboard} />
-      <dashboard.Component model={dashboard} key={dashboard.state.key} />
+      <div className={isHomePage ? homePageStyles : undefined}>
+        <dashboard.Component model={dashboard} key={dashboard.state.key} />
+      </div>
       <DashboardPrompt dashboard={dashboard} />
     </UrlSyncContextProvider>
   );

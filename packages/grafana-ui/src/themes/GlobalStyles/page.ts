@@ -108,6 +108,8 @@ export function getPageStyles(theme: GrafanaTheme2) {
     },
 
     // Home page green background styling
+    // The main green styling is applied via the DashboardScenePage component wrapper
+    // These CSS rules provide additional green styling to parent containers
     'body.page-home .main-view': {
       backgroundColor: '#22c55e',
     },
