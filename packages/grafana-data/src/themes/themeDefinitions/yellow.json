@@ -1,0 +1,62 @@
+{
+  "name": "Yellow",
+  "id": "yellow",
+  "colors": {
+    "mode": "dark",
+    "border": {
+      "weak": "rgba(255, 220, 100, 0.2)",
+      "medium": "rgba(255, 220, 100, 0.35)",
+      "strong": "rgba(255, 220, 100, 0.5)"
+    },
+    "text": {
+      "primary": "#F5F5DC",
+      "secondary": "#E0E0C0",
+      "disabled": "rgba(245, 245, 220, 0.5)",
+      "link": "#FFD700",
+      "maxContrast": "#FFFFFF"
+    },
+    "primary": {
+      "main": "#FFD700",
+      "text": "#FFE55C",
+      "border": "#FFE55C",
+      "name": "primary",
+      "shade": "rgb(255, 223, 100)",
+      "transparent": "#FFD70026",
+      "contrastText": "#1A1A00",
+      "borderTransparent": "#FFE55C40"
+    },
+    "secondary": {
+      "main": "rgba(255, 220, 100, 0.10)",
+      "shade": "rgba(255, 220, 100, 0.14)",
+      "transparent": "rgba(255, 220, 100, 0.08)",
+      "text": "rgb(255, 220, 100)",
+      "contrastText": "rgb(255, 220, 100)",
+      "border": "rgba(255, 220, 100, 0.08)",
+      "name": "secondary",
+      "borderTransparent": "rgba(255, 220, 100, 0.25)"
+    },
+    "background": {
+      "canvas": "#1A1A00",
+      "primary": "#2A2A00",
+      "secondary": "#3A3A00",
+      "elevated": "#3A3A00"
+    },
+    "action": {
+      "hover": "rgba(255, 220, 100, 0.16)",
+      "selected": "rgba(255, 220, 100, 0.12)",
+      "selectedBorder": "#FFD700",
+      "focus": "rgba(255, 220, 100, 0.16)",
+      "hoverOpacity": 0.08,
+      "disabledText": "rgba(245, 245, 220, 0.5)",
+      "disabledBackground": "rgba(255, 220, 100, 0.08)",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, #FFD700 0%, #FFE55C 100%)",
+      "brandVertical": "linear-gradient(0.01deg, #FFD700 0.01%, #FFE55C 99.99%)"
+    },
+    "contrastThreshold": 3,
+    "hoverFactor": 0.05,
+    "tonalOffset": 0.2
+  }
+}
