@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
 
 import { SelectableValue, GrafanaTheme2, PluginType } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
@@ -19,15 +19,14 @@ import { SearchField } from '../components/SearchField';
 import UpdateAllButton from '../components/UpdateAllButton';
 import { UpdateAllModal } from '../components/UpdateAllModal';
 import { Sorters } from '../helpers';
-import { useHistory } from '../hooks/useHistory';
 import { useGetAll, useGetUpdatable, useIsRemotePluginsAvailable } from '../state/hooks';
 
 export default function Browse() {
   const location = useLocation();
+  const navigate = useNavigate();
   const locationSearch = locationSearchToObject(location.search);
   const navModel = useSelector((state) => getNavModel(state.navIndex, 'plugins'));
   const styles = useStyles2(getStyles);
-  const history = useHistory();
   const remotePluginsAvailable = useIsRemotePluginsAvailable();
 
   const keyword = locationSearch.q?.toString() || '';
@@ -55,15 +54,31 @@ export default function Browse() {
   const disableUpdateAllButton = updatablePlugins.length <= 0 || areUpdatesLoading;
 
   const onFilterByChange = (value: string) => {
-    history.push({ query: { filterBy: value } });
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('filterBy', value);
+    navigate({ pathname: location.pathname, search: `?${searchParams.toString()}` });
   };
 
   const onFilterByTypeChange = (value: SelectableValue<string>) => {
-    history.push({ query: { filterByType: value.value } });
+    const searchParams = new URLSearchParams(location.search);
+    if (value.value) {
+      searchParams.set('filterByType', value.value);
+    } else {
+      searchParams.delete('filterByType');
+    }
+    navigate({ pathname: location.pathname, search: `?${searchParams.toString()}` });
   };
 
   const onSearch = (q: string) => {
-    history.push({ query: { filterBy, filterByType, q } });
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('filterBy', filterBy);
+    searchParams.set('filterByType', filterByType);
+    if (q) {
+      searchParams.set('q', q);
+    } else {
+      searchParams.delete('q');
+    }
+    navigate({ pathname: location.pathname, search: `?${searchParams.toString()}` });
   };
 
   const onUpdateAll = () => {
