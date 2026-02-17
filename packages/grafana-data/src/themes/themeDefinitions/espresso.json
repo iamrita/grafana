@@ -1,0 +1,71 @@
+{
+  "name": "Espresso",
+  "id": "espresso",
+  "colors": {
+    "mode": "dark",
+    "border": {
+      "weak": "#4A3728",
+      "medium": "#5D4633",
+      "strong": "#7A5D47"
+    },
+    "text": {
+      "primary": "#F5E6D3",
+      "secondary": "#D4C4B0",
+      "disabled": "#A89888",
+      "link": "#D4A574",
+      "maxContrast": "#FFFFFF"
+    },
+    "primary": {
+      "main": "#8B5A2B",
+      "text": "#D4A574",
+      "border": "#A0522D",
+      "name": "primary",
+      "shade": "#6B4423",
+      "transparent": "#8B5A2B26",
+      "contrastText": "#FFFFFF",
+      "borderTransparent": "#8B5A2B40"
+    },
+    "secondary": {
+      "main": "#5D4633",
+      "text": "#D4C4B0",
+      "border": "#7A5D47",
+      "name": "secondary",
+      "shade": "#4A3728",
+      "transparent": "#5D463326",
+      "contrastText": "#F5E6D3",
+      "borderTransparent": "#5D463340"
+    },
+    "info": {
+      "main": "#6B8E9F"
+    },
+    "success": {
+      "main": "#7D9B6A"
+    },
+    "warning": {
+      "main": "#D4A574"
+    },
+    "background": {
+      "canvas": "#1C1410",
+      "primary": "#2D221A",
+      "secondary": "#3D2E24",
+      "elevated": "#4A3728"
+    },
+    "action": {
+      "hover": "#5D4633",
+      "selected": "#7A5D47",
+      "selectedBorder": "#D4A574",
+      "focus": "#8B5A2B",
+      "hoverOpacity": 0.1,
+      "disabledText": "#A89888",
+      "disabledBackground": "#3D2E24",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, #6B4423 0%, #D4A574 100%)",
+      "brandVertical": "linear-gradient(0deg, #6B4423 0%, #D4A574 100%)"
+    },
+    "contrastThreshold": 4,
+    "hoverFactor": 0.07,
+    "tonalOffset": 0.15
+  }
+}
