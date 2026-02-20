@@ -1,0 +1,71 @@
+{
+  "name": "Ocean",
+  "id": "ocean",
+  "colors": {
+    "mode": "light",
+    "border": {
+      "weak": "rgba(0, 0, 0, 0.12)",
+      "medium": "rgba(0, 0, 0, 0.20)",
+      "strong": "rgba(0, 0, 0, 0.30)"
+    },
+    "text": {
+      "primary": "#1A2E3A",
+      "secondary": "#4A6B7A",
+      "disabled": "rgba(0, 0, 0, 0.5)",
+      "link": "#0077B6",
+      "maxContrast": "#000000"
+    },
+    "primary": {
+      "main": "#0077B6",
+      "text": "#0077B6",
+      "border": "#005A8A",
+      "name": "primary",
+      "shade": "#005A8A",
+      "transparent": "#0077B626",
+      "contrastText": "#FFFFFF",
+      "borderTransparent": "#0077B640"
+    },
+    "secondary": {
+      "main": "#FFFFFF",
+      "text": "#006494",
+      "border": "#90E0EF",
+      "name": "secondary",
+      "shade": "#90E0EF",
+      "transparent": "#FFFFFF26",
+      "contrastText": "#006494",
+      "borderTransparent": "#FFFFFF40"
+    },
+    "info": {
+      "main": "#00B4D8"
+    },
+    "success": {
+      "main": "#4CAF50"
+    },
+    "warning": {
+      "main": "#FFC107"
+    },
+    "background": {
+      "canvas": "#F0F7FA",
+      "primary": "#FFFFFF",
+      "secondary": "#E8F4F8",
+      "elevated": "#FFFFFF"
+    },
+    "action": {
+      "hover": "rgba(0, 119, 182, 0.12)",
+      "selected": "rgba(0, 119, 182, 0.36)",
+      "selectedBorder": "#0077B6",
+      "focus": "rgba(0, 119, 182, 0.50)",
+      "hoverOpacity": 0.08,
+      "disabledText": "rgba(0, 119, 182, 0.5)",
+      "disabledBackground": "rgba(0, 119, 182, 0.06)",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, rgba(0, 119, 182, 1) 0%, rgba(0, 180, 216, 1) 100%)",
+      "brandVertical": "linear-gradient(0deg, rgba(0, 119, 182, 1) 0%, rgba(0, 180, 216, 1) 100%)"
+    },
+    "contrastThreshold": 3,
+    "hoverFactor": 0.03,
+    "tonalOffset": 0.15
+  }
+}
