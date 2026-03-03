@@ -479,6 +479,10 @@ export function getAppRoutes(): RouteDescriptor[] {
       ),
     },
     {
+      path: '/labs',
+      component: SafeDynamicImport(() => import(/* webpackChunkName: "LabsPage"*/ 'app/features/labs/LabsPage')),
+    },
+    {
       path: '/sandbox/test',
       allowAnonymous: true, // purposefully to allow testing
       component: SafeDynamicImport(
