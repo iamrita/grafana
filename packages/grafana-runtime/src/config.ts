@@ -26,6 +26,7 @@ import {
   UnifiedAlertingConfig,
   GrafanaConfig,
   CurrentUserDTO,
+  store,
 } from '@grafana/data';
 
 /**
@@ -282,6 +283,7 @@ export class GrafanaBootConfig {
       systemDateFormats.update(this.dateFormats);
     }
 
+    handleSafeModeReset();
     overrideFeatureTogglesFromUrl(this);
     overrideFeatureTogglesFromLocalStorage(this);
 
@@ -295,12 +297,27 @@ export class GrafanaBootConfig {
   }
 }
 
+function handleSafeModeReset() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('safeMode')) {
+    return;
+  }
+
+  store.delete('grafana.featureToggles');
+  window.sessionStorage.setItem('grafana.featureToggles.safeModeReset', '1');
+
+  params.delete('safeMode');
+  const nextQuery = params.toString();
+  const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
+  window.history.replaceState({}, '', nextUrl);
+}
+
 // localstorage key: grafana.featureToggles
 // example value: panelEditor=1,panelInspector=1
 function overrideFeatureTogglesFromLocalStorage(config: GrafanaBootConfig) {
   const featureToggles = config.featureToggles;
   const localStorageKey = 'grafana.featureToggles';
-  const localStorageValue = window.localStorage.getItem(localStorageKey);
+  const localStorageValue = store.get(localStorageKey);
   if (localStorageValue) {
     const features = localStorageValue.split(',');
     for (const feature of features) {
