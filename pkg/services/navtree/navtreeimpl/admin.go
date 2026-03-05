@@ -62,6 +62,13 @@ func (s *ServiceImpl) getAdminNode(c *contextmodel.ReqContext) (*navtree.NavLink
 			Url:      s.cfg.AppSubURL + "/admin/provisioning",
 		})
 	}
+	generalNodeLinks = append(generalNodeLinks, &navtree.NavLink{
+		Text:     "Labs",
+		Id:       "labs",
+		SubTitle: "Experiment with feature flags",
+		Icon:     "flask",
+		Url:      s.cfg.AppSubURL + "/labs",
+	})
 
 	generalNode := &navtree.NavLink{
 		Text:     "General",
