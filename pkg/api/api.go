@@ -120,6 +120,7 @@ func (hs *HTTPServer) registerRoutes() {
 	r.Get("/admin/stats", authorize(ac.EvalPermission(ac.ActionServerStatsRead)), hs.Index)
 	r.Get("/admin/provisioning", reqOrgAdmin, hs.Index)
 	r.Get("/admin/provisioning/*", reqOrgAdmin, hs.Index)
+	r.Get("/labs", reqSignedIn, hs.Index)
 
 	if hs.Cfg.CloudMigration.Enabled {
 		r.Get("/admin/migrate-to-cloud", authorize(cloudmigration.MigrationAssistantAccess), hs.Index)
@@ -457,6 +458,7 @@ func (hs *HTTPServer) registerRoutes() {
 
 		apiRoute.Get("/frontend/settings/", hs.GetFrontendSettings)
 		apiRoute.Get("/frontend/assets", hs.GetFrontendAssets)
+		apiRoute.Get("/featuremgmt/v1/flags", routing.Wrap(hs.GetFeatureFlags))
 
 		// Folders
 		hs.registerFolderAPI(apiRoute, authorize)
