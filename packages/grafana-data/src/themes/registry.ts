@@ -8,6 +8,7 @@ import gildedgrove from './themeDefinitions/gildedgrove.json';
 import gloom from './themeDefinitions/gloom.json';
 import mars from './themeDefinitions/mars.json';
 import matrix from './themeDefinitions/matrix.json';
+import pink from './themeDefinitions/pink.json';
 import sapphiredusk from './themeDefinitions/sapphiredusk.json';
 import synthwave from './themeDefinitions/synthwave.json';
 import tron from './themeDefinitions/tron.json';
@@ -28,6 +29,7 @@ const extraThemes: { [key: string]: unknown } = {
   gloom,
   mars,
   matrix,
+  pink,
   sapphiredusk,
   synthwave,
   tron,
