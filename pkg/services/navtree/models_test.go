@@ -6,6 +6,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSortPlacesLabsByWeight(t *testing.T) {
+	nodes := []*NavLink{
+		{Id: NavIDApps, SortWeight: WeightApps},
+		{Id: NavIDExplore, SortWeight: WeightExplore},
+		{Id: NavIDLabs, SortWeight: WeightLabs},
+	}
+
+	Sort(nodes)
+
+	require.Equal(t, NavIDExplore, nodes[0].Id)
+	require.Equal(t, NavIDLabs, nodes[1].Id)
+	require.Equal(t, NavIDApps, nodes[2].Id)
+}
+
 func TestNavTreeRoot(t *testing.T) {
 	t.Run("Sorting by index", func(t *testing.T) {
 		treeRoot := NavTreeRoot{
