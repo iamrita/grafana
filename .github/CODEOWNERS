@@ -948,6 +948,7 @@ playwright.storybook.config.ts @grafana/grafana-frontend-platform
 /public/app/features/inspector/ @grafana/dashboards-squad
 /public/app/features/logs/ @grafana/observability-logs
 /public/app/features/live/ @grafana/dashboards-squad
+/public/app/features/labs/ @grafana/grafana-search-navigate-organise @grafana/grafana-frontend-platform
 /public/app/features/stars/ @grafana/grafana-search-navigate-organise
 /public/app/features/apiserver/ @grafana/grafana-app-platform-squad
 /public/app/features/manage-dashboards/ @grafana/dashboards-squad
@@ -1255,6 +1256,7 @@ embed.go @grafana/grafana-as-code
 /.github/workflows/pr-patch-check.yml @grafana/grafana-developer-enablement-squad
 /.github/workflows/pr-test-integration.yml @grafana/grafana-backend-group
 /.github/workflows/reject-gh-secrets.yml @grafana/grafana-developer-enablement-squad
+/.github/workflows/pr-security-review.yml @grafana/grafana-developer-enablement-squad
 /.github/workflows/sync-mirror-event.yml @grafana/grafana-developer-enablement-squad
 /.github/workflows/publish-technical-documentation-next.yml @grafana/docs-tooling
 /.github/workflows/publish-technical-documentation-release.yml @grafana/docs-tooling
