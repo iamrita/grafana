@@ -569,6 +569,9 @@ func (hs *HTTPServer) registerRoutes() {
 		adminRoute.Post("/provisioning/alerting/reload", authorize(ac.EvalPermission(ActionProvisioningReload, ScopeProvisionersAlertRules)), routing.Wrap(hs.AdminProvisioningReloadAlerting))
 	}, reqSignedIn)
 
+	// Feature management API
+	hs.registerFeatureMgmtRoutes(r)
+
 	// Administering users
 	r.Group("/api/admin/users", func(adminUserRoute routing.RouteRegister) {
 		userIDScope := ac.Scope("global.users", "id", ac.Parameter(":id"))
