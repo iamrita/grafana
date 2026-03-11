@@ -1065,12 +1065,6 @@ export interface FeatureToggles {
   */
   alertingBulkActionsInUI?: boolean;
   /**
-  * Deprecated: Use kubernetesAuthzCoreRolesApi, kubernetesAuthzRolesApi, and kubernetesAuthzRoleBindingsApi instead
-  * @deprecated
-  * @default false
-  */
-  kubernetesAuthzApis?: boolean;
-  /**
   * Redirects the traffic from the legacy access control endpoints to the new K8s AuthZ endpoints
   * @default false
   */

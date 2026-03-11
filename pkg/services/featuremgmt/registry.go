@@ -1669,14 +1669,6 @@ var (
 			Expression:   "true", // enabled by default
 		},
 		{
-			Name:         "kubernetesAuthzApis",
-			Description:  "Deprecated: Use kubernetesAuthzCoreRolesApi, kubernetesAuthzRolesApi, and kubernetesAuthzRoleBindingsApi instead",
-			Stage:        FeatureStageDeprecated,
-			Owner:        identityAccessTeam,
-			HideFromDocs: true,
-			Expression:   "false",
-		},
-		{
 			Name:         "kubernetesAuthZHandlerRedirect",
 			Description:  "Redirects the traffic from the legacy access control endpoints to the new K8s AuthZ endpoints",
 			Stage:        FeatureStageExperimental,

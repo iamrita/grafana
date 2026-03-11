@@ -610,10 +610,6 @@ const (
 	// Use FiredAt for StartsAt when sending alerts to Alertmaanger
 	FlagAlertRuleUseFiredAtForStartsAt = "alertRuleUseFiredAtForStartsAt"
 
-	// FlagKubernetesAuthzApis
-	// Deprecated: Use kubernetesAuthzCoreRolesApi, kubernetesAuthzRolesApi, and kubernetesAuthzRoleBindingsApi instead
-	FlagKubernetesAuthzApis = "kubernetesAuthzApis"
-
 	// FlagKubernetesAuthZHandlerRedirect
 	// Redirects the traffic from the legacy access control endpoints to the new K8s AuthZ endpoints
 	FlagKubernetesAuthZHandlerRedirect = "kubernetesAuthZHandlerRedirect"
