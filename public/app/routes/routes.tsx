@@ -236,6 +236,13 @@ export function getAppRoutes(): RouteDescriptor[] {
           : () => <Navigate replace to="/admin" />,
     },
     {
+      path: '/admin/labs',
+      component:
+        isDevEnv || config.featureToggles.labsPage
+          ? SafeDynamicImport(() => import(/* webpackChunkName: "LabsPage" */ 'app/features/labs/LabsPage'))
+          : () => <Navigate replace to="/admin" />,
+    },
+    {
       path: '/admin/access',
       component: () => <NavLandingPage navId="cfg/access" />,
     },

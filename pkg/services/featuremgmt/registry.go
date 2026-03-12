@@ -25,6 +25,14 @@ var (
 			Expression:  "false",
 		},
 		{
+			Name:         "labsPage",
+			Description:  "Enable the Labs page for feature flag management in the admin section",
+			Stage:        FeatureStageExperimental,
+			FrontendOnly: true,
+			Owner:        grafanaOperatorExperienceSquad,
+			Expression:   "false",
+		},
+		{
 			Name:        "panelTitleSearch",
 			Description: "Search for dashboards using panel title",
 			Stage:       FeatureStagePublicPreview,

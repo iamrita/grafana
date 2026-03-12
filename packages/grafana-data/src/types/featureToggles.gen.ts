@@ -24,6 +24,11 @@ export interface FeatureToggles {
   */
   disableEnvelopeEncryption?: boolean;
   /**
+  * Enable the Labs page for feature flag management in the admin section
+  * @default false
+  */
+  labsPage?: boolean;
+  /**
   * Search for dashboards using panel title
   * @default false
   */

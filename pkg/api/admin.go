@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana/pkg/apimachinery/identity"
 	ac "github.com/grafana/grafana/pkg/services/accesscontrol"
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/stats"
 	"github.com/grafana/grafana/pkg/setting"
 )
@@ -170,4 +171,32 @@ type GetSettingsResponse struct {
 type GetStatsResponse struct {
 	// in:body
 	Body stats.AdminStats `json:"body"`
+}
+
+// swagger:route GET /admin/feature-toggles admin adminGetFeatureToggles
+//
+// Fetch feature toggles metadata.
+//
+// Returns the list of all feature toggles with their metadata including name, description, stage, and owner.
+//
+// Security:
+// - basic:
+//
+// Responses:
+// 200: adminGetFeatureTogglesResponse
+// 401: unauthorisedError
+// 403: forbiddenError
+// 500: internalServerError
+func (hs *HTTPServer) AdminGetFeatureToggles(c *contextmodel.ReqContext) response.Response {
+	features, err := featuremgmt.GetEmbeddedFeatureList()
+	if err != nil {
+		return response.Error(http.StatusInternalServerError, "Failed to get feature toggles", err)
+	}
+	return response.JSON(http.StatusOK, features)
+}
+
+// swagger:response adminGetFeatureTogglesResponse
+type GetFeatureTogglesResponse struct {
+	// in:body
+	Body interface{} `json:"body"`
 }
