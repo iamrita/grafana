@@ -2682,6 +2682,20 @@
     },
     {
       "metadata": {
+        "name": "labsPage",
+        "resourceVersion": "1773353942635",
+        "creationTimestamp": "2026-03-12T22:19:02Z"
+      },
+      "spec": {
+        "description": "Enable the Labs page for feature flag management in the admin section",
+        "stage": "experimental",
+        "codeowner": "@grafana/grafana-operator-experience-squad",
+        "frontend": true,
+        "expression": "false"
+      }
+    },
+    {
+      "metadata": {
         "name": "liveAPIServer",
         "resourceVersion": "1768816234707",
         "creationTimestamp": "2026-01-19T09:34:08Z",

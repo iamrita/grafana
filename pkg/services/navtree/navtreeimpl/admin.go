@@ -63,6 +63,18 @@ func (s *ServiceImpl) getAdminNode(c *contextmodel.ReqContext) (*navtree.NavLink
 		})
 	}
 
+	//nolint:staticcheck // not yet migrated to OpenFeature
+	// labsPage is frontend-only, so we use the string directly
+	if s.features.IsEnabled(ctx, "labsPage") || s.cfg.Env == setting.Dev {
+		generalNodeLinks = append(generalNodeLinks, &navtree.NavLink{
+			Text:     "Labs",
+			Id:       "labs",
+			SubTitle: "Explore and toggle experimental features",
+			Icon:     "flask",
+			Url:      s.cfg.AppSubURL + "/admin/labs",
+		})
+	}
+
 	generalNode := &navtree.NavLink{
 		Text:     "General",
 		SubTitle: "Manage default preferences and settings across Grafana",
