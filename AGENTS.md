@@ -295,3 +295,36 @@ Use admonitions sparingly.
 Only include exceptional information in admonitions.
 
 <!-- docs-ai-end -->
+
+## Cursor Cloud specific instructions
+
+This is the Grafana open-source monorepo (Go backend + React/TypeScript frontend).
+
+### Services
+
+- **Go backend** (port 3000): `make run` — uses `air` for hot-reload. Serves the API and static assets. Uses embedded SQLite by default (no external DB needed).
+- **Frontend dev server**: `yarn start` — webpack watch mode that rebuilds on changes. The backend proxies to it automatically when `app_mode = development`.
+
+### Running
+
+1. Start the backend: `make run` (first build takes ~3 minutes; subsequent rebuilds are fast via `air`).
+2. Start the frontend: `yarn start` (initial webpack compilation takes ~15 minutes; incremental rebuilds are fast).
+3. Open `http://localhost:3000`. Default credentials: `admin` / `admin`.
+
+### Gotchas
+
+- Node.js v24 is required (`.nvmrc` specifies `v24.11.0`). Run `source ~/.nvm/nvm.sh && nvm use` before any yarn/node commands.
+- The `.yarnrc.yml` sets `enableScripts: false` globally. Native packages like `esbuild` and `@swc/core` still work because they use optional platform-specific dependencies rather than postinstall scripts.
+- Increase `fs.inotify.max_user_watches` to 524288 before running `yarn start` to avoid `ENOSPC` errors: `echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p`.
+- If webpack type-checking shows stale errors after pulling updates, delete `tsconfig.tsbuildinfo` and restart `yarn start`.
+
+### Lint, test, and build commands
+
+Refer to `contribute/developer-guide.md` for full details. Quick reference:
+
+- **Frontend lint:** `yarn lint` (runs both `lint:ts` and `lint:sass`)
+- **Frontend tests:** `yarn jest --ci --bail --testPathPattern='<path>'` for specific tests, or `yarn test:ci` for full suite
+- **Backend tests:** `go test ./pkg/...`
+- **Backend lint:** `make golangci-lint` (requires golangci-lint via `.citools`)
+- **Build frontend:** `yarn build`
+- **Build backend:** `make build-go`
