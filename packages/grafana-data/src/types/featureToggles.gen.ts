@@ -710,11 +710,6 @@ export interface FeatureToggles {
   */
   alertingPrometheusRulesPrimary?: boolean;
   /**
-  * Deprecated. Replace with lokiShardSplitting. Used in Logs Drilldown to split queries into multiple queries based on the number of shards
-  * @default false
-  */
-  exploreLogsShardSplitting?: boolean;
-  /**
   * Used in Logs Drilldown to query by aggregated metrics
   * @default false
   */
@@ -1064,12 +1059,6 @@ export interface FeatureToggles {
   * @default true
   */
   alertingBulkActionsInUI?: boolean;
-  /**
-  * Deprecated: Use kubernetesAuthzCoreRolesApi, kubernetesAuthzRolesApi, and kubernetesAuthzRoleBindingsApi instead
-  * @deprecated
-  * @default false
-  */
-  kubernetesAuthzApis?: boolean;
   /**
   * Redirects the traffic from the legacy access control endpoints to the new K8s AuthZ endpoints
   * @default false
