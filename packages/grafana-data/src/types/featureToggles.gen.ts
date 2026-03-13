@@ -950,11 +950,6 @@ export interface FeatureToggles {
   */
   scopeSearchAllLevels?: boolean;
   /**
-  * Enables the alert rule version history restore feature
-  * @default true
-  */
-  alertingRuleVersionHistoryRestore?: boolean;
-  /**
   * Enables the report creation drawer in a dashboard
   * @default false
   */

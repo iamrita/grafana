@@ -518,7 +518,8 @@
       "metadata": {
         "name": "alertingRuleVersionHistoryRestore",
         "resourceVersion": "1764664939750",
-        "creationTimestamp": "2025-02-17T12:25:32Z"
+        "creationTimestamp": "2025-02-17T12:25:32Z",
+        "deletionTimestamp": "2026-03-13T10:04:43Z"
       },
       "spec": {
         "description": "Enables the alert rule version history restore feature",

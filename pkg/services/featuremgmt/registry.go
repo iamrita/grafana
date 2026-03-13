@@ -1485,15 +1485,6 @@ var (
 			Expression:   "false",
 		},
 		{
-			Name:         "alertingRuleVersionHistoryRestore",
-			Description:  "Enables the alert rule version history restore feature",
-			FrontendOnly: true,
-			Stage:        FeatureStageGeneralAvailability,
-			Owner:        grafanaAlertingSquad,
-			HideFromDocs: true,
-			Expression:   "true", // enabled by default
-		},
-		{
 			Name:         "newShareReportDrawer",
 			Description:  "Enables the report creation drawer in a dashboard",
 			Stage:        FeatureStagePublicPreview,
