@@ -6,3 +6,7 @@ export const GETTING_STARTED_URL = `${PROVISIONING_URL}/getting-started`;
 export const UPGRADE_URL = 'https://grafana.com/profile/org/subscription';
 
 export const DEFAULT_REPOSITORY_TYPES: Array<'github' | 'local'> = ['github', 'local'];
+
+export const DEFAULT_BRANCH_NAMES = ['main', 'master'] as const;
+
+export const FOLDER_METADATA_FILE = '_folder.json';
