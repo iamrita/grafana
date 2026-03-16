@@ -21,6 +21,7 @@ import { ExtensionToolbarItem } from '../ExtensionSidebar/ExtensionToolbarItem';
 import { NavToolbarSeparator } from '../NavToolbar/NavToolbarSeparator';
 import { QuickAdd } from '../QuickAdd/QuickAdd';
 
+import { GitHubTopBarButton } from './GitHubTopBarButton';
 import { HelpTopBarButton } from './HelpTopBarButton';
 import { InviteUserButton } from './InviteUserButton';
 import { ProfileButton } from './ProfileButton';
@@ -95,6 +96,7 @@ export const SingleTopBar = memo(function SingleTopBar({
           <TopBarExtensionPoint />
           <TopSearchBarCommandPaletteTrigger />
           {!isSmallScreen && <QuickAdd />}
+          <GitHubTopBarButton />
           <HelpTopBarButton isSmallScreen={isSmallScreen} />
           <NavToolbarSeparator />
           {!isSmallScreen && <ExtensionToolbarItem compact={isSmallScreen} />}
