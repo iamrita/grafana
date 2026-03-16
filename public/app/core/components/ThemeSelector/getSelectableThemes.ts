@@ -3,6 +3,7 @@ import { config } from '@grafana/runtime';
 
 export function getSelectableThemes() {
   const allowedExtraThemes = [];
+  allowedExtraThemes.push('ocean');
 
   if (config.featureToggles.colorblindThemes) {
     allowedExtraThemes.push('deuteranopia_protanopia_dark');

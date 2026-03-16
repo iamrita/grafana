@@ -1,0 +1,56 @@
+{
+  "name": "Ocean",
+  "id": "ocean",
+  "colors": {
+    "mode": "dark",
+    "border": {
+      "weak": "rgba(77, 208, 225, 0.12)",
+      "medium": "rgba(77, 208, 225, 0.2)",
+      "strong": "rgba(77, 208, 225, 0.3)"
+    },
+    "text": {
+      "primary": "#e0e8f0",
+      "secondary": "rgba(224, 232, 240, 0.75)",
+      "disabled": "rgba(224, 232, 240, 0.5)",
+      "link": "#4dd0e1",
+      "maxContrast": "#ffffff"
+    },
+    "primary": {
+      "main": "#00bcd4",
+      "text": "#4dd0e1",
+      "border": "#00bcd4",
+      "name": "primary"
+    },
+    "secondary": {
+      "main": "#16344e",
+      "shade": "#214d70",
+      "transparent": "rgba(77, 208, 225, 0.1)",
+      "text": "rgba(224, 232, 240, 0.75)",
+      "contrastText": "#e0e8f0",
+      "border": "rgba(77, 208, 225, 0.16)"
+    },
+    "background": {
+      "canvas": "#0a1929",
+      "primary": "#0d2137",
+      "secondary": "#122a45",
+      "elevated": "#16344e"
+    },
+    "action": {
+      "hover": "rgba(77, 208, 225, 0.16)",
+      "selected": "rgba(77, 208, 225, 0.12)",
+      "selectedBorder": "#00bcd4",
+      "focus": "rgba(77, 208, 225, 0.16)",
+      "hoverOpacity": 0.08,
+      "disabledText": "rgba(224, 232, 240, 0.5)",
+      "disabledBackground": "rgba(77, 208, 225, 0.08)",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, #00bcd4 0%, #0277bd 100%)",
+      "brandVertical": "linear-gradient(0.01deg, #00bcd4 0.01%, #0277bd 99.99%)"
+    },
+    "contrastThreshold": 3,
+    "hoverFactor": 0.03,
+    "tonalOffset": 0.15
+  }
+}
