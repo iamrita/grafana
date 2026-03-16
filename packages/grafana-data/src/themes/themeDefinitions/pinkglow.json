@@ -1,0 +1,71 @@
+{
+  "name": "Pink Glow",
+  "id": "pinkglow",
+  "colors": {
+    "mode": "light",
+    "border": {
+      "weak": "rgba(0, 0, 0, 0.12)",
+      "medium": "rgba(0, 0, 0, 0.20)",
+      "strong": "rgba(0, 0, 0, 0.30)"
+    },
+    "text": {
+      "primary": "#2D1B2E",
+      "secondary": "#4A2D4B",
+      "disabled": "rgba(0, 0, 0, 0.5)",
+      "link": "#FF1493",
+      "maxContrast": "#000000"
+    },
+    "primary": {
+      "main": "#FF1493",
+      "text": "#FF1493",
+      "border": "#FF69B4",
+      "name": "primary",
+      "shade": "#FF69B4",
+      "transparent": "#FF149326",
+      "contrastText": "#FFFFFF",
+      "borderTransparent": "#FF149340"
+    },
+    "secondary": {
+      "main": "#FFFFFF",
+      "text": "#4A2D4B",
+      "border": "#FFB6C1",
+      "name": "secondary",
+      "shade": "#FFB6C1",
+      "transparent": "#FFFFFF26",
+      "contrastText": "#2D1B2E",
+      "borderTransparent": "#FFFFFF40"
+    },
+    "info": {
+      "main": "#1A82E2"
+    },
+    "success": {
+      "main": "#4CAF50"
+    },
+    "warning": {
+      "main": "#FFC107"
+    },
+    "background": {
+      "canvas": "#FFF0F5",
+      "primary": "#FFFFFF",
+      "secondary": "#FFE4E9",
+      "elevated": "#FFFFFF"
+    },
+    "action": {
+      "hover": "rgba(255, 20, 147, 0.12)",
+      "selected": "rgba(255, 20, 147, 0.36)",
+      "selectedBorder": "#FF1493",
+      "focus": "rgba(255, 20, 147, 0.50)",
+      "hoverOpacity": 0.08,
+      "disabledText": "rgba(255, 20, 147, 0.5)",
+      "disabledBackground": "rgba(255, 20, 147, 0.06)",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, rgba(255, 20, 147, 1) 0%, rgba(255, 105, 180, 1) 100%)",
+      "brandVertical": "linear-gradient(0deg, rgba(255, 20, 147, 1) 0%, rgba(255, 105, 180, 1) 100%)"
+    },
+    "contrastThreshold": 3,
+    "hoverFactor": 0.03,
+    "tonalOffset": 0.15
+  }
+}
