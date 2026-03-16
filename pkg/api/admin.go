@@ -3,12 +3,14 @@ package api
 import (
 	"context"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/grafana/grafana/pkg/api/response"
 	"github.com/grafana/grafana/pkg/apimachinery/identity"
 	ac "github.com/grafana/grafana/pkg/services/accesscontrol"
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/stats"
 	"github.com/grafana/grafana/pkg/setting"
 )
@@ -45,6 +47,58 @@ func (hs *HTTPServer) AdminGetVerboseSettings(c *contextmodel.ReqContext) respon
 		return response.Error(http.StatusForbidden, "Failed to authorize settings", err)
 	}
 	return response.JSON(http.StatusOK, verboseSettings)
+}
+
+// swagger:route GET /admin/feature-toggles admin adminGetFeatureToggles
+//
+// Fetch feature toggles.
+//
+// Returns the current enabled state and metadata for feature toggles.
+// Flags marked as hidden from docs are excluded.
+//
+// Security:
+// - basic:
+//
+// Responses:
+// 200: adminGetFeatureTogglesResponse
+// 401: unauthorisedError
+// 403: forbiddenError
+func (hs *HTTPServer) AdminGetFeatureToggles(c *contextmodel.ReqContext) response.Response {
+	featureList, err := featuremgmt.GetEmbeddedFeatureList()
+	if err != nil {
+		return response.Error(http.StatusInternalServerError, "Failed to get feature toggles", err)
+	}
+
+	enabledFlags := hs.Features.GetEnabled(c.Req.Context())
+	features := make([]FeatureToggleInfo, 0, len(featureList.Items))
+
+	for _, feature := range featureList.Items {
+		if feature.Spec.HideFromDocs {
+			continue
+		}
+
+		features = append(features, FeatureToggleInfo{
+			Name:            feature.Name,
+			Description:     feature.Spec.Description,
+			Stage:           feature.Spec.Stage,
+			Owner:           feature.Spec.Owner,
+			RequiresRestart: feature.Spec.RequiresRestart,
+			FrontendOnly:    feature.Spec.FrontendOnly,
+			Enabled:         enabledFlags[feature.Name],
+		})
+	}
+
+	slices.SortFunc(features, func(a, b FeatureToggleInfo) int {
+		if a.Name < b.Name {
+			return -1
+		}
+		if a.Name > b.Name {
+			return 1
+		}
+		return 0
+	})
+
+	return response.JSON(http.StatusOK, FeatureTogglesResponse{Features: features})
 }
 
 // swagger:route GET /admin/stats admin adminGetStats
@@ -164,6 +218,26 @@ func (hs *HTTPServer) getAuthorizedVerboseSettings(ctx context.Context, user ide
 type GetSettingsResponse struct {
 	// in:body
 	Body setting.SettingsBag `json:"body"`
+}
+
+type FeatureToggleInfo struct {
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	Stage           string `json:"stage"`
+	Owner           string `json:"owner,omitempty"`
+	RequiresRestart bool   `json:"requiresRestart,omitempty"`
+	FrontendOnly    bool   `json:"frontendOnly,omitempty"`
+	Enabled         bool   `json:"enabled"`
+}
+
+// swagger:response adminGetFeatureTogglesResponse
+type GetFeatureTogglesResponse struct {
+	// in:body
+	Body FeatureTogglesResponse `json:"body"`
+}
+
+type FeatureTogglesResponse struct {
+	Features []FeatureToggleInfo `json:"features"`
 }
 
 // swagger:response adminGetStatsResponse
