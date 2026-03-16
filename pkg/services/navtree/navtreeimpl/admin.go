@@ -187,6 +187,15 @@ func (s *ServiceImpl) getAdminNode(c *contextmodel.ReqContext) (*navtree.NavLink
 		})
 	}
 
+	// Labs - feature flag management (available to all authenticated users)
+	configNodes = append(configNodes, &navtree.NavLink{
+		Text:     "Labs",
+		Id:       "labs",
+		SubTitle: "Toggle experimental feature flags",
+		Icon:     "flask",
+		Url:      s.cfg.AppSubURL + "/admin/labs",
+	})
+
 	configNode := &navtree.NavLink{
 		Id:         navtree.NavIDCfg,
 		Text:       "Administration",
