@@ -63,6 +63,14 @@ func (s *ServiceImpl) getAdminNode(c *contextmodel.ReqContext) (*navtree.NavLink
 		})
 	}
 
+	generalNodeLinks = append(generalNodeLinks, &navtree.NavLink{
+		Text:     "Labs",
+		SubTitle: "Experimental feature flags",
+		Id:       "labs",
+		Url:      s.cfg.AppSubURL + "/admin/labs",
+		Icon:     "flask",
+	})
+
 	generalNode := &navtree.NavLink{
 		Text:     "General",
 		SubTitle: "Manage default preferences and settings across Grafana",

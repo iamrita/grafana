@@ -385,6 +385,12 @@ export function getAppRoutes(): RouteDescriptor[] {
         () => import(/* webpackChunkName: "ServerStats" */ 'app/features/admin/ServerStats')
       ),
     },
+    {
+      path: '/admin/labs',
+      component: SafeDynamicImport(
+        () => import(/* webpackChunkName: "LabsPage" */ 'app/features/labs/LabsPage')
+      ),
+    },
     config.cloudMigrationEnabled && {
       path: '/admin/migrate-to-cloud',
       roles: () => contextSrv.evaluatePermission([AccessControlAction.MigrationAssistantMigrate]),
