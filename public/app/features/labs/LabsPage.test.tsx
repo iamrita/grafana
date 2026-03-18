@@ -1,6 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import { TestProvider } from '../../../test/helpers/TestProvider';
+
+import LabsPage from './LabsPage';
 import { FeatureFlagDTO, FeatureFlagListResponse } from './types';
 
 const mockFlags: FeatureFlagDTO[] = [
@@ -30,10 +33,12 @@ const mockFlags: FeatureFlagDTO[] = [
 
 const mockResponse: FeatureFlagListResponse = { flags: mockFlags };
 
+const mockGet = jest.fn().mockResolvedValue(mockResponse);
+
 jest.mock('@grafana/runtime', () => ({
   ...jest.requireActual('@grafana/runtime'),
   getBackendSrv: () => ({
-    get: jest.fn().mockResolvedValue(mockResponse),
+    get: mockGet,
   }),
 }));
 
@@ -42,12 +47,19 @@ describe('LabsPage', () => {
 
   beforeEach(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+    mockGet.mockClear();
   });
 
-  // Lazy import to ensure mock is set up before module is loaded
   async function renderLabsPage() {
-    const { default: LabsPage } = await import('./LabsPage');
-    return render(<LabsPage />);
+    let result: ReturnType<typeof render>;
+    await act(async () => {
+      result = render(
+        <TestProvider>
+          <LabsPage />
+        </TestProvider>
+      );
+    });
+    return result!;
   }
 
   it('should render feature flags', async () => {
@@ -66,8 +78,8 @@ describe('LabsPage', () => {
   it('should display stage badges', async () => {
     await renderLabsPage();
     expect(await screen.findByText('experimental')).toBeInTheDocument();
-    expect(screen.getByText('GA')).toBeInTheDocument();
-    expect(screen.getByText('deprecated')).toBeInTheDocument();
+    expect(screen.getAllByText('GA').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('deprecated').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should toggle a feature flag and persist in localStorage', async () => {
@@ -90,7 +102,9 @@ describe('LabsPage', () => {
     const searchInput = screen.getByPlaceholderText('Search feature flags...');
     await user.type(searchInput, 'Deprecated');
 
-    expect(screen.queryByText('testFeatureA')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('testFeatureA')).not.toBeInTheDocument();
+    });
     expect(screen.getByText('testFeatureC')).toBeInTheDocument();
   });
 
