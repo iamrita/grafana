@@ -57,6 +57,7 @@ export const ThemeTypographyInputSchema = z.object({
 export type ThemeTypographyInput = z.infer<typeof ThemeTypographyInputSchema>;
 
 const defaultFontFamily = "'Inter', 'Helvetica', 'Arial', sans-serif";
+const defaultHeadingFontFamily = "'Times New Roman', 'Times', serif";
 const defaultFontFamilyMonospace = "'Roboto Mono', monospace";
 
 export function createTypography(colors: ThemeColors, typographyInput: ThemeTypographyInput = {}): ThemeTypography {
@@ -108,13 +109,24 @@ export function createTypography(colors: ThemeColors, typographyInput: ThemeTypo
   };
 
   // All our fonts/line heights should be integer multiples of 2 to prevent issues with alignment
+  const headingFontFamily = defaultHeadingFontFamily;
+  const buildHeadingVariant = (
+    fontWeight: number,
+    size: number,
+    lineHeight: number,
+    letterSpacing: number
+  ): ThemeTypographyVariant => ({
+    ...buildVariant(fontWeight, size, lineHeight, letterSpacing),
+    fontFamily: headingFontFamily,
+  });
+
   const variants = {
-    h1: buildVariant(fontWeightRegular, 28, 32, -0.25),
-    h2: buildVariant(fontWeightRegular, 24, 28, 0),
-    h3: buildVariant(fontWeightRegular, 22, 24, 0),
-    h4: buildVariant(fontWeightRegular, 18, 22, 0.25),
-    h5: buildVariant(fontWeightRegular, 16, 22, 0),
-    h6: buildVariant(fontWeightMedium, 14, 22, 0.15),
+    h1: buildHeadingVariant(fontWeightRegular, 28, 32, -0.25),
+    h2: buildHeadingVariant(fontWeightRegular, 24, 28, 0),
+    h3: buildHeadingVariant(fontWeightRegular, 22, 24, 0),
+    h4: buildHeadingVariant(fontWeightRegular, 18, 22, 0.25),
+    h5: buildHeadingVariant(fontWeightRegular, 16, 22, 0),
+    h6: buildHeadingVariant(fontWeightMedium, 14, 22, 0.15),
     body: buildVariant(fontWeightRegular, fontSize, 22, 0.15),
     bodySmall: buildVariant(fontWeightRegular, 12, 18, 0.15),
     code: { ...buildVariant(fontWeightRegular, 14, 16, 0.15), fontFamily: fontFamilyMonospace },
