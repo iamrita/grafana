@@ -2,7 +2,8 @@ import { css } from '@emotion/css';
 import { useMemo, useState } from 'react';
 import { useAsync } from 'react-use';
 
-import { GrafanaTheme2 } from '@grafana/data';
+import { GrafanaTheme2, store } from '@grafana/data';
+import { Trans, t } from '@grafana/i18n';
 import { getBackendSrv } from '@grafana/runtime';
 import { Badge, Card, FilterInput, RadioButtonGroup, Spinner, Switch, useStyles2 } from '@grafana/ui';
 import { Page } from 'app/core/components/Page/Page';
@@ -20,20 +21,18 @@ const stageOptions: Array<{ label: string; value: StageFilter }> = [
 ];
 
 function getLocalOverrides(): Record<string, boolean> {
-  const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+  const stored = store.get(LOCAL_STORAGE_KEY);
   if (!stored) {
     return {};
   }
-  return stored.split(',').reduce(
-    (acc, item) => {
-      const [name, value] = item.split('=');
-      if (name) {
-        acc[name] = value === 'true' || value === '1';
-      }
-      return acc;
-    },
-    {} as Record<string, boolean>
-  );
+  const result: Record<string, boolean> = {};
+  stored.split(',').forEach((item: string) => {
+    const [name, value] = item.split('=');
+    if (name) {
+      result[name] = value === 'true' || value === '1';
+    }
+  });
+  return result;
 }
 
 function setLocalOverride(name: string, enabled: boolean) {
@@ -42,7 +41,7 @@ function setLocalOverride(name: string, enabled: boolean) {
   const serialized = Object.entries(overrides)
     .map(([k, v]) => `${k}=${v ? 'true' : 'false'}`)
     .join(',');
-  window.localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
+  store.set(LOCAL_STORAGE_KEY, serialized);
 }
 
 function getStageBadgeColor(stage: string): 'blue' | 'orange' | 'green' | 'red' | 'purple' {
@@ -106,11 +105,17 @@ function LabsPage() {
     <Page navId="labs">
       <Page.Contents>
         <div className={styles.description}>
-          Toggle feature flags for this browser session. Changes are stored in localStorage and take effect on page
-          reload.
+          <Trans i18nKey="labs.description">
+            Toggle feature flags for this browser session. Changes are stored in localStorage and take effect on page
+            reload.
+          </Trans>
         </div>
         <div className={styles.actionBar}>
-          <FilterInput placeholder="Search feature flags..." value={searchQuery} onChange={setSearchQuery} />
+          <FilterInput
+            placeholder={t('labs.search-placeholder', 'Search feature flags...')}
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
           <RadioButtonGroup options={stageOptions} value={stageFilter} onChange={setStageFilter} />
         </div>
         {loading && (
@@ -119,26 +124,38 @@ function LabsPage() {
           </div>
         )}
         {!loading && filteredFlags.length === 0 && (
-          <div className={styles.empty}>No feature flags found matching your criteria.</div>
+          <div className={styles.empty}>
+            <Trans i18nKey="labs.no-flags-found">No feature flags found matching your criteria.</Trans>
+          </div>
         )}
         {!loading && (
           <div className={styles.flagList}>
             {filteredFlags.map((flag) => (
-              <Card key={flag.name} className={styles.card}>
+              <Card key={flag.name} noMargin className={styles.card}>
                 <Card.Heading>{flag.name}</Card.Heading>
                 <Card.Meta>
                   <Badge text={flag.stage} color={getStageBadgeColor(flag.stage)} />
-                  {flag.requiresRestart && <Badge text="Requires restart" color="orange" icon="exclamation-triangle" />}
-                  {flag.requiresDevMode && <Badge text="Dev mode only" color="purple" />}
-                  {flag.frontendOnly && <Badge text="Frontend only" color="blue" />}
+                  {flag.requiresRestart && (
+                    <Badge
+                      text={t('labs.requires-restart', 'Requires restart')}
+                      color="orange"
+                      icon="exclamation-triangle"
+                    />
+                  )}
+                  {flag.requiresDevMode && (
+                    <Badge text={t('labs.dev-mode-only', 'Dev mode only')} color="purple" />
+                  )}
+                  {flag.frontendOnly && <Badge text={t('labs.frontend-only', 'Frontend only')} color="blue" />}
                 </Card.Meta>
-                <Card.Description>{flag.description || 'No description available'}</Card.Description>
+                <Card.Description>
+                  {flag.description || t('labs.no-description', 'No description available')}
+                </Card.Description>
                 <Card.SecondaryActions>
                   <div className={styles.toggleContainer}>
                     <Switch
                       value={isEnabled(flag)}
                       onChange={() => handleToggle(flag)}
-                      aria-label={`Toggle ${flag.name}`}
+                      aria-label={t('labs.toggle-flag', 'Toggle {{flagName}}', { flagName: flag.name })}
                     />
                   </div>
                 </Card.SecondaryActions>
