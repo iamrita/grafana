@@ -232,6 +232,7 @@ const getStyles = (theme: GrafanaTheme2, headerLevels: number, headerHeight: num
       right: 0,
       background: theme.colors.background.primary,
       flexDirection: 'column',
+      fontFamily: '"Times New Roman", Times, serif',
     }),
     topNavMenuDocked: css({
       left: MENU_WIDTH,
