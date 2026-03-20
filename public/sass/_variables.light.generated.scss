@@ -16,7 +16,7 @@ $theme-name: light;
 
 // New Colors
 // -------------------------
-$blue-base: #3871dc;
+$blue-base: #7C3AED;
 $red-base: #e0226e;
 $green-base: #1b855e;
 
@@ -39,7 +39,7 @@ $layer2: #f4f5f5;
 
 // Accent colors
 // -------------------------
-$blue: #1f62e0;
+$blue: #6D28D9;
 $red: $red-base;
 $yellow: #ecbb13;
 $purple: #9933cc;
@@ -150,7 +150,7 @@ $popover-shadow: 0px 13px 20px 1px rgba(24, 26, 27, 0.18);
 $graph-tooltip-bg: $gray-5;
 
 $tooltipLinkColor: color.adjust($tooltipColor, $lightness: 5%);
-$tooltipExternalLinkColor: #6e9fff;
+$tooltipExternalLinkColor: #6D28D9;
 
 $popover-error-bg: $red-base;
 $popover-help-bg: $tooltipBackground;
@@ -167,7 +167,7 @@ $info-box-border-color: $blue-base;
 $switch-bg: $white;
 $switch-slider-color: $gray-7;
 $switch-slider-off-bg: $gray-5;
-$switch-slider-on-bg: #1f60c4;
+$switch-slider-on-bg: #6D28D9;
 $switch-slider-shadow: 0 0 3px $dark-2;
 
 //Checkbox

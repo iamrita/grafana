@@ -23,8 +23,8 @@ export const palette = {
   gray95: '#f4f5f5',
   gray100: '#fbfbfb',
 
-  blueDarkMain: '#3d71d9',
-  blueDarkText: '#6e9fff',
+  blueDarkMain: '#7C3AED',
+  blueDarkText: '#A78BFA',
   redDarkMain: '#d10e5c',
   redDarkText: '#ff5286',
   greenDarkMain: '#1a7f4b',
@@ -32,8 +32,8 @@ export const palette = {
   orangeDarkMain: '#ff9900',
   orangeDarkText: '#fbad37',
 
-  blueLightMain: '#3871dc',
-  blueLightText: '#1f62e0',
+  blueLightMain: '#7C3AED',
+  blueLightText: '#6D28D9',
   redLightMain: '#e0226e',
   redLightText: '#cf0e5B',
   greenLightMain: '#1b855e',
