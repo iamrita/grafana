@@ -1,0 +1,86 @@
+{
+  "name": "Bright pink",
+  "id": "brightpink",
+  "colors": {
+    "mode": "light",
+    "border": {
+      "weak": "rgba(219, 39, 119, 0.12)",
+      "medium": "rgba(219, 39, 119, 0.20)",
+      "strong": "rgba(219, 39, 119, 0.30)"
+    },
+    "text": {
+      "primary": "#4A1942",
+      "secondary": "#6B2C5A",
+      "disabled": "rgba(74, 25, 66, 0.5)",
+      "link": "#DB2777",
+      "maxContrast": "#2D0A26"
+    },
+    "primary": {
+      "main": "#EC4899",
+      "text": "#DB2777",
+      "border": "#BE185D",
+      "name": "primary",
+      "shade": "#BE185D",
+      "transparent": "#EC489926",
+      "contrastText": "#FFFFFF",
+      "borderTransparent": "#EC489940"
+    },
+    "secondary": {
+      "main": "#FFFFFF",
+      "text": "#831843",
+      "border": "#FBCFE8",
+      "name": "secondary",
+      "shade": "#F9A8D4",
+      "transparent": "#FFFFFF26",
+      "contrastText": "#831843",
+      "borderTransparent": "#FFFFFF40"
+    },
+    "info": {
+      "main": "#DB2777"
+    },
+    "success": {
+      "main": "#059669"
+    },
+    "warning": {
+      "main": "#F59E0B"
+    },
+    "error": {
+      "main": "#DC2626"
+    },
+    "background": {
+      "canvas": "#FDF2F8",
+      "primary": "#FFFFFF",
+      "secondary": "#FCE7F3",
+      "elevated": "#FFFFFF"
+    },
+    "action": {
+      "hover": "rgba(236, 72, 153, 0.12)",
+      "selected": "rgba(236, 72, 153, 0.24)",
+      "selectedBorder": "#EC4899",
+      "focus": "rgba(236, 72, 153, 0.50)",
+      "hoverOpacity": 0.08,
+      "disabledText": "rgba(131, 24, 67, 0.5)",
+      "disabledBackground": "rgba(236, 72, 153, 0.06)",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, #EC4899 0%, #F472B6 100%)",
+      "brandVertical": "linear-gradient(0deg, #EC4899 0%, #F472B6 100%)"
+    },
+    "contrastThreshold": 3,
+    "hoverFactor": 0.03,
+    "tonalOffset": 0.15
+  },
+  "visualization": {
+    "palette": [
+      "#EC4899",
+      "#F472B6",
+      "#DB2777",
+      "#BE185D",
+      "#9D174D",
+      "#831843",
+      "#F9A8D4",
+      "#FBCFE8"
+    ]
+  }
+}
