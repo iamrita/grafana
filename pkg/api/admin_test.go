@@ -148,6 +148,27 @@ func TestAdmin_AccessControl(t *testing.T) {
 				},
 			},
 		},
+		{
+			expectedCode: http.StatusOK,
+			desc:         "AdminGetLabsFeatures returns 200 for user with settings read for all scopes",
+			url:          "/api/admin/labs/features",
+			permissions: []accesscontrol.Permission{
+				{
+					Action: accesscontrol.ActionSettingsRead,
+					Scope:  accesscontrol.ScopeSettingsAll,
+				},
+			},
+		},
+		{
+			expectedCode: http.StatusForbidden,
+			desc:         "AdminGetLabsFeatures returns 403 without required permissions",
+			url:          "/api/admin/labs/features",
+			permissions: []accesscontrol.Permission{
+				{
+					Action: "wrong",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
