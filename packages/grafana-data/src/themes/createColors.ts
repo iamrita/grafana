@@ -168,10 +168,10 @@ class DarkColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
   };
 
   background = {
-    canvas: palette.gray05,
-    primary: palette.gray10,
-    secondary: palette.gray15,
-    elevated: palette.gray15,
+    canvas: '#0b2e22',
+    primary: '#123b2d',
+    secondary: '#184737',
+    elevated: '#184737',
   };
 
   action = {
@@ -253,10 +253,10 @@ class LightColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
   };
 
   background = {
-    canvas: palette.gray100,
-    primary: palette.white,
-    secondary: palette.gray95,
-    elevated: palette.white,
+    canvas: '#ffe6f2',
+    primary: '#fff6fb',
+    secondary: '#ffd6ea',
+    elevated: '#fff6fb',
   };
 
   action = {
