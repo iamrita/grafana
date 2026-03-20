@@ -4,18 +4,19 @@ import { useAsync, useMount } from 'react-use';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { t } from '@grafana/i18n';
-import { getBackendSrv } from '@grafana/runtime';
+import { config, getBackendSrv } from '@grafana/runtime';
 import { Alert, Button, Field, Input, RadioButtonGroup, Stack, Switch, Text, Tooltip, useStyles2 } from '@grafana/ui';
-import config from 'app/core/config';
 import { Page } from 'app/core/components/Page/Page';
 
 import {
   FeatureToggleOverrides,
+  applyFeatureToggleToConfig,
   clearFeatureToggleOverrides,
   countPendingChanges,
   hasResetFeatureFlagsParam,
   readFeatureToggleOverrides,
   removeResetFeatureFlagsParamFromCurrentUrl,
+  restoreFeatureTogglesFromServerState,
   writeFeatureToggleOverrides,
 } from './labsUtils';
 
@@ -184,6 +185,7 @@ export default function LabsPage() {
   const onToggle = (feature: LabsFeature, checked: boolean) => {
     const nextOverrides = { ...overrides, [feature.name]: checked };
     const writeError = writeFeatureToggleOverrides(nextOverrides);
+    applyFeatureToggleToConfig(config.featureToggles as Record<string, boolean | undefined>, feature.name, checked);
     setOverrides(nextOverrides);
     setStorageError(writeError);
   };
@@ -191,7 +193,13 @@ export default function LabsPage() {
   const onReset = () => {
     const resetError = clearFeatureToggleOverrides();
     setOverrides({});
+    if (!resetError) {
+      setInitialOverrides({});
+    }
     setStorageError(resetError);
+    if (!resetError && features.length > 0) {
+      restoreFeatureTogglesFromServerState(config.featureToggles as Record<string, boolean | undefined>, features);
+    }
   };
 
   return (
@@ -212,10 +220,10 @@ export default function LabsPage() {
           )}
 
           {pendingChanges > 0 && (
-            <Alert severity="info" title={t('admin.labs.pending-title', 'Pending feature flag changes')}>
+            <Alert severity="info" title={t('admin.labs.pending-title', 'Feature flag overrides this session')}>
               {t(
                 'admin.labs.pending-description',
-                '{{count}} changes are saved in local storage. Reload the page to apply them.',
+                '{{count}} override(s) changed since you opened this page. Values apply immediately and persist in local storage across refreshes.',
                 { count: pendingChanges }
               )}
             </Alert>
@@ -258,7 +266,7 @@ export default function LabsPage() {
             <div className={styles.list}>
               {filteredFeatures.map((feature) => {
                 const stage = normalizeStage(feature.stage);
-                const isReadonly = !feature.frontendOnly;
+                const isReadonly = feature.requiresRestart || (feature.requiresDevMode && !isDevEnv);
                 const currentValue = overrides[feature.name] ?? feature.enabled;
 
                 return (
@@ -298,7 +306,7 @@ export default function LabsPage() {
                           placement="top"
                           content={t(
                             'admin.labs.readonly-tooltip',
-                            'This flag requires server configuration and cannot be changed from the browser.'
+                            'This flag cannot be overridden from the browser (requires restart or dev mode).'
                           )}
                         >
                           <div>

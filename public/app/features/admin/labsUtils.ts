@@ -87,3 +87,18 @@ export function removeResetFeatureFlagsParamFromCurrentUrl() {
   url.searchParams.delete(RESET_FEATURE_FLAGS_PARAM);
   window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
 }
+
+/** Updates in-memory feature toggles so UI reacts without a full page reload. */
+export function applyFeatureToggleToConfig(featureToggles: Record<string, boolean | undefined>, name: string, enabled: boolean) {
+  featureToggles[name] = enabled;
+}
+
+/** Resets runtime config keys to server-reported defaults (after clearing local overrides). */
+export function restoreFeatureTogglesFromServerState(
+  featureToggles: Record<string, boolean | undefined>,
+  features: Array<{ name: string; enabled: boolean }>
+) {
+  for (const f of features) {
+    featureToggles[f.name] = f.enabled;
+  }
+}

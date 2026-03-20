@@ -1,24 +1,23 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import config from 'app/core/config';
-
 import LabsPage, { LabsFeature } from './LabsPage';
 import { FEATURE_TOGGLES_LOCAL_STORAGE_KEY } from './labsUtils';
 
-const mockGet = jest.fn();
+/* eslint-disable no-var */
+var mockGet: jest.Mock;
+var mockRuntimeConfig: { buildInfo: { env: string }; featureToggles: Record<string, boolean | undefined> };
 
-jest.mock('@grafana/runtime', () => ({
-  getBackendSrv: () => ({
-    get: mockGet,
-  }),
-}));
-
-jest.mock('app/core/config', () => ({
-  __esModule: true,
-  default: {
-    buildInfo: { env: 'development' },
-  },
-}));
+jest.mock('@grafana/runtime', () => {
+  mockGet = jest.fn();
+  mockRuntimeConfig = { buildInfo: { env: 'development' }, featureToggles: {} };
+  return {
+    getBackendSrv: () => ({
+      get: mockGet,
+    }),
+    config: mockRuntimeConfig,
+  };
+});
+/* eslint-enable no-var */
 
 jest.mock('app/core/services/context_srv', () => ({
   contextSrv: {
@@ -53,6 +52,16 @@ const mockFeatures: LabsFeature[] = [
     owner: '@grafana/backend',
     enabled: true,
     frontendOnly: false,
+    requiresRestart: false,
+    requiresDevMode: false,
+  },
+  {
+    name: 'restartFeature',
+    description: 'Needs server restart',
+    stage: 'deprecated',
+    owner: '@grafana/backend',
+    enabled: false,
+    frontendOnly: false,
     requiresRestart: true,
     requiresDevMode: false,
   },
@@ -69,17 +78,15 @@ const mockFeatures: LabsFeature[] = [
 ];
 
 describe('LabsPage', () => {
-  const originalEnv = config.buildInfo.env;
-
   beforeEach(() => {
     mockGet.mockResolvedValue(mockFeatures);
     window.localStorage.clear();
     window.history.replaceState({}, '', '/admin/labs');
-    config.buildInfo.env = 'development';
+    mockRuntimeConfig.buildInfo.env = 'development';
+    mockRuntimeConfig.featureToggles = {};
   });
 
   afterEach(() => {
-    config.buildInfo.env = originalEnv;
     jest.clearAllMocks();
   });
 
@@ -92,15 +99,24 @@ describe('LabsPage', () => {
 
     await waitFor(() => {
       expect(window.localStorage.getItem(FEATURE_TOGGLES_LOCAL_STORAGE_KEY)).toContain('frontendFeature=true');
+      expect(mockRuntimeConfig.featureToggles.frontendFeature).toBe(true);
     });
   });
 
-  it('shows backend-only feature toggle as disabled', async () => {
+  it('allows toggling backend feature when restart is not required', async () => {
     render(<LabsPage />);
 
     await screen.findByText('backendFeature');
     const backendSwitchInput = document.getElementById('feature-toggle-backendFeature');
-    expect(backendSwitchInput).toBeDisabled();
+    expect(backendSwitchInput).not.toBeDisabled();
+  });
+
+  it('disables toggle when the flag requires a restart', async () => {
+    render(<LabsPage />);
+
+    await screen.findByText('restartFeature');
+    const restartInput = document.getElementById('feature-toggle-restartFeature');
+    expect(restartInput).toBeDisabled();
   });
 
   it('filters by search and stage', async () => {
@@ -124,7 +140,7 @@ describe('LabsPage', () => {
   });
 
   it('hides dev-only flags in production', async () => {
-    config.buildInfo.env = 'production';
+    mockRuntimeConfig.buildInfo.env = 'production';
     render(<LabsPage />);
 
     await screen.findByText('frontendFeature');
