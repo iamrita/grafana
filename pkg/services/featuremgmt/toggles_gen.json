@@ -638,7 +638,8 @@
       "metadata": {
         "name": "alertingRulePermanentlyDelete",
         "resourceVersion": "1771434338561",
-        "creationTimestamp": "2025-04-03T11:18:25Z"
+        "creationTimestamp": "2025-04-03T11:18:25Z",
+        "deletionTimestamp": "2026-03-21T10:05:15Z"
       },
       "spec": {
         "description": "Enables UI functionality to permanently delete alert rules",
