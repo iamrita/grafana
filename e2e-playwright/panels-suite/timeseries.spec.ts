@@ -2,12 +2,6 @@ import { test, expect } from '@grafana/plugin-e2e';
 
 const DASHBOARD_UID = '1KxMUdE7k';
 
-test.use({
-  featureToggles: {
-    timeRangePan: true,
-  },
-});
-
 test.describe('Panels test: TimeSeries X-axis panning', { tag: ['@panels', '@timeseries'] }, () => {
   test('x-axis panning functionality', async ({ gotoDashboardPage, page, selectors }) => {
     let centerX: number;
