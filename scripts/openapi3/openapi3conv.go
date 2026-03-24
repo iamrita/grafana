@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -57,6 +58,13 @@ func main() {
 	// this is a workaround. In the swagger2 specs there ir no definition of the host, so the converter can not create
 	// a URL. Adding this will ensure that all the api calls start with "/api".
 	doc3.AddServer(&openapi3.Server{URL: "/api"})
+
+	// Structural validation of the OpenAPI 3 document (paths, components, refs). Example values produced by go-swagger
+	// from prose such as "// Example: ..." on slice-typed fields are not always schema-valid; skip example checks until
+	// those sources are fixed (e.g. grafana-plugin-sdk-go FrameMeta.UniqueRowIDFields).
+	if err = doc3.Validate(context.Background(), openapi3.DisableExamplesValidation()); err != nil {
+		panic(err)
+	}
 
 	j3, err := json.MarshalIndent(doc3, "", "  ")
 	if err != nil {
