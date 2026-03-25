@@ -16,7 +16,6 @@ import {
   DataQuery,
 } from '@grafana/data';
 import { mockTransformationsRegistry, organizeFieldsTransformer } from '@grafana/data/internal';
-import { config } from '@grafana/runtime';
 import { extractFieldsTransformer } from 'app/features/transformers/extractFields/extractFields';
 import { LokiQueryDirection } from 'app/plugins/datasource/loki/dataquery.gen';
 import { configureStore } from 'app/store/configureStore';
@@ -463,55 +462,42 @@ describe('Logs', () => {
     });
   });
 
-  describe('with table visualisation', () => {
-    let originalVisualisationTypeValue = config.featureToggles.logsExploreTableVisualisation;
+  it('should show visualisation type radio group', () => {
+    setup();
+    const logsSection = screen.getByRole('radio', { name: 'Show results in table visualisation' });
+    expect(logsSection).toBeInTheDocument();
+  });
 
-    beforeAll(() => {
-      originalVisualisationTypeValue = config.featureToggles.logsExploreTableVisualisation;
-      config.featureToggles.logsExploreTableVisualisation = true;
-    });
+  it('should change visualisation to table on toggle (loki)', async () => {
+    setup({});
+    const logsSection = screen.getByRole('radio', { name: 'Show results in table visualisation' });
+    await userEvent.click(logsSection);
 
-    afterAll(() => {
-      config.featureToggles.logsExploreTableVisualisation = originalVisualisationTypeValue;
-    });
+    const table = screen.getByTestId('logRowsTable');
+    expect(table).toBeInTheDocument();
+  });
 
-    it('should show visualisation type radio group', () => {
-      setup();
-      const logsSection = screen.getByRole('radio', { name: 'Show results in table visualisation' });
-      expect(logsSection).toBeInTheDocument();
-    });
+  it('should use default state from localstorage - table', async () => {
+    localStorage.setItem(visualisationTypeKey, 'table');
+    setup({});
+    const table = await screen.findByTestId('logRowsTable');
+    expect(table).toBeInTheDocument();
+  });
 
-    it('should change visualisation to table on toggle (loki)', async () => {
-      setup({});
-      const logsSection = screen.getByRole('radio', { name: 'Show results in table visualisation' });
-      await userEvent.click(logsSection);
+  it('should use default state from localstorage - logs', async () => {
+    localStorage.setItem(visualisationTypeKey, 'logs');
+    setup({});
+    const table = await screen.findByTestId('logRows');
+    expect(table).toBeInTheDocument();
+  });
 
-      const table = screen.getByTestId('logRowsTable');
-      expect(table).toBeInTheDocument();
-    });
+  it('should change visualisation to table on toggle (elastic)', async () => {
+    setup({}, getMockElasticFrame());
+    const logsSection = screen.getByRole('radio', { name: 'Show results in table visualisation' });
+    await userEvent.click(logsSection);
 
-    it('should use default state from localstorage - table', async () => {
-      localStorage.setItem(visualisationTypeKey, 'table');
-      setup({});
-      const table = await screen.findByTestId('logRowsTable');
-      expect(table).toBeInTheDocument();
-    });
-
-    it('should use default state from localstorage - logs', async () => {
-      localStorage.setItem(visualisationTypeKey, 'logs');
-      setup({});
-      const table = await screen.findByTestId('logRows');
-      expect(table).toBeInTheDocument();
-    });
-
-    it('should change visualisation to table on toggle (elastic)', async () => {
-      setup({}, getMockElasticFrame());
-      const logsSection = screen.getByRole('radio', { name: 'Show results in table visualisation' });
-      await userEvent.click(logsSection);
-
-      const table = screen.getByTestId('logRowsTable');
-      expect(table).toBeInTheDocument();
-    });
+    const table = screen.getByTestId('logRowsTable');
+    expect(table).toBeInTheDocument();
   });
 });
 
