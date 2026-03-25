@@ -62,6 +62,8 @@ jobs:
 
       - name: Generate Swagger specs
         run: make swagger-clean && make openapi3-gen
+      - name: Validate OpenAPI 3 document
+        run: go run ./scripts/openapi3 validate public/openapi3.json
       - name: Check for changes
         run: |
           git add -f public/api-merged.json public/openapi3.json
