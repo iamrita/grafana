@@ -10,31 +10,33 @@ const (
 	// itself in relation to a particular item in the menu. The weights
 	// are negative to ensure that the default items are placed above
 	// any items with default weight.
+	// Values are explicit so new entries (e.g. Labs) do not shift ordering.
 
-	WeightHome = (iota - 40) * 100
-	WeightBookmarks
-	WeightSavedItems
-	WeightDashboard
-	WeightExplore
-	WeightDrilldown
-	WeightAssistant
-	WeightAlerting
-	WeightAlertsAndIncidents
-	WeightAIAndML
-	WeightAdaptiveTelemetry
-	WeightCMAB
-	WeightTestingAndSynthetics
-	WeightObservability
-	WeightCloudServiceProviders
-	WeightInfrastructure
-	WeightApplication
-	WeightAsserts
-	WeightDataConnections
-	WeightApps
-	WeightPlugin
-	WeightConfig
-	WeightProfile
-	WeightHelp
+	WeightHome                   int64 = -4000
+	WeightBookmarks                    = -3900
+	WeightSavedItems                 = -3800
+	WeightDashboard                  = -3700
+	WeightExplore                    = -3600
+	WeightDrilldown                  = -3500
+	WeightAssistant                  = -3400
+	WeightAlerting                   = -3300
+	WeightAlertsAndIncidents         = -3200
+	WeightAIAndML                    = -3100
+	WeightAdaptiveTelemetry          = -3000
+	WeightCMAB                       = -2900
+	WeightTestingAndSynthetics       = -2800
+	WeightObservability              = -2700
+	WeightCloudServiceProviders      = -2600
+	WeightInfrastructure             = -2500
+	WeightApplication                = -2400
+	WeightAsserts                    = -2300
+	WeightDataConnections            = -2200
+	WeightApps                       = -2100
+	WeightLabs                       = -2050 // between Apps and Plugin
+	WeightPlugin                     = -2000
+	WeightConfig                     = -1900
+	WeightProfile                    = -1800
+	WeightHelp                       = -1700
 )
 
 const (
@@ -55,6 +57,7 @@ const (
 	NavIDCfgPlugins           = "cfg/plugins"
 	NavIDCfgAccess            = "cfg/access"
 	NavIDBookmarks            = "bookmarks"
+	NavIDLabs                 = "labs"
 )
 
 type NavLink struct {
