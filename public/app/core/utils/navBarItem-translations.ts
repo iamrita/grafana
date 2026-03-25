@@ -143,6 +143,8 @@ export function getNavTitle(navId: string | undefined) {
       return t('nav.frontend.title', 'Frontend');
     case 'apps':
       return t('nav.apps.title', 'More apps');
+    case 'labs':
+      return t('nav.labs.title', 'Labs');
     case 'alerts-and-incidents':
       return t('nav.alerts-and-incidents.title', 'Alerts & IRM');
     case 'testing-and-synthetics':
@@ -298,6 +300,11 @@ export function getNavSubTitle(navId: string | undefined) {
       return t('nav.config-access.subtitle', 'Configure access for individual users, teams, and service accounts');
     case 'apps':
       return t('nav.apps.subtitle', 'App plugins that extend the Grafana experience');
+    case 'labs':
+      return t(
+        'nav.labs.subtitle',
+        'Try experimental features in your browser (does not change server configuration)'
+      );
     case 'monitoring':
       return t('nav.monitoring.subtitle', 'Out-of-the-box observability solutions');
     case 'infrastructure':

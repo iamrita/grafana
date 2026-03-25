@@ -1204,6 +1204,20 @@ export const versionedPages = {
       '11.2.0': '/admin/migrate-to-cloud',
     },
   },
+  Labs: {
+    url: {
+      [MIN_GRAFANA_VERSION]: '/labs',
+    },
+    container: {
+      [MIN_GRAFANA_VERSION]: 'data-testid labs-page',
+    },
+    search: {
+      [MIN_GRAFANA_VERSION]: 'data-testid labs-search',
+    },
+    flagRow: {
+      [MIN_GRAFANA_VERSION]: (flagName: string) => `data-testid labs-flag-row-${flagName}`,
+    },
+  },
 } satisfies VersionedSelectorGroup;
 
 export type VersionedPages = typeof versionedPages;
