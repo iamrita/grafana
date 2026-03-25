@@ -89,6 +89,8 @@ export const getTranslatedThemeName = (theme: ThemeRegistryItem) => {
       return t('shared.preferences.theme.light-label', 'Light');
     case 'system':
       return t('shared.preferences.theme.system-label', 'System preference');
+    case 'brightpink':
+      return t('shared.preferences.theme.brightpink-label', 'Bright pink');
     default:
       return theme.name;
   }
