@@ -815,45 +815,41 @@ const UnthemedLogs: React.FunctionComponent<Props> = (props: Props) => {
       </div>
       <PanelChrome
         titleItems={[
-          config.featureToggles.logsExploreTableVisualisation ? (
-            visualisationType === 'logs' ? null : (
-              <PanelChrome.TitleItem title={t('explore.unthemed-logs.title-feedback', 'Feedback')} key="A">
-                <LogsFeedback feedbackUrl="https://forms.gle/5YyKdRQJ5hzq4c289" />
-              </PanelChrome.TitleItem>
-            )
-          ) : null,
+          visualisationType === 'logs' ? null : (
+            <PanelChrome.TitleItem title={t('explore.unthemed-logs.title-feedback', 'Feedback')} key="A">
+              <LogsFeedback feedbackUrl="https://forms.gle/5YyKdRQJ5hzq4c289" />
+            </PanelChrome.TitleItem>
+          ),
         ]}
         title={t('explore.unthemed-logs.title-logs', 'Logs')}
         actions={
           <>
-            {config.featureToggles.logsExploreTableVisualisation && (
-              <div className={styles.visualisationType}>
-                <RadioButtonGroup
-                  className={styles.visualisationTypeRadio}
-                  options={[
-                    {
-                      label: t('explore.unthemed-logs.label.logs', 'Logs'),
-                      value: 'logs',
-                      description: t(
-                        'explore.unthemed-logs.description.show-results-in-logs-visualisation',
-                        'Show results in logs visualisation'
-                      ),
-                    },
-                    {
-                      label: t('explore.unthemed-logs.label.table', 'Table'),
-                      value: 'table',
-                      description: t(
-                        'explore.unthemed-logs.description.show-results-in-table-visualisation',
-                        'Show results in table visualisation'
-                      ),
-                    },
-                  ]}
-                  size="sm"
-                  value={visualisationType}
-                  onChange={onChangeVisualisation}
-                />
-              </div>
-            )}
+            <div className={styles.visualisationType}>
+              <RadioButtonGroup
+                className={styles.visualisationTypeRadio}
+                options={[
+                  {
+                    label: t('explore.unthemed-logs.label.logs', 'Logs'),
+                    value: 'logs',
+                    description: t(
+                      'explore.unthemed-logs.description.show-results-in-logs-visualisation',
+                      'Show results in logs visualisation'
+                    ),
+                  },
+                  {
+                    label: t('explore.unthemed-logs.label.table', 'Table'),
+                    value: 'table',
+                    description: t(
+                      'explore.unthemed-logs.description.show-results-in-table-visualisation',
+                      'Show results in table visualisation'
+                    ),
+                  },
+                ]}
+                size="sm"
+                value={visualisationType}
+                onChange={onChangeVisualisation}
+              />
+            </div>
           </>
         }
         loadingState={loading ? LoadingState.Loading : LoadingState.Done}
