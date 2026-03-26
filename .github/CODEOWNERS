@@ -1334,3 +1334,4 @@ embed.go @grafana/grafana-as-code
 # Security
 /relyance.yaml @grafana/security-team
 /.github/workflows/relyance-scan.yml @grafana/security-team
+/.github/workflows/pr-security-review.yml @grafana/security-team
