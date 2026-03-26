@@ -12,11 +12,64 @@ jobs:
   main:
     permissions:
       contents: read
+      issues: write
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
+      - name: Ensure PR automation labels exist (forks)
+        if: github.repository != 'grafana/grafana'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${{ github.repository }}/contents/.github/pr-commands.json?ref=${{ github.event.pull_request.head.sha }}" \
+            --jq '.content' | tr -d '\n' | base64 -d > /tmp/pr-commands.json
+          node <<'NODE' > /tmp/pr-command-labels.txt
+          const cmds = require('/tmp/pr-commands.json');
+          const labels = new Set();
+          for (const c of cmds) {
+            if (c.addLabel) {
+              labels.add(c.addLabel);
+            }
+          }
+          labels.add('no-check-mt-service-compatibility');
+          console.log([...labels].sort().join('\n'));
+          NODE
+          while IFS= read -r name || [[ -n "${name:-}" ]]; do
+            [[ -z "${name// }" ]] && continue
+            gh label create "$name" \
+              --repo "${{ github.repository }}" \
+              --color EDEDED \
+              --description 'Referenced by Grafana pr-commands automation' \
+              2>/dev/null || true
+          done < /tmp/pr-command-labels.txt
+
+      - name: Add MT mixed frontend/backend exception label when needed
+        if: github.repository != 'grafana/grafana'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files=$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" --name-only)
+          has_fe=0
+          has_be=0
+          while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            case "$f" in
+              public/*|packages/*|e2e/*) has_fe=1 ;;
+            esac
+            case "$f" in
+              pkg/*|go.mod|go.sum|*.go) has_be=1 ;;
+            esac
+          done <<< "$files"
+          if [[ "$has_fe" -eq 1 && "$has_be" -eq 1 ]]; then
+            gh pr edit "$PR_NUMBER" --repo "${{ github.repository }}" \
+              --add-label no-check-mt-service-compatibility 2>/dev/null || true
+          fi
+
       - name: Checkout Actions
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
           repository: "grafana/grafana-github-actions"
           path: ./actions
