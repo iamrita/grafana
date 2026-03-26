@@ -77,10 +77,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          head_sha="${{ github.event.pull_request.head.sha }}"
+          # Same merge SHA as other PR workflows (not the branch tip).
+          merge_sha="${{ github.sha }}"
           for workflow in "PR automation" "MT Service Compatibility"; do
             run_id=$(gh run list --repo "${{ github.repository }}" --workflow "$workflow" \
-              --branch "${{ github.head_ref }}" --commit "$head_sha" \
+              --branch "${{ github.head_ref }}" --commit "$merge_sha" \
               --status failure --limit 5 \
               --json databaseId --jq '.[0].databaseId // empty')
             if [[ -n "$run_id" ]]; then
