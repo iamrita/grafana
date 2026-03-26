@@ -2,9 +2,10 @@ import { getBuiltInThemes } from '@grafana/data';
 import { config } from '@grafana/runtime';
 
 export function getSelectableThemes() {
-  const allowedExtraThemes = ['brightpink'];
+  const allowedExtraThemes: string[] = [];
 
   if (config.featureToggles.grafanaconThemes) {
+    allowedExtraThemes.push('brightpink');
     allowedExtraThemes.push('desertbloom');
     allowedExtraThemes.push('gildedgrove');
     allowedExtraThemes.push('sapphiredusk');
