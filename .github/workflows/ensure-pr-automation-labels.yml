@@ -1,6 +1,7 @@
 # Runs from the pull request branch (unlike pull_request_target). Seeds labels that
 # upstream Grafana defines but forks often lack, so PR automation can apply area/* labels.
-# If PR automation still races the first time, push an empty commit to re-run checks.
+# Uses the API instead of a full checkout so this usually finishes before PR automation fails,
+# and re-runs failed PR automation / MT compatibility jobs if they lost the race.
 name: Ensure PR automation labels
 
 on:
@@ -8,6 +9,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
+  actions: write
   issues: write
   pull-requests: write
 
@@ -20,18 +22,15 @@ jobs:
     if: github.repository != 'grafana/grafana'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          persist-credentials: false
-
       - name: Create labels from pr-commands.json
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          gh api "repos/${{ github.repository }}/contents/.github/pr-commands.json?ref=${{ github.event.pull_request.head.sha }}" \
+            --jq '.content' | tr -d '\n' | base64 -d > /tmp/pr-commands.json
           node <<'NODE' > /tmp/pr-command-labels.txt
-          const cmds = require('./.github/pr-commands.json');
+          const cmds = require('/tmp/pr-commands.json');
           const labels = new Set();
           for (const c of cmds) {
             if (c.addLabel) {
@@ -72,3 +71,19 @@ jobs:
             gh pr edit "$PR_NUMBER" --repo "${{ github.repository }}" \
               --add-label no-check-mt-service-compatibility 2>/dev/null || true
           fi
+
+      - name: Re-run failed PR automation and MT compatibility (race recovery)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head_sha="${{ github.event.pull_request.head.sha }}"
+          for workflow in "PR automation" "MT Service Compatibility"; do
+            run_id=$(gh run list --repo "${{ github.repository }}" --workflow "$workflow" \
+              --branch "${{ github.head_ref }}" --commit "$head_sha" \
+              --status failure --limit 5 \
+              --json databaseId --jq '.[0].databaseId // empty')
+            if [[ -n "$run_id" ]]; then
+              gh run rerun "$run_id" --repo "${{ github.repository }}" --failed || true
+            fi
+          done
