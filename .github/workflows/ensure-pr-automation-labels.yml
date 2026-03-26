@@ -25,9 +25,11 @@ jobs:
       - name: Create labels from pr-commands.json
         env:
           GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          gh api "repos/${{ github.repository }}/contents/.github/pr-commands.json?ref=${{ github.event.pull_request.head.sha }}" \
+          gh api "repos/${REPOSITORY}/contents/.github/pr-commands.json?ref=${PR_HEAD_SHA}" \
             --jq '.content' | tr -d '\n' | base64 -d > /tmp/pr-commands.json
           node <<'NODE' > /tmp/pr-command-labels.txt
           const cmds = require('/tmp/pr-commands.json');
@@ -43,7 +45,7 @@ jobs:
           while IFS= read -r name || [[ -n "${name:-}" ]]; do
             [[ -z "${name// }" ]] && continue
             gh label create "$name" \
-              --repo "${{ github.repository }}" \
+              --repo "${REPOSITORY}" \
               --color EDEDED \
               --description 'Referenced by Grafana pr-commands automation' \
               2>/dev/null || true
@@ -52,10 +54,11 @@ jobs:
       - name: Add MT mixed frontend/backend exception label when needed
         env:
           GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          files=$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" --name-only)
+          files=$(gh pr diff "$PR_NUMBER" --repo "${REPOSITORY}" --name-only)
           has_fe=0
           has_be=0
           while IFS= read -r f; do
@@ -68,23 +71,25 @@ jobs:
             esac
           done <<< "$files"
           if [[ "$has_fe" -eq 1 && "$has_be" -eq 1 ]]; then
-            gh pr edit "$PR_NUMBER" --repo "${{ github.repository }}" \
+            gh pr edit "$PR_NUMBER" --repo "${REPOSITORY}" \
               --add-label no-check-mt-service-compatibility 2>/dev/null || true
           fi
 
       - name: Re-run failed PR automation and MT compatibility (race recovery)
         env:
           GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          MERGE_SHA: ${{ github.sha }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
           # Same merge SHA as other PR workflows (not the branch tip).
-          merge_sha="${{ github.sha }}"
           for workflow in "PR automation" "MT Service Compatibility"; do
-            run_id=$(gh run list --repo "${{ github.repository }}" --workflow "$workflow" \
-              --branch "${{ github.head_ref }}" --commit "$merge_sha" \
+            run_id=$(gh run list --repo "${REPOSITORY}" --workflow "$workflow" \
+              --branch "${HEAD_REF}" --commit "${MERGE_SHA}" \
               --status failure --limit 5 \
               --json databaseId --jq '.[0].databaseId // empty')
             if [[ -n "$run_id" ]]; then
-              gh run rerun "$run_id" --repo "${{ github.repository }}" --failed || true
+              gh run rerun "$run_id" --repo "${REPOSITORY}" --failed || true
             fi
           done

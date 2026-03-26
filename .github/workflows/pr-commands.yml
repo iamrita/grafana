@@ -20,9 +20,11 @@ jobs:
         if: github.repository != 'grafana/grafana'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          gh api "repos/${{ github.repository }}/contents/.github/pr-commands.json?ref=${{ github.event.pull_request.head.sha }}" \
+          gh api "repos/${REPOSITORY}/contents/.github/pr-commands.json?ref=${PR_HEAD_SHA}" \
             --jq '.content' | tr -d '\n' | base64 -d > /tmp/pr-commands.json
           node <<'NODE' > /tmp/pr-command-labels.txt
           const cmds = require('/tmp/pr-commands.json');
@@ -38,7 +40,7 @@ jobs:
           while IFS= read -r name || [[ -n "${name:-}" ]]; do
             [[ -z "${name// }" ]] && continue
             gh label create "$name" \
-              --repo "${{ github.repository }}" \
+              --repo "${REPOSITORY}" \
               --color EDEDED \
               --description 'Referenced by Grafana pr-commands automation' \
               2>/dev/null || true
@@ -48,10 +50,11 @@ jobs:
         if: github.repository != 'grafana/grafana'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          files=$(gh pr diff "$PR_NUMBER" --repo "${{ github.repository }}" --name-only)
+          files=$(gh pr diff "$PR_NUMBER" --repo "${REPOSITORY}" --name-only)
           has_fe=0
           has_be=0
           while IFS= read -r f; do
@@ -64,7 +67,7 @@ jobs:
             esac
           done <<< "$files"
           if [[ "$has_fe" -eq 1 && "$has_be" -eq 1 ]]; then
-            gh pr edit "$PR_NUMBER" --repo "${{ github.repository }}" \
+            gh pr edit "$PR_NUMBER" --repo "${REPOSITORY}" \
               --add-label no-check-mt-service-compatibility 2>/dev/null || true
           fi
 
