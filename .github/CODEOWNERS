@@ -1283,6 +1283,7 @@ embed.go @grafana/grafana-as-code
 /.github/workflows/pr-codeql-analysis-javascript.yml @DanCech
 /.github/workflows/pr-codeql-analysis-python.yml @DanCech
 /.github/workflows/pr-commands.yml @tolzhabayev
+/.github/workflows/ensure-pr-automation-labels.yml @tolzhabayev
 /.github/workflows/pr-external-labelling.yml @Proximyst
 /.github/workflows/pr-patch-check-event.yml @grafana/grafana-developer-enablement-squad
 /.github/workflows/pr-patch-check.yml @grafana/grafana-developer-enablement-squad
@@ -1367,3 +1368,4 @@ embed.go @grafana/grafana-as-code
 # Security
 /relyance.yaml @grafana/security-team
 /.github/workflows/relyance-scan.yml @grafana/security-team
+/.github/workflows/pr-security-review.yml @grafana/security-team

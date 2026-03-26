@@ -1,25 +1,30 @@
-name: PR automation
+# Runs from the pull request branch (unlike pull_request_target). Seeds labels that
+# upstream Grafana defines but forks often lack, so PR automation can apply area/* labels.
+# Uses the API instead of a full checkout so this usually finishes before PR automation fails,
+# and re-runs failed PR automation / MT compatibility jobs if they lost the race.
+name: Ensure PR automation labels
+
 on:
-  pull_request_target:
-    types:
-      - labeled
-      - opened
-      - synchronize
-permissions: {}
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  actions: write
+  issues: write
+  pull-requests: write
+
 concurrency:
-  group: pr-commands-${{ github.event.number }}
+  group: ensure-pr-labels-${{ github.repository }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  main:
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
+  ensure-labels:
+    if: github.repository != 'grafana/grafana'
     runs-on: ubuntu-latest
     steps:
-      - name: Ensure PR automation labels exist (forks)
-        if: github.repository != 'grafana/grafana'
+      - name: Create labels from pr-commands.json
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -47,9 +52,8 @@ jobs:
           done < /tmp/pr-command-labels.txt
 
       - name: Add MT mixed frontend/backend exception label when needed
-        if: github.repository != 'grafana/grafana'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
@@ -71,17 +75,22 @@ jobs:
               --add-label no-check-mt-service-compatibility 2>/dev/null || true
           fi
 
-      - name: Checkout Actions
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          repository: "grafana/grafana-github-actions"
-          path: ./actions
-          ref: main
-          persist-credentials: false
-      - name: Install Actions
-        run: npm install --production --prefix ./actions
-      - name: Run Commands
-        uses: ./actions/commands
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          configPath: pr-commands
+      - name: Re-run failed PR automation and MT compatibility (race recovery)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          MERGE_SHA: ${{ github.sha }}
+          # Use pull_request payload, not github.head_ref (CodeQL Actions hardening).
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          # Same merge SHA as other PR workflows (not the branch tip).
+          for workflow in "PR automation" "MT Service Compatibility"; do
+            run_id=$(gh run list --repo "${REPOSITORY}" --workflow "$workflow" \
+              --branch "${HEAD_REF}" --commit "${MERGE_SHA}" \
+              --status failure --limit 5 \
+              --json databaseId --jq '.[0].databaseId // empty')
+            if [[ -n "$run_id" ]]; then
+              gh run rerun "$run_id" --repo "${REPOSITORY}" --failed || true
+            fi
+          done

@@ -2,7 +2,7 @@ import { getBuiltInThemes } from '@grafana/data';
 import { config } from '@grafana/runtime';
 
 export function getSelectableThemes() {
-  const allowedExtraThemes = [];
+  const allowedExtraThemes: string[] = [];
 
   if (config.featureToggles.colorblindThemes) {
     allowedExtraThemes.push('deuteranopia_protanopia_dark');
@@ -12,6 +12,7 @@ export function getSelectableThemes() {
   }
 
   if (config.featureToggles.grafanaconThemes) {
+    allowedExtraThemes.push('brightpink');
     allowedExtraThemes.push('desertbloom');
     allowedExtraThemes.push('gildedgrove');
     allowedExtraThemes.push('sapphiredusk');
