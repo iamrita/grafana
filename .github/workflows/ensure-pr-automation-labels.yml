@@ -80,7 +80,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           MERGE_SHA: ${{ github.sha }}
-          HEAD_REF: ${{ github.head_ref }}
+          # Use pull_request payload, not github.head_ref (CodeQL Actions hardening).
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
           # Same merge SHA as other PR workflows (not the branch tip).
