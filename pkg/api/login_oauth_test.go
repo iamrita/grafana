@@ -88,7 +88,6 @@ func TestOAuthLogin_Redirect(t *testing.T) {
 					require.Len(t, res.Cookies(), 1)
 				}
 
-				require.GreaterOrEqual(t, len(res.Cookies()), 1)
 				stateCookie := res.Cookies()[0]
 				assert.Equal(t, OauthStateCookieName, stateCookie.Name)
 				assert.Equal(t, tt.expectedRedirect.Extra[authn.KeyOAuthState], stateCookie.Value)

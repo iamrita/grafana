@@ -29,12 +29,11 @@ import (
 	"github.com/grafana/grafana/pkg/web"
 )
 
-func ProvideService(cfg *setting.Cfg, authenticator authn.Authenticator, features featuremgmt.FeatureToggles,
+func ProvideService(cfg *setting.Cfg, authenticator authn.Authenticator, _ featuremgmt.FeatureToggles,
 ) *ContextHandler {
 	return &ContextHandler{
 		cfg:           cfg,
 		authenticator: authenticator,
-		features:      features,
 	}
 }
 
@@ -42,7 +41,6 @@ func ProvideService(cfg *setting.Cfg, authenticator authn.Authenticator, feature
 type ContextHandler struct {
 	cfg           *setting.Cfg
 	authenticator authn.Authenticator
-	features      featuremgmt.FeatureToggles
 }
 
 type reqContextKey = ctxkey.Key
@@ -110,11 +108,10 @@ func (h *ContextHandler) setRequestContext(ctx context.Context) context.Context 
 		SignedInUser: &user.SignedInUser{
 			Permissions: map[int64]map[string][]string{},
 		},
-		IsSignedIn:                false,
-		AllowAnonymous:            false,
-		SkipDSCache:               false,
-		Logger:                    log.New("context"),
-		UseSessionStorageRedirect: h.features.IsEnabledGlobally(featuremgmt.FlagUseSessionStorageForRedirection),
+		IsSignedIn:     false,
+		AllowAnonymous: false,
+		SkipDSCache:    false,
+		Logger:         log.New("context"),
 	}
 
 	// inject ReqContext in the context

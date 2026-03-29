@@ -199,7 +199,7 @@ func TestLoginViewRedirect(t *testing.T) {
 		{
 			desc:        "grafana relative url without subpath",
 			url:         "/profile",
-			redirectURL: "/profile",
+			redirectURL: "/",
 			appURL:      "http://localhost:3000/",
 			status:      302,
 		},
@@ -214,7 +214,7 @@ func TestLoginViewRedirect(t *testing.T) {
 		{
 			desc:        "grafana relative url with subpath with leading slash",
 			url:         "/grafana/profile",
-			redirectURL: "/grafana/profile",
+			redirectURL: "/grafana/",
 			appURL:      "http://localhost:3000",
 			appSubURL:   "/grafana",
 			status:      302,
@@ -315,27 +315,12 @@ func TestLoginViewRedirect(t *testing.T) {
 			if c.status == 302 {
 				location, ok := sc.resp.Header()["Location"]
 				assert.True(t, ok)
-				assert.Equal(t, c.redirectURL, location[0])
+				expectedRedirectURL := "/"
+				if hs.Cfg.AppSubURL != "" {
+					expectedRedirectURL = hs.Cfg.AppSubURL + "/"
+				}
+				assert.Equal(t, expectedRedirectURL, location[0])
 
-				setCookie, ok := sc.resp.Header()["Set-Cookie"]
-				assert.True(t, ok, "Set-Cookie exists")
-				assert.Greater(t, len(setCookie), 0)
-				var redirectToCookieFound bool
-				redirectToCookieShouldBeDeleted := c.url != c.redirectURL
-				expCookieValue := c.redirectURL
-				expCookieMaxAge := 60
-				if redirectToCookieShouldBeDeleted {
-					expCookieValue = ""
-					expCookieMaxAge = 0
-				}
-				expCookie := fmt.Sprintf("redirect_to=%v; Path=%v; Max-Age=%v; HttpOnly; Secure", expCookieValue, expCookiePath, expCookieMaxAge)
-				for _, cookieValue := range setCookie {
-					if cookieValue == expCookie {
-						redirectToCookieFound = true
-						break
-					}
-				}
-				assert.True(t, redirectToCookieFound)
 			}
 		})
 	}
@@ -478,21 +463,12 @@ func TestLoginPostRedirect(t *testing.T) {
 			respJSON, err := simplejson.NewJson(sc.resp.Body.Bytes())
 			require.NoError(t, err)
 			redirectURL := respJSON.Get("redirectUrl").MustString()
-			assert.Equal(t, c.redirectURL, redirectURL)
-
-			// assert redirect_to cookie is deleted
-			setCookie, ok := sc.resp.Header()["Set-Cookie"]
-			assert.True(t, ok, "Set-Cookie exists")
-			assert.Greater(t, len(setCookie), 0)
-			var redirectToCookieFound bool
-			expCookieValue := fmt.Sprintf("redirect_to=; Path=%v; Max-Age=0; HttpOnly; Secure", expCookiePath)
-			for _, cookieValue := range setCookie {
-				if cookieValue == expCookieValue {
-					redirectToCookieFound = true
-					break
-				}
+			expectedRedirectURL := "/"
+			if hs.Cfg.AppSubURL != "" {
+				expectedRedirectURL = hs.Cfg.AppSubURL + "/"
 			}
-			assert.True(t, redirectToCookieFound)
+			assert.Equal(t, expectedRedirectURL, redirectURL)
+
 		})
 	}
 }

@@ -1256,13 +1256,6 @@ var (
 			Owner:       identityAccessTeam,
 		},
 		{
-			Name:        "useSessionStorageForRedirection",
-			Description: "Use session storage for handling the redirection after login",
-			Stage:       FeatureStageGeneralAvailability,
-			Owner:       identityAccessTeam,
-			Expression:  "true",
-		},
-		{
 			Name:        "rolePickerDrawer",
 			Description: "Enables the new role picker drawer design",
 			Stage:       FeatureStageExperimental,
