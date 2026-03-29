@@ -21,7 +21,6 @@ import (
 	"github.com/grafana/grafana/pkg/services/auth"
 	"github.com/grafana/grafana/pkg/services/authn"
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
-	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	loginservice "github.com/grafana/grafana/pkg/services/login"
 	"github.com/grafana/grafana/pkg/services/secrets"
 	"github.com/grafana/grafana/pkg/services/user"
@@ -148,11 +147,6 @@ func (hs *HTTPServer) LoginView(c *contextmodel.ReqContext) {
 			}
 		}
 
-		if !c.UseSessionStorageRedirect {
-			c.Redirect(hs.GetRedirectURL(c))
-			return
-		}
-
 		c.Redirect(hs.Cfg.AppSubURL + "/")
 		return
 	}
@@ -192,10 +186,7 @@ func (hs *HTTPServer) tryAutoLogin(c *contextmodel.ReqContext) bool {
 	for providerName, provider := range oauthInfos {
 		if provider.AutoLogin || hs.Cfg.OAuthAutoLogin {
 			redirectUrl := hs.Cfg.AppSubURL + "/login/" + providerName
-			//nolint:staticcheck // not yet migrated to OpenFeature
-			if hs.Features.IsEnabledGlobally(featuremgmt.FlagUseSessionStorageForRedirection) {
-				redirectUrl += hs.getRedirectToForAutoLogin(c)
-			}
+			redirectUrl += hs.getRedirectToForAutoLogin(c)
 			c.Logger.Info("OAuth auto login enabled. Redirecting to " + redirectUrl)
 			c.Redirect(redirectUrl, 307)
 			return true
@@ -204,10 +195,7 @@ func (hs *HTTPServer) tryAutoLogin(c *contextmodel.ReqContext) bool {
 
 	if samlAutoLogin {
 		redirectUrl := hs.Cfg.AppSubURL + "/login/saml"
-		//nolint:staticcheck // not yet migrated to OpenFeature
-		if hs.Features.IsEnabledGlobally(featuremgmt.FlagUseSessionStorageForRedirection) {
-			redirectUrl += hs.getRedirectToForAutoLogin(c)
-		}
+		redirectUrl += hs.getRedirectToForAutoLogin(c)
 		c.Logger.Info("SAML auto login enabled. Redirecting to " + redirectUrl)
 		c.Redirect(redirectUrl, 307)
 		return true
@@ -218,6 +206,9 @@ func (hs *HTTPServer) tryAutoLogin(c *contextmodel.ReqContext) bool {
 
 func (hs *HTTPServer) getRedirectToForAutoLogin(c *contextmodel.ReqContext) string {
 	redirectTo := c.Req.FormValue("redirectTo")
+	if redirectTo == "" {
+		return ""
+	}
 	if hs.Cfg.AppSubURL != "" && strings.HasPrefix(redirectTo, hs.Cfg.AppSubURL) {
 		redirectTo = strings.TrimPrefix(redirectTo, hs.Cfg.AppSubURL)
 	}
@@ -228,6 +219,9 @@ func (hs *HTTPServer) getRedirectToForAutoLogin(c *contextmodel.ReqContext) stri
 
 	// remove any forceLogin=true params
 	redirectTo = middleware.RemoveForceLoginParams(redirectTo)
+	if redirectTo == "" {
+		return ""
+	}
 	return "?redirectTo=" + url.QueryEscape(redirectTo)
 }
 
@@ -250,7 +244,7 @@ func (hs *HTTPServer) LoginPost(c *contextmodel.ReqContext) response.Response {
 	}
 
 	metrics.MApiLoginPost.Inc()
-	return authn.HandleLoginResponse(c.Req, c.Resp, hs.Cfg, identity, hs.ValidateRedirectTo, hs.Features)
+	return authn.HandleLoginResponse(c.Req, c.Resp, hs.Cfg, identity, hs.ValidateRedirectTo)
 }
 
 func (hs *HTTPServer) LoginPasswordless(c *contextmodel.ReqContext) response.Response {
@@ -262,7 +256,7 @@ func (hs *HTTPServer) LoginPasswordless(c *contextmodel.ReqContext) response.Res
 		}
 		return response.Err(err)
 	}
-	return authn.HandleLoginResponse(c.Req, c.Resp, hs.Cfg, identity, hs.ValidateRedirectTo, hs.Features)
+	return authn.HandleLoginResponse(c.Req, c.Resp, hs.Cfg, identity, hs.ValidateRedirectTo)
 }
 
 func (hs *HTTPServer) StartPasswordless(c *contextmodel.ReqContext) {
