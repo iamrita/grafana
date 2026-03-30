@@ -15,9 +15,8 @@ export const Page = () => {
   const theme = createTheme({ colors: { mode: 'light' } });
   const [url, setURL] = useState<SelectableValue<string>>();
   const urls = useAsync(async () => {
-    const v2 = { label: 'Grafana API (OpenAPI v2)', key: 'openapi2', value: 'public/api-merged.json' };
-    const v3 = { label: 'Grafana API (OpenAPI v3)', key: 'openapi3', value: 'public/openapi3.json' };
-    const urls: Array<SelectableValue<string>> = [v2, v3];
+    const v3 = { label: 'Grafana HTTP API (OpenAPI 3)', key: 'openapi3', value: 'public/openapi3.json' };
+    const urls: Array<SelectableValue<string>> = [v3];
 
     const rsp = await fetch('openapi/v3');
     const apis = await rsp.json();
