@@ -419,10 +419,6 @@ const (
 	// Enables the scopes usage in Metrics Explore
 	FlagEnableScopesInMetricsExplore = "enableScopesInMetricsExplore"
 
-	// FlagCloudWatchRoundUpEndTime
-	// Round up end time for metric queries to the next minute to avoid missing data
-	FlagCloudWatchRoundUpEndTime = "cloudWatchRoundUpEndTime"
-
 	// FlagPrometheusAzureOverrideAudience
 	// Deprecated. Allow override default AAD audience for Azure Prometheus endpoint. Enabled by default. This feature should no longer be used and will be removed in the future.
 	FlagPrometheusAzureOverrideAudience = "prometheusAzureOverrideAudience"

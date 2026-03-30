@@ -1228,7 +1228,8 @@
       "metadata": {
         "name": "cloudWatchRoundUpEndTime",
         "resourceVersion": "1771434338561",
-        "creationTimestamp": "2024-06-27T15:10:28Z"
+        "creationTimestamp": "2024-06-27T15:10:28Z",
+        "deletionTimestamp": "2026-03-30T10:54:37Z"
       },
       "spec": {
         "description": "Round up end time for metric queries to the next minute to avoid missing data",

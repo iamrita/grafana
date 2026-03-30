@@ -1162,13 +1162,6 @@ var (
 			Expression:      "false",
 		},
 		{
-			Name:        "cloudWatchRoundUpEndTime",
-			Description: "Round up end time for metric queries to the next minute to avoid missing data",
-			Stage:       FeatureStageGeneralAvailability,
-			Owner:       awsDatasourcesSquad,
-			Expression:  "true",
-		},
-		{
 			Name:        "prometheusAzureOverrideAudience",
 			Description: "Deprecated. Allow override default AAD audience for Azure Prometheus endpoint. Enabled by default. This feature should no longer be used and will be removed in the future.",
 			Stage:       FeatureStageDeprecated,

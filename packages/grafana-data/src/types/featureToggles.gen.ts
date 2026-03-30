@@ -739,11 +739,6 @@ export interface FeatureToggles {
   */
   enableScopesInMetricsExplore?: boolean;
   /**
-  * Round up end time for metric queries to the next minute to avoid missing data
-  * @default true
-  */
-  cloudWatchRoundUpEndTime?: boolean;
-  /**
   * Deprecated. Allow override default AAD audience for Azure Prometheus endpoint. Enabled by default. This feature should no longer be used and will be removed in the future.
   * @deprecated
   * @default true
