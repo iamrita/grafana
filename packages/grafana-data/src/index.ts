@@ -484,11 +484,13 @@ export type {
   OAuthSettings,
   AuthSettings,
   GrafanaConfig,
+  FeatureToggleDefinition,
   BuildInfo,
   LicenseInfo,
   PreinstalledPlugin,
   UnifiedAlertingConfig,
 } from './types/config';
+export { GrafanaEdition } from './types/config';
 export { availableIconsIndex, type IconName, isIconName, toIconName } from './types/icon';
 export type { WithAccessControlMetadata } from './types/accesscontrol';
 export { AlertState, type AlertStateInfo } from './types/alerts';

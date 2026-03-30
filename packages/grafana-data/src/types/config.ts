@@ -12,6 +12,19 @@ import { PanelPluginMeta } from './panel';
 import { AngularMeta, PluginDependencies, PluginExtensions, PluginLoadingStrategy } from './plugin';
 import { TimeOption } from './time';
 
+/** Metadata for a registered feature flag (Labs UI). */
+export interface FeatureToggleDefinition {
+  name: string;
+  description: string;
+  stage: string;
+  owner?: string;
+  boolean: boolean;
+  defaultEnabled?: boolean;
+  requiresRestart?: boolean;
+  requiresDevMode?: boolean;
+  frontend?: boolean;
+}
+
 export interface AzureSettings {
   cloud?: string;
   clouds?: AzureCloudInfo[];
@@ -274,6 +287,8 @@ export interface GrafanaConfig {
   liveNamespaced: boolean; // use namespace or orgId prefix
   anonymousEnabled: boolean;
   anonymousDeviceLimit: number;
+  /** Feature flag metadata for the Labs UI (from the server registry). */
+  featureToggleRegistry?: FeatureToggleDefinition[];
   featureToggles: FeatureToggles;
   licenseInfo: LicenseInfo;
   http2Enabled: boolean;

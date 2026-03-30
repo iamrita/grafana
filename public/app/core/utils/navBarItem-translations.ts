@@ -57,6 +57,8 @@ export function getNavTitle(navId: string | undefined) {
       return t('nav.scenes.title', 'Scenes');
     case 'explore':
       return t('nav.explore.title', 'Explore');
+    case 'labs':
+      return t('nav.labs.title', 'Labs');
     case 'drilldown':
       return t('nav.drilldown.title', 'Drilldown');
     case 'alerting':
@@ -319,6 +321,8 @@ export function getNavSubTitle(navId: string | undefined) {
       );
     case 'plugin-page-grafana-ml-app':
       return t('nav.machine-learning.subtitle', 'Explore AI and machine learning features');
+    case 'labs':
+      return t('nav.labs.subtitle', 'Discover and override feature flags in this browser session');
     default:
       return undefined;
   }

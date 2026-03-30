@@ -5,9 +5,10 @@ import {
   AuthSettings,
   AzureSettings as AzureSettingsGrafanaData,
   BootData,
-  BuildInfo,
   DataSourceInstanceSettings,
+  store,
   FeatureToggles,
+  FeatureToggleDefinition,
   GrafanaTheme,
   GrafanaTheme2,
   LicenseInfo,
@@ -26,6 +27,7 @@ import {
   UnifiedAlertingConfig,
   GrafanaConfig,
   CurrentUserDTO,
+  GrafanaEdition,
 } from '@grafana/data';
 
 /**
@@ -95,11 +97,18 @@ export class GrafanaBootConfig {
   appSubUrl = '';
   namespace = 'default';
   windowTitlePrefix = 'Grafana - ';
-  buildInfo: BuildInfo = {
+  buildInfo = {
     version: '1.0',
+    versionString: 'Grafana v1.0',
     commit: '1',
+    commitShort: '1',
+    buildstamp: 0,
+    edition: GrafanaEdition.OpenSource,
+    latestVersion: '',
+    hasUpdate: false,
+    hideVersion: false,
     env: 'production',
-  } as BuildInfo;
+  };
   bootData: BootData;
   externalUserMngLinkUrl = '';
   externalUserMngLinkName = '';
@@ -144,9 +153,16 @@ export class GrafanaBootConfig {
   theme: GrafanaTheme;
   theme2: GrafanaTheme2;
   featureToggles: FeatureToggles = {};
+  featureToggleRegistry: FeatureToggleDefinition[] = [];
   anonymousEnabled = false;
   anonymousDeviceLimit?: number;
-  licenseInfo: LicenseInfo = {} as LicenseInfo;
+  licenseInfo: LicenseInfo = {
+    expiry: 0,
+    licenseUrl: '',
+    stateInfo: '',
+    edition: GrafanaEdition.OpenSource,
+    enabledFeatures: {},
+  };
   rendererAvailable = false;
   rendererVersion = '';
   rendererDefaultImageWidth = 1000;
@@ -286,6 +302,8 @@ export class GrafanaBootConfig {
       systemDateFormats.update(this.dateFormats);
     }
 
+    applyFeatureToggleDefaultsFromRegistry(this);
+
     overrideFeatureTogglesFromUrl(this);
     overrideFeatureTogglesFromLocalStorage(this);
 
@@ -299,19 +317,38 @@ export class GrafanaBootConfig {
   }
 }
 
+/** Key used for persisting feature toggle overrides (matches boot-time localStorage override). */
+export const GRAFANA_FEATURE_TOGGLES_STORAGE_KEY = 'grafana.featureToggles';
+
+function applyFeatureToggleDefaultsFromRegistry(config: GrafanaBootConfig) {
+  const registry = config.featureToggleRegistry;
+  if (!registry?.length) {
+    return;
+  }
+
+  const toggles = config.featureToggles;
+  for (const def of registry) {
+    if (!def.boolean || !def.name) {
+      continue;
+    }
+    if (!Object.prototype.hasOwnProperty.call(toggles, def.name)) {
+      Reflect.set(toggles, def.name, !!def.defaultEnabled);
+    }
+  }
+}
+
 // localstorage key: grafana.featureToggles
 // example value: panelEditor=1,panelInspector=1
 function overrideFeatureTogglesFromLocalStorage(config: GrafanaBootConfig) {
   const featureToggles = config.featureToggles;
-  const localStorageKey = 'grafana.featureToggles';
-  const localStorageValue = window.localStorage.getItem(localStorageKey);
+  const localStorageKey = GRAFANA_FEATURE_TOGGLES_STORAGE_KEY;
+  const localStorageValue = store.get(localStorageKey);
   if (localStorageValue) {
     const features = localStorageValue.split(',');
     for (const feature of features) {
       const [featureName, featureValue] = feature.split('=');
       const toggleState = featureValue === 'true' || featureValue === '1';
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      featureToggles[featureName as keyof FeatureToggles] = toggleState;
+      Reflect.set(featureToggles, featureName, toggleState);
       console.log(`Setting feature toggle ${featureName} = ${toggleState} via localstorage`);
     }
   }
@@ -331,13 +368,13 @@ function overrideFeatureTogglesFromUrl(config: GrafanaBootConfig) {
   const params = new URLSearchParams(window.location.search);
   params.forEach((value, key) => {
     if (key.startsWith('__feature.')) {
-      const featureToggles = config.featureToggles as Record<string, boolean>;
+      const featureToggles = config.featureToggles;
       const featureName = key.substring(10);
 
       const toggleState = value === 'true' || value === ''; // browser rewrites true as ''
-      if (toggleState !== featureToggles[key]) {
+      if (toggleState !== Reflect.get(featureToggles, featureName)) {
         if (isDevelopment || safeRuntimeFeatureFlags.has(featureName)) {
-          featureToggles[featureName] = toggleState;
+          Reflect.set(featureToggles, featureName, toggleState);
           console.log(`Setting feature toggle ${featureName} = ${toggleState} via url`);
         } else {
           console.log(`Unable to change feature toggle ${featureName} via url in production.`);
@@ -359,8 +396,8 @@ if (!bootData) {
       dark: '',
       light: '',
     },
-    settings: {} as GrafanaConfig,
-    user: {} as CurrentUserDTO,
+    settings: { featureToggles: {} } as GrafanaConfig,
+    user: { isSignedIn: false } as CurrentUserDTO,
     navTree: [],
   };
 }
