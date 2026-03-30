@@ -182,6 +182,17 @@ func (s *ServiceImpl) GetNavTree(c *contextmodel.ReqContext, prefs *pref.Prefere
 
 	if c.IsSignedIn {
 		treeRoot.AddSection(&navtree.NavLink{
+			Text:       "Labs",
+			SubTitle:   "Explore and toggle experimental features",
+			Id:         navtree.NavIDLabs,
+			Url:        s.cfg.AppSubURL + "/labs",
+			Icon:       "flask",
+			SortWeight: navtree.WeightLabs,
+		})
+	}
+
+	if c.IsSignedIn {
+		treeRoot.AddSection(&navtree.NavLink{
 			Text:           "Bookmarks",
 			Id:             navtree.NavIDBookmarks,
 			Icon:           "bookmark",

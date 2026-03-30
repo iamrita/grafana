@@ -9,12 +9,24 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/grafana/grafana/pkg/infra/log"
+	ac "github.com/grafana/grafana/pkg/services/accesscontrol"
+	accesscontrolmock "github.com/grafana/grafana/pkg/services/accesscontrol/mock"
+	"github.com/grafana/grafana/pkg/services/authn"
+	"github.com/grafana/grafana/pkg/services/authn/authntest"
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
 	"github.com/grafana/grafana/pkg/services/dashboards"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
+	"github.com/grafana/grafana/pkg/services/licensing"
+	"github.com/grafana/grafana/pkg/services/navtree"
+	"github.com/grafana/grafana/pkg/services/pluginsintegration/pluginsettings"
+	"github.com/grafana/grafana/pkg/services/pluginsintegration/pluginstore"
+	pref "github.com/grafana/grafana/pkg/services/preference"
 	"github.com/grafana/grafana/pkg/services/search/model"
 	"github.com/grafana/grafana/pkg/services/star"
 	"github.com/grafana/grafana/pkg/services/star/startest"
 	"github.com/grafana/grafana/pkg/services/user"
+	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/web"
 )
 
@@ -156,5 +168,54 @@ func TestBuildStarredItemsNavLinks(t *testing.T) {
 		require.Equal(t, "A Dashboard", navLinks[0].Text)
 		require.Equal(t, "B Dashboard", navLinks[1].Text)
 		require.Equal(t, "C Dashboard", navLinks[2].Text)
+	})
+}
+
+func TestGetNavTree_LabsSection(t *testing.T) {
+	cfg := setting.NewCfg()
+
+	service := ServiceImpl{
+		cfg:            cfg,
+		log:            log.New("navtree-test"),
+		accessControl:  accesscontrolmock.New().WithPermissions([]ac.Permission{}),
+		pluginStore:    &pluginstore.FakePluginStore{PluginList: []pluginstore.Plugin{}},
+		pluginSettings: &pluginsettings.FakePluginSettings{Plugins: map[string]*pluginsettings.DTO{}},
+		features:       featuremgmt.WithFeatures(),
+		starService:    startest.NewStarServiceFake(),
+		license:        &licensing.OSSLicensingService{Cfg: cfg},
+		authnService:   &authntest.FakeService{ExpectedIdentity: &authn.Identity{}},
+	}
+
+	t.Run("Signed-in user sees Labs nav node", func(t *testing.T) {
+		httpReq, _ := http.NewRequest(http.MethodGet, "", nil)
+		reqCtx := &contextmodel.ReqContext{
+			SignedInUser: &user.SignedInUser{UserID: 1, OrgID: 1},
+			Context:      &web.Context{Req: httpReq},
+			IsSignedIn:   true,
+		}
+
+		treeRoot, err := service.GetNavTree(reqCtx, &pref.Preference{})
+		require.NoError(t, err)
+
+		labsNode := treeRoot.FindById(navtree.NavIDLabs)
+		require.NotNil(t, labsNode, "Labs nav node should exist for signed-in users")
+		require.Equal(t, "labs", labsNode.Id)
+		require.Equal(t, "/labs", labsNode.Url)
+		require.Equal(t, "Labs", labsNode.Text)
+	})
+
+	t.Run("Anonymous user does not see Labs nav node", func(t *testing.T) {
+		httpReq, _ := http.NewRequest(http.MethodGet, "", nil)
+		reqCtx := &contextmodel.ReqContext{
+			SignedInUser: &user.SignedInUser{IsAnonymous: true},
+			Context:      &web.Context{Req: httpReq},
+			IsSignedIn:   false,
+		}
+
+		treeRoot, err := service.GetNavTree(reqCtx, &pref.Preference{})
+		require.NoError(t, err)
+
+		labsNode := treeRoot.FindById(navtree.NavIDLabs)
+		require.Nil(t, labsNode, "Labs nav node should not exist for anonymous users")
 	})
 }
