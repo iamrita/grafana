@@ -1,6 +1,15 @@
-import { createTheme } from './createTheme';
+import brightpink from './themeDefinitions/brightpink.json';
+import { createTheme, NewThemeOptionsSchema } from './createTheme';
 
 describe('createTheme', () => {
+  it('parses and builds the brightpink theme definition', () => {
+    const data = NewThemeOptionsSchema.parse(brightpink);
+    const theme = createTheme(data);
+    expect(theme.name).toBe('Bright pink');
+    expect(theme.colors.primary.main).toBe('#FF1493');
+    expect(theme.isDark).toBe(true);
+  });
+
   it('create custom theme', () => {
     const custom = createTheme({
       colors: {
