@@ -138,6 +138,10 @@ openapi3-gen: swagger-gen ## Generates OpenApi 3 specs from the Swagger 2 alread
 	$(GO) run $(GO_RACE_FLAG) scripts/openapi3/openapi3conv.go cleanup $(ENTERPRISE_SPEC_TARGET) $(MERGED_SPEC_TARGET)
 	$(GO) run $(GO_RACE_FLAG) scripts/openapi3/openapi3conv.go $(MERGED_SPEC_TARGET) $(OAPI_SPEC_TARGET)
 
+.PHONY: openapi3-validate
+openapi3-validate: ## Validate public/openapi3.json as OpenAPI 3.x (kin-openapi)
+	$(GO) run $(GO_RACE_FLAG) scripts/openapi3/openapi3conv.go validate $(OAPI_SPEC_TARGET)
+
 .PHONY: generate-openapi
 generate-openapi: openapi3-gen
 	$(GO) test ./pkg/tests/apis || true

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -19,6 +20,11 @@ func main() {
 	outFile := "public/openapi3.json"
 	inFile := "api-merged.json"
 	args := os.Args[1:]
+
+	if len(args) > 0 && args[0] == "validate" {
+		validateOpenAPI3CLI(args[1:])
+		return
+	}
 
 	// first parameter as the input
 	if len(args) > 0 && args[0] != "" {
@@ -67,6 +73,40 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("OpenAPI specs generated in file %s\n", outFile)
+
+	if err := validateOpenAPI3File(outFile); err != nil {
+		panic(err)
+	}
+}
+
+func validateOpenAPI3CLI(paths []string) {
+	if len(paths) == 0 {
+		paths = []string{"public/openapi3.json"}
+	}
+	for _, p := range paths {
+		if err := validateOpenAPI3File(p); err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
+		}
+	}
+}
+
+func validateOpenAPI3File(path string) error {
+	ctx := context.Background()
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile(path)
+	if err != nil {
+		return fmt.Errorf("openapi3 load %q: %w", path, err)
+	}
+	opts := []openapi3.ValidationOption{
+		openapi3.DisableExamplesValidation(),
+		openapi3.DisableSchemaDefaultsValidation(),
+	}
+	if err := doc.Validate(ctx, opts...); err != nil {
+		return fmt.Errorf("openapi3 validate %q: %w", path, err)
+	}
+	fmt.Printf("OpenAPI 3 document OK: %s\n", path)
+	return nil
 }
 
 func postProcessSwaggerFile(inFile string) {
