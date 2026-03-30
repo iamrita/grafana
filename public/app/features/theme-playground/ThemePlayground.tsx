@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { createTheme, GrafanaTheme2, NewThemeOptions } from '@grafana/data';
 import { NewThemeOptionsSchema } from '@grafana/data/internal';
 import aubergine from '@grafana/data/themes/definitions/aubergine.json';
+import brightpink from '@grafana/data/themes/definitions/brightpink.json';
 import debug from '@grafana/data/themes/definitions/debug.json';
 import desertbloom from '@grafana/data/themes/definitions/desertbloom.json';
 import deuteranopia_protanopia_dark from '@grafana/data/themes/definitions/deuteranopia_protanopia_dark.json';
@@ -52,6 +53,7 @@ const themeMap: Record<string, NewThemeOptions> = {
 
 const experimentalDefinitions: Record<string, unknown> = {
   aubergine,
+  brightpink,
   debug,
   desertbloom,
   deuteranopia_protanopia_dark,
