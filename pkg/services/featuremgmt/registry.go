@@ -593,14 +593,6 @@ var (
 			Expression:  "false",
 		},
 		{
-			Name:            "annotationPermissionUpdate",
-			Description:     "Change the way annotation permissions work by scoping them to folders and dashboards.",
-			Stage:           FeatureStageGeneralAvailability,
-			RequiresDevMode: false,
-			Expression:      "true", // enabled by default
-			Owner:           identityAccessTeam,
-		},
-		{
 			Name:         "annotationsClustering",
 			Description:  "Enables annotation clustering and switches to refactored annotation code",
 			Stage:        FeatureStageExperimental,
@@ -1477,13 +1469,6 @@ var (
 			Stage:       FeatureStageExperimental,
 			Owner:       grafanaSearchAndStorageSquad,
 			Expression:  "false",
-		},
-		{
-			Name:        "improvedExternalSessionHandlingSAML",
-			Description: "Enables improved support for SAML external sessions. Ensure the NameID format is correctly configured in Grafana for SAML Single Logout to function properly.",
-			Stage:       FeatureStageGeneralAvailability,
-			Expression:  "true", // enabled by default
-			Owner:       identityAccessTeam,
 		},
 		{
 			Name:         "teamHttpHeadersTempo",

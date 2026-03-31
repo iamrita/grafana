@@ -898,7 +898,8 @@
       "metadata": {
         "name": "annotationPermissionUpdate",
         "resourceVersion": "1771434338561",
-        "creationTimestamp": "2023-10-31T13:30:13Z"
+        "creationTimestamp": "2023-10-31T13:30:13Z",
+        "deletionTimestamp": "2026-03-31T10:12:36Z"
       },
       "spec": {
         "description": "Change the way annotation permissions work by scoping them to folders and dashboards.",
@@ -2248,7 +2249,8 @@
       "metadata": {
         "name": "improvedExternalSessionHandlingSAML",
         "resourceVersion": "1771434338561",
-        "creationTimestamp": "2025-01-09T17:02:49Z"
+        "creationTimestamp": "2025-01-09T17:02:49Z",
+        "deletionTimestamp": "2026-03-31T10:12:36Z"
       },
       "spec": {
         "description": "Enables improved support for SAML external sessions. Ensure the NameID format is correctly configured in Grafana for SAML Single Logout to function properly.",

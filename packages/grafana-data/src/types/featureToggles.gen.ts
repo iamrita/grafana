@@ -389,11 +389,6 @@ export interface FeatureToggles {
   */
   alertmanagerRemotePrimary?: boolean;
   /**
-  * Change the way annotation permissions work by scoping them to folders and dashboards.
-  * @default true
-  */
-  annotationPermissionUpdate?: boolean;
-  /**
   * Enables annotation clustering and switches to refactored annotation code
   * @default false
   */
@@ -944,11 +939,6 @@ export interface FeatureToggles {
   * @default false
   */
   k8SFolderCounts?: boolean;
-  /**
-  * Enables improved support for SAML external sessions. Ensure the NameID format is correctly configured in Grafana for SAML Single Logout to function properly.
-  * @default true
-  */
-  improvedExternalSessionHandlingSAML?: boolean;
   /**
   * Enables LBAC for datasources for Tempo to apply LBAC filtering of traces to the client requests for users in teams
   * @default false
