@@ -59,6 +59,8 @@ export function getNavTitle(navId: string | undefined) {
       return t('nav.explore.title', 'Explore');
     case 'drilldown':
       return t('nav.drilldown.title', 'Drilldown');
+    case 'labs':
+      return t('nav.labs.title', 'Labs');
     case 'alerting':
       return t('nav.alerting.title', 'Alerting');
     case 'plugin-page-grafana-oncall-app':
@@ -228,6 +230,8 @@ export function getNavSubTitle(navId: string | undefined) {
       );
     case 'alerting':
       return t('nav.alerting.subtitle', 'Learn about problems in your systems moments after they occur');
+    case 'labs':
+      return t('nav.labs.subtitle', 'Discover experimental and preview features');
     case 'alerting-upgrade':
       return t(
         'nav.alerting-upgrade.subtitle',

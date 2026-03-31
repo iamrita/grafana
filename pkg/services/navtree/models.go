@@ -35,6 +35,8 @@ const (
 	WeightConfig
 	WeightProfile
 	WeightHelp
+	// Keep Labs between Drilldown and Assistant without shifting existing constants.
+	WeightLabs = WeightDrilldown + 50
 )
 
 const (
@@ -42,6 +44,7 @@ const (
 	NavIDDashboards           = "dashboards/browse"
 	NavIDExplore              = "explore"
 	NavIDDrilldown            = "drilldown"
+	NavIDLabs                 = "labs"
 	NavIDAdaptiveTelemetry    = "adaptive-telemetry"
 	NavIDCfg                  = "cfg" // NavIDCfg is the id for org configuration navigation node
 	NavIDAlertsAndIncidents   = "alerts-and-incidents"

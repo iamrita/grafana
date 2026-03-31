@@ -11,12 +11,58 @@ import (
 
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
 	"github.com/grafana/grafana/pkg/services/dashboards"
+	"github.com/grafana/grafana/pkg/services/navtree"
 	"github.com/grafana/grafana/pkg/services/search/model"
 	"github.com/grafana/grafana/pkg/services/star"
 	"github.com/grafana/grafana/pkg/services/star/startest"
 	"github.com/grafana/grafana/pkg/services/user"
+	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/web"
 )
+
+func TestGetLabsNode(t *testing.T) {
+	service := ServiceImpl{
+		cfg: setting.NewCfg(),
+	}
+
+	t.Run("returns labs nav item for signed-in users", func(t *testing.T) {
+		node := service.getLabsNode(&contextmodel.ReqContext{
+			IsSignedIn: true,
+			SignedInUser: &user.SignedInUser{
+				UserID: 1,
+				OrgID:  1,
+			},
+		})
+
+		require.NotNil(t, node)
+		require.Equal(t, navtree.NavIDLabs, node.Id)
+		require.Equal(t, "Labs", node.Text)
+		require.Equal(t, "Discover experimental and preview features", node.SubTitle)
+		require.Equal(t, "rocket", node.Icon)
+		require.Equal(t, int64(navtree.WeightLabs), node.SortWeight)
+		require.Equal(t, "/labs", node.Url)
+	})
+
+	t.Run("places labs between drilldown and assistant weights", func(t *testing.T) {
+		treeRoot := navtree.NavTreeRoot{
+			Children: []*navtree.NavLink{
+				{Id: navtree.NavIDDrilldown, SortWeight: navtree.WeightDrilldown},
+				{Id: navtree.NavIDLabs, SortWeight: navtree.WeightLabs},
+				{Id: "assistant", SortWeight: navtree.WeightAssistant},
+			},
+		}
+
+		treeRoot.Sort()
+		require.Equal(t, navtree.NavIDDrilldown, treeRoot.Children[0].Id)
+		require.Equal(t, navtree.NavIDLabs, treeRoot.Children[1].Id)
+		require.Equal(t, "assistant", treeRoot.Children[2].Id)
+	})
+
+	t.Run("omits labs nav item for signed-out users", func(t *testing.T) {
+		node := service.getLabsNode(&contextmodel.ReqContext{})
+		require.Nil(t, node)
+	})
+}
 
 func TestBuildStarredItemsNavLinks(t *testing.T) {
 	httpReq, _ := http.NewRequest(http.MethodGet, "", nil)
