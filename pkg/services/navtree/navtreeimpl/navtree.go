@@ -145,6 +145,10 @@ func (s *ServiceImpl) GetNavTree(c *contextmodel.ReqContext, prefs *pref.Prefere
 		})
 	}
 
+	if c.IsSignedIn {
+		treeRoot.AddSection(s.getLabsNode())
+	}
+
 	if s.cfg.ProfileEnabled && c.IsSignedIn {
 		treeRoot.AddSection(s.getProfileNode(c))
 	}
@@ -193,6 +197,16 @@ func (s *ServiceImpl) GetNavTree(c *contextmodel.ReqContext, prefs *pref.Prefere
 	}
 
 	return treeRoot, nil
+}
+
+func (s *ServiceImpl) getLabsNode() *navtree.NavLink {
+	return &navtree.NavLink{
+		Text:       "Labs",
+		Id:         navtree.NavIDLabs,
+		Icon:       "apps",
+		SortWeight: navtree.WeightLabs,
+		Url:        s.cfg.AppSubURL + "/labs",
+	}
 }
 
 func (s *ServiceImpl) getHomeNode(c *contextmodel.ReqContext, prefs *pref.Preference) *navtree.NavLink {
