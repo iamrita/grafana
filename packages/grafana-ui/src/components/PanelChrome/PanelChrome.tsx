@@ -515,7 +515,7 @@ const getContentStyle = (
 };
 
 const getStyles = (theme: GrafanaTheme2) => {
-  const { background, borderColor } = theme.components.panel;
+  const { borderColor } = theme.components.panel;
   const newPanelPadding = getFeatureToggle('newPanelPadding');
 
   return {
@@ -525,7 +525,7 @@ const getStyles = (theme: GrafanaTheme2) => {
     }),
     panel: css({
       label: 'panel-container',
-      backgroundColor: background,
+      backgroundColor: '#22c55e',
       border: `1px solid ${borderColor}`,
       position: 'unset',
       borderRadius: theme.shape.radius.default,

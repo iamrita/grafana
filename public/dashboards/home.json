@@ -65,7 +65,7 @@
       "id": 5,
       "links": [],
       "options": {
-        "content": "### Grafana on GitHub\n\n[Open the Grafana repository](https://github.com/grafana/grafana)",
+        "content": "## Grafana on GitHub\n\n[Open the Grafana repository](https://github.com/grafana/grafana)",
         "mode": "markdown"
       },
       "title": "Navigation",

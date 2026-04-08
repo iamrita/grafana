@@ -1,4 +1,4 @@
-import { screen, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useToggle } from 'react-use';
 
@@ -278,4 +278,128 @@ it('does not select the panel when clicking interactive content', async () => {
 
   await user.pointer({ keys: '[MouseLeft>]', target: screen.getByText('Non-interactive') });
   expect(onSelect).toHaveBeenCalledTimes(1);
+});
+
+it('applies transparent display mode to the panel surface', () => {
+  setup({ title: 'Transparent panel', displayMode: 'transparent' });
+  const panel = screen.getByTestId(selectors.components.Panels.Panel.title('Transparent panel'));
+  expect(panel).toHaveStyle({ backgroundColor: 'transparent' });
+});
+
+it('invokes statusMessageOnClick when panel status is activated', async () => {
+  const statusMessageOnClick = jest.fn();
+  const { user } = setup({ title: 'Panel', statusMessage: 'Something failed', statusMessageOnClick });
+  await user.click(screen.getByLabelText('Panel status'));
+  expect(statusMessageOnClick).toHaveBeenCalled();
+});
+
+it('calls onCancelQuery when streaming indicator is activated', async () => {
+  const onCancelQuery = jest.fn();
+  const { user } = setup({ title: 'Stream panel', loadingState: LoadingState.Streaming, onCancelQuery });
+  const streamingButton = screen.getByTestId('icon-circle-mono').closest('button');
+  expect(streamingButton).toBeInTheDocument();
+  await user.click(streamingButton!);
+  expect(onCancelQuery).toHaveBeenCalled();
+});
+
+it('shows cancel query control after delay while loading', () => {
+  jest.useFakeTimers();
+  const onCancelQuery = jest.fn();
+  setup({ title: 'Loading panel', loadingState: LoadingState.Loading, onCancelQuery });
+  expect(screen.queryByTestId('icon-sync-slash')).not.toBeInTheDocument();
+  act(() => {
+    jest.advanceTimersByTime(2000);
+  });
+  const cancelButton = screen.getByTestId('icon-sync-slash').closest('button');
+  expect(cancelButton).toBeInTheDocument();
+  fireEvent.click(cancelButton!);
+  expect(onCancelQuery).toHaveBeenCalled();
+  jest.useRealTimers();
+});
+
+it('renders menu when menu prop is a function', () => {
+  setup({ title: 'Menu fn', menu: () => <div>Menu body</div> });
+  expect(screen.getByTestId(selectors.components.Panels.Panel.menu('Menu fn'))).toBeInTheDocument();
+});
+
+it('renders non-function children for auto-sized panel chrome', () => {
+  render(
+    <PanelChrome padding="none">
+      <div>Autosize content</div>
+    </PanelChrome>
+  );
+  expect(screen.getByText('Autosize content')).toBeInTheDocument();
+});
+
+it('does not call onSelect after large pointer movement on the header', () => {
+  const onSelect = jest.fn();
+
+  render(
+    <ElementSelectionContext.Provider
+      value={{
+        enabled: true,
+        selected: [],
+        onSelect,
+        onClear: jest.fn(),
+      }}
+    >
+      <PanelChrome width={100} height={100} selectionId="header-move" title="Move" dragClass="drag" />
+    </ElementSelectionContext.Provider>
+  );
+
+  const header = screen.getByTestId(selectors.components.Panels.Panel.headerContainer);
+  fireEvent.pointerDown(header, { clientX: 0, clientY: 0, pointerId: 1 });
+  fireEvent.pointerUp(header, { clientX: 40, clientY: 0, pointerId: 1 });
+
+  expect(onSelect).not.toHaveBeenCalled();
+});
+
+it('does not call onSelect when pointer up lands on dragClassCancel region', () => {
+  const onSelect = jest.fn();
+
+  render(
+    <ElementSelectionContext.Provider
+      value={{
+        enabled: true,
+        selected: [],
+        onSelect,
+        onClear: jest.fn(),
+      }}
+    >
+      <PanelChrome
+        width={100}
+        height={100}
+        selectionId="cancel-zone"
+        title="Cancel"
+        dragClass="drag"
+        dragClassCancel="cancel-zone"
+        titleItems={<span className="cancel-zone">Cancel area</span>}
+      />
+    </ElementSelectionContext.Provider>
+  );
+
+  const header = screen.getByTestId(selectors.components.Panels.Panel.headerContainer);
+  const cancelEl = screen.getByText('Cancel area');
+
+  fireEvent.pointerDown(header, { clientX: 2, clientY: 2, pointerId: 1 });
+  fireEvent.pointerUp(cancelEl, { clientX: 2, clientY: 2, pointerId: 1 });
+
+  expect(onSelect).not.toHaveBeenCalled();
+});
+
+it('respects newPanelPadding feature toggle for layout', () => {
+  const toggles = window.grafanaBootData!.settings.featureToggles ?? {};
+  const previous = toggles.newPanelPadding;
+  window.grafanaBootData!.settings.featureToggles = { ...toggles, newPanelPadding: true };
+
+  setup({ title: 'Padding toggle' });
+  expect(screen.getByText('Padding toggle')).toBeInTheDocument();
+
+  if (previous === undefined) {
+    const next = { ...window.grafanaBootData!.settings.featureToggles };
+    delete next.newPanelPadding;
+    window.grafanaBootData!.settings.featureToggles = next;
+  } else {
+    window.grafanaBootData!.settings.featureToggles = { ...toggles, newPanelPadding: previous };
+  }
 });

@@ -41,9 +41,13 @@ export const WelcomeBanner = () => {
 };
 
 const getStyles = (theme: GrafanaTheme2) => {
+  const bannerPink = theme.visualization.getColorByName('pink');
+
   return {
     container: css({
       display: 'flex',
+      backgroundColor: bannerPink,
+      color: theme.colors.getContrastText(bannerPink),
       backgroundSize: 'cover',
       height: '100%',
       alignItems: 'center',
@@ -63,16 +67,21 @@ const getStyles = (theme: GrafanaTheme2) => {
     }),
     title: css({
       marginBottom: 0,
+      ...theme.typography.h1,
+      fontSize: theme.typography.pxToRem(32),
+      lineHeight: 40 / 32,
 
       [theme.breakpoints.down('lg')]: {
         marginBottom: theme.spacing(1),
       },
 
       [theme.breakpoints.down('md')]: {
-        fontSize: theme.typography.h2.fontSize,
+        fontSize: theme.typography.h1.fontSize,
+        lineHeight: theme.typography.h1.lineHeight,
       },
       [theme.breakpoints.down('sm')]: {
-        fontSize: theme.typography.h3.fontSize,
+        fontSize: theme.typography.h2.fontSize,
+        lineHeight: theme.typography.h2.lineHeight,
       },
     }),
     help: css({
@@ -80,12 +89,13 @@ const getStyles = (theme: GrafanaTheme2) => {
       alignItems: 'baseline',
     }),
     helpText: css({
-      ...theme.typography.h3,
+      ...theme.typography.h2,
       marginRight: theme.spacing(2),
       marginBottom: 0,
 
       [theme.breakpoints.down('md')]: {
-        fontSize: theme.typography.h4.fontSize,
+        fontSize: theme.typography.h3.fontSize,
+        lineHeight: theme.typography.h3.lineHeight,
       },
 
       [theme.breakpoints.down('sm')]: {
@@ -97,6 +107,8 @@ const getStyles = (theme: GrafanaTheme2) => {
       flexWrap: 'wrap',
       gap: theme.spacing(2),
       textWrap: 'nowrap',
+      fontSize: theme.typography.h5.fontSize,
+      lineHeight: theme.typography.h5.lineHeight,
 
       [theme.breakpoints.down('sm')]: {
         gap: theme.spacing(1),
