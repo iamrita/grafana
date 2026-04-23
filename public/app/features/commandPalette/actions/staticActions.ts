@@ -8,6 +8,7 @@ import {
   shouldRenderInviteUserButton,
   performInviteUserClick,
 } from 'app/core/components/AppChrome/TopBar/InviteUserButtonUtils';
+import { getSelectableThemes } from 'app/core/components/ThemeSelector/getSelectableThemes';
 import { changeTheme } from 'app/core/services/theme';
 import { currentMockApiState, toggleMockApiAndReload, togglePseudoLocale } from 'app/dev-utils';
 import { CONTENT_KINDS, SOURCE_ENTRY_POINTS } from 'app/features/dashboard/dashgrid/DashboardLibrary/constants';
@@ -86,27 +87,26 @@ function getGlobalActions(): CommandPaletteAction[] {
     {
       id: 'preferences/theme',
       name: t('command-palette.action.change-theme', 'Change theme'),
-      keywords: 'interface color dark light',
+      keywords: 'interface color dark light theme',
       section: t('command-palette.section.preferences', 'Preferences'),
       priority: PREFERENCES_PRIORITY,
     },
-    {
-      id: 'preferences/dark-theme',
-      name: t('command-palette.action.dark-theme', 'Dark'),
-      keywords: 'dark theme',
-      perform: () => changeTheme('dark'),
-      parent: 'preferences/theme',
-      priority: PREFERENCES_PRIORITY,
-    },
-    {
-      id: 'preferences/light-theme',
-      name: t('command-palette.action.light-theme', 'Light'),
-      keywords: 'light theme',
-      perform: () => changeTheme('light'),
-      parent: 'preferences/theme',
-      priority: PREFERENCES_PRIORITY,
-    },
   ];
+
+  const selectableThemes = getSelectableThemes();
+  for (const theme of selectableThemes) {
+    if (theme.id === 'system') {
+      continue;
+    }
+    actions.push({
+      id: `preferences/theme-${theme.id}`,
+      name: theme.name,
+      keywords: `${theme.name.toLowerCase()} theme`,
+      perform: () => changeTheme(theme.id),
+      parent: 'preferences/theme',
+      priority: PREFERENCES_PRIORITY,
+    });
+  }
 
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable @grafana/i18n/no-untranslated-strings
