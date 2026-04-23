@@ -227,6 +227,9 @@ func (hs *HTTPServer) registerRoutes() {
 	r.Get("/alerts-and-incidents", reqSignedIn, hs.Index)
 	r.Get("/alerts-and-incidents/*", reqSignedIn, hs.Index)
 
+	r.Get("/labs", reqSignedIn, hs.Index)
+	r.Get("/labs/*", reqSignedIn, hs.Index)
+
 	// sign up
 	r.Get("/verify", hs.Index)
 	r.Get("/signup", hs.Index)
@@ -474,6 +477,7 @@ func (hs *HTTPServer) registerRoutes() {
 
 		apiRoute.Get("/frontend/settings/", hs.GetFrontendSettings)
 		apiRoute.Get("/frontend/assets", hs.GetFrontendAssets)
+		apiRoute.Get("/labs/feature-flags", routing.Wrap(hs.GetLabsFeatureFlags))
 
 		// Folders
 		hs.registerFolderAPI(apiRoute, authorize)

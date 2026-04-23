@@ -176,6 +176,26 @@ func (s *ServiceImpl) GetNavTree(c *contextmodel.ReqContext, prefs *pref.Prefere
 		return nil, err
 	}
 
+	if c.IsSignedIn {
+		treeRoot.AddSection(&navtree.NavLink{
+			Text:       "Labs",
+			Id:         navtree.NavIDLabs,
+			SubTitle:   "Experimental features and previews",
+			Icon:       "rocket",
+			SortWeight: navtree.WeightLabs,
+			Url:        s.cfg.AppSubURL + "/labs",
+			Children: []*navtree.NavLink{
+				{
+					Text:     "Feature flags",
+					Id:       "labs-feature-flags",
+					SubTitle: "View curated feature toggles and browser-only overrides",
+					Icon:     "toggle-on",
+					Url:      s.cfg.AppSubURL + "/labs/feature-flags",
+				},
+			},
+		})
+	}
+
 	// NOTE: empty admin section cleanup is intentionally NOT done here.
 	// It happens in setIndexViewData (pkg/api/index.go) AFTER RunIndexDataHooks,
 	// so enterprise hooks have a chance to add items before empty sections are pruned.

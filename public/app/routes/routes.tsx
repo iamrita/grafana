@@ -537,6 +537,16 @@ export function getAppRoutes(): RouteDescriptor[] {
       ),
     },
     {
+      path: '/labs',
+      component: SafeDynamicImport(() => import(/* webpackChunkName: "LabsLandingPage" */ 'app/features/labs/LabsLandingPage')),
+    },
+    {
+      path: '/labs/feature-flags',
+      component: SafeDynamicImport(
+        () => import(/* webpackChunkName: "LabsFeatureFlagsPage" */ 'app/features/labs/LabsFeatureFlagsPage')
+      ),
+    },
+    {
       path: '/theme-playground',
       component: SafeDynamicImport(
         () => import(/* webpackChunkName: "ThemePlayground"*/ 'app/features/theme-playground/ThemePlayground')

@@ -25,6 +25,10 @@ export function getNavTitle(navId: string | undefined) {
       return t('nav.create-alert.title', 'New alert rule');
     case 'bookmarks':
       return t('nav.bookmarks.title', 'Bookmarks');
+    case 'labs':
+      return t('nav.labs.title', 'Labs');
+    case 'labs-feature-flags':
+      return t('nav.labs-feature-flags.title', 'Feature flags');
     case 'bookmarks-empty':
       return t('nav.bookmarks-empty.title', 'Bookmark pages for them to appear here');
     case 'starred':
@@ -319,6 +323,10 @@ export function getNavSubTitle(navId: string | undefined) {
       );
     case 'plugin-page-grafana-ml-app':
       return t('nav.machine-learning.subtitle', 'Explore AI and machine learning features');
+    case 'labs':
+      return t('nav.labs.subtitle', 'Experimental features and previews');
+    case 'labs-feature-flags':
+      return t('nav.labs-feature-flags.subtitle', 'Curated feature toggles and browser-only overrides');
     default:
       return undefined;
   }
