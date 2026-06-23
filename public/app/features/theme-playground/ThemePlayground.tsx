@@ -8,6 +8,8 @@ import debug from '@grafana/data/themes/definitions/debug.json';
 import desertbloom from '@grafana/data/themes/definitions/desertbloom.json';
 import deuteranopia_protanopia_dark from '@grafana/data/themes/definitions/deuteranopia_protanopia_dark.json';
 import deuteranopia_protanopia_light from '@grafana/data/themes/definitions/deuteranopia_protanopia_light.json';
+import ember_dark from '@grafana/data/themes/definitions/ember_dark.json';
+import ember_light from '@grafana/data/themes/definitions/ember_light.json';
 import gildedgrove from '@grafana/data/themes/definitions/gildedgrove.json';
 import gloom from '@grafana/data/themes/definitions/gloom.json';
 import mars from '@grafana/data/themes/definitions/mars.json';
@@ -56,6 +58,8 @@ const experimentalDefinitions: Record<string, unknown> = {
   desertbloom,
   deuteranopia_protanopia_dark,
   deuteranopia_protanopia_light,
+  ember_dark,
+  ember_light,
   gildedgrove,
   gloom,
   mars,

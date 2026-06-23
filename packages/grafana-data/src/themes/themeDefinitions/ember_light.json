@@ -1,0 +1,57 @@
+{
+  "name": "Ember Light",
+  "id": "ember-light",
+  "colors": {
+    "mode": "light",
+    "border": {
+      "weak": "rgba(38, 37, 30, 0.12)",
+      "medium": "rgba(38, 37, 30, 0.20)",
+      "strong": "rgba(38, 37, 30, 0.30)"
+    },
+    "text": {
+      "primary": "#26251e",
+      "secondary": "rgba(38, 37, 30, 0.60)",
+      "disabled": "rgba(38, 37, 30, 0.50)",
+      "link": "#f54e00",
+      "maxContrast": "#000000"
+    },
+    "primary": {
+      "main": "#f54e00",
+      "text": "#f54e00",
+      "border": "#f54e00",
+      "name": "primary"
+    },
+    "secondary": {
+      "main": "#f0efeb",
+      "shade": "#e6e5e0",
+      "transparent": "rgba(38, 37, 30, 0.08)",
+      "text": "#26251e",
+      "contrastText": "#26251e",
+      "border": "rgba(38, 37, 30, 0.12)",
+      "name": "secondary"
+    },
+    "background": {
+      "canvas": "#f7f7f4",
+      "primary": "#f2f1ed",
+      "secondary": "#f0efeb",
+      "elevated": "#ffffff"
+    },
+    "action": {
+      "hover": "rgba(38, 37, 30, 0.12)",
+      "selected": "rgba(38, 37, 30, 0.20)",
+      "selectedBorder": "#f54e00",
+      "focus": "rgba(38, 37, 30, 0.30)",
+      "hoverOpacity": 0.08,
+      "disabledText": "rgba(38, 37, 30, 0.50)",
+      "disabledBackground": "rgba(38, 37, 30, 0.04)",
+      "disabledOpacity": 0.38
+    },
+    "gradients": {
+      "brandHorizontal": "linear-gradient(270deg, #f54e00 0%, #ff8a4d 100%)",
+      "brandVertical": "linear-gradient(0.01deg, #f54e00 0.01%, #ff8a4d 99.99%)"
+    },
+    "contrastThreshold": 3,
+    "hoverFactor": 0.03,
+    "tonalOffset": 0.15
+  }
+}

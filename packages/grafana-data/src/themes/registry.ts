@@ -6,6 +6,8 @@ import debug from './themeDefinitions/debug.json';
 import desertbloom from './themeDefinitions/desertbloom.json';
 import deuteranopia_protanopia_dark from './themeDefinitions/deuteranopia_protanopia_dark.json';
 import deuteranopia_protanopia_light from './themeDefinitions/deuteranopia_protanopia_light.json';
+import ember_dark from './themeDefinitions/ember_dark.json';
+import ember_light from './themeDefinitions/ember_light.json';
 import gildedgrove from './themeDefinitions/gildedgrove.json';
 import gloom from './themeDefinitions/gloom.json';
 import mars from './themeDefinitions/mars.json';
@@ -30,6 +32,8 @@ const extraThemes: { [key: string]: unknown } = {
   desertbloom,
   deuteranopia_protanopia_dark,
   deuteranopia_protanopia_light,
+  ember_dark,
+  ember_light,
   gildedgrove,
   gloom,
   mars,

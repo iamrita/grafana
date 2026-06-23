@@ -11,6 +11,8 @@ var themes = []ThemeDTO{
 	{ID: "desertbloom", Type: "light", IsExtra: true},
 	{ID: "deuteranopia_protanopia_dark", Type: "dark", IsExtra: true},
 	{ID: "deuteranopia_protanopia_light", Type: "light", IsExtra: true},
+	{ID: "ember-dark", Type: "dark", IsExtra: true},
+	{ID: "ember-light", Type: "light", IsExtra: true},
 	{ID: "gildedgrove", Type: "dark", IsExtra: true},
 	{ID: "gloom", Type: "dark", IsExtra: true},
 	{ID: "mars", Type: "dark", IsExtra: true},
