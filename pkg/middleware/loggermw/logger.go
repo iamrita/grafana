@@ -102,6 +102,10 @@ func (l *loggerImpl) prepareLogParams(c *contextmodel.ReqContext, duration time.
 		lvl = errutil.LevelError
 	}
 
+	if l.cfg.SlowRequestThreshold > 0 && duration >= l.cfg.SlowRequestThreshold {
+		lvl = lvl.HighestOf(errutil.LevelWarn)
+	}
+
 	logParams := []any{
 		"method", r.Method,
 		"path", r.URL.Path,

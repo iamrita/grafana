@@ -111,12 +111,43 @@ func Test_prepareLog(t *testing.T) {
 			},
 			expectedLevel: errutil.LevelInfo,
 		},
+		{
+			name:     "slow request logs at warn level",
+			req:      mustRequest(http.NewRequest(http.MethodGet, "/api/slow", nil)),
+			response: mockResponseWriter{status: http.StatusOK},
+			duration: 3 * time.Second,
+			opts: opts{
+				RouterLogging: true,
+			},
+			expectFields: map[string]any{
+				"status": http.StatusOK,
+				"path":   "/api/slow",
+			},
+			expectedLevel: errutil.LevelWarn,
+		},
+		{
+			name:     "fast request stays at info level when threshold is configured",
+			req:      mustRequest(http.NewRequest(http.MethodGet, "/api/fast", nil)),
+			response: mockResponseWriter{status: http.StatusOK},
+			duration: 100 * time.Millisecond,
+			opts: opts{
+				RouterLogging: true,
+			},
+			expectFields: map[string]any{
+				"status": http.StatusOK,
+				"path":   "/api/fast",
+			},
+			expectedLevel: errutil.LevelInfo,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := setting.NewCfg()
 			cfg.RouterLogging = tc.opts.RouterLogging
+			if tc.name == "slow request logs at warn level" || tc.name == "fast request stays at info level when threshold is configured" {
+				cfg.SlowRequestThreshold = 2 * time.Second
+			}
 			l := Provide(cfg, featuremgmt.WithFeatures(tc.opts.Features...))
 
 			service, ok := l.(*loggerImpl)
