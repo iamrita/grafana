@@ -35,6 +35,8 @@ func TestLoadingSettings(t *testing.T) {
 		require.Equal(t, "admin", cfg.AdminUser)
 		require.Equal(t, "", cfg.RendererCallbackUrl)
 		require.Equal(t, "TLS1.2", cfg.MinTLSVersion)
+		require.Equal(t, int64(16*1024*1024), cfg.MaxRequestBodyBytes)
+		require.Equal(t, time.Duration(0), cfg.SlowRequestThreshold)
 	})
 
 	t.Run("default.ini should have no semi-colon commented entries", func(t *testing.T) {
@@ -244,6 +246,34 @@ func TestLoadingSettings(t *testing.T) {
 		require.Nil(t, err)
 
 		require.Equal(t, "TLS1.3", cfg.MinTLSVersion)
+	})
+
+	t.Run("Should be able to override max request body bytes via command line", func(t *testing.T) {
+		cfg := NewCfg()
+		err := cfg.Load(CommandLineArgs{
+			HomePath: "../../",
+			Args: []string{
+				"cfg:default.server.max_request_body_bytes=0",
+			},
+			Config: filepath.Join("../../", "pkg/setting/testdata/override.ini"),
+		})
+		require.Nil(t, err)
+
+		require.Equal(t, int64(0), cfg.MaxRequestBodyBytes)
+	})
+
+	t.Run("Should be able to override slow request threshold via command line", func(t *testing.T) {
+		cfg := NewCfg()
+		err := cfg.Load(CommandLineArgs{
+			HomePath: "../../",
+			Args: []string{
+				"cfg:default.server.slow_request_threshold=2s",
+			},
+			Config: filepath.Join("../../", "pkg/setting/testdata/override.ini"),
+		})
+		require.Nil(t, err)
+
+		require.Equal(t, 2*time.Second, cfg.SlowRequestThreshold)
 	})
 
 	t.Run("Defaults can be overridden in specified config file", func(t *testing.T) {
