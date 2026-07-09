@@ -277,6 +277,7 @@ func ProvideHTTPServer(opts ServerOptions, cfg *setting.Cfg, routeRegister routi
 	userVerifier user.Verifier, pluginPreinstall pluginchecker.Preinstall, publicDashboardsService publicdashboards.Service,
 ) (*HTTPServer, error) {
 	web.Env = cfg.Env
+	web.MaxRequestBodyBytes = cfg.MaxRequestBodyBytes
 	m := web.New()
 
 	hs := &HTTPServer{

@@ -1,8 +1,14 @@
 package web
 
 import (
+	"bytes"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type StructWithInt struct {
@@ -115,4 +121,46 @@ func TestValidationFailure(t *testing.T) {
 			t.Error("Validation should fail:", i, x)
 		}
 	}
+}
+
+func TestBindWithLimit(t *testing.T) {
+	type payload struct {
+		Name string `json:"name"`
+	}
+
+	t.Run("oversized JSON body returns ErrRequestBodyTooLarge", func(t *testing.T) {
+		body := strings.Repeat("a", 1024)
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"`+body+`"}`))
+		req.Header.Set("Content-Type", "application/json")
+
+		var got payload
+		err := BindWithLimit(req, &got, 64)
+		require.ErrorIs(t, err, ErrRequestBodyTooLarge)
+		require.Equal(t, http.StatusRequestEntityTooLarge, StatusCodeFromBindError(err))
+	})
+
+	t.Run("disabled limit allows larger JSON body", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte(`{"name":"ok"}`)))
+		req.Header.Set("Content-Type", "application/json")
+
+		var got payload
+		err := BindWithLimit(req, &got, 0)
+		require.NoError(t, err)
+		require.Equal(t, "ok", got.Name)
+	})
+
+	t.Run("uses package default limit", func(t *testing.T) {
+		t.Cleanup(func() {
+			MaxRequestBodyBytes = 0
+		})
+
+		MaxRequestBodyBytes = 32
+		body := strings.Repeat("a", 128)
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"`+body+`"}`))
+		req.Header.Set("Content-Type", "application/json")
+
+		var got payload
+		err := Bind(req, &got)
+		require.ErrorIs(t, err, ErrRequestBodyTooLarge)
+	})
 }

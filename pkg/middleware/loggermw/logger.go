@@ -92,14 +92,17 @@ func (l *loggerImpl) prepareLogParams(c *contextmodel.ReqContext, duration time.
 
 	status := rw.Status()
 	lvl := errutil.LevelInfo
+	isSlow := l.cfg.SlowRequestThreshold > 0 && duration > l.cfg.SlowRequestThreshold
 
 	switch {
-	case status == http.StatusOK, status == http.StatusNotModified:
-		if !l.cfg.RouterLogging {
-			lvl = errutil.LevelNever
-		}
 	case status >= http.StatusInternalServerError:
 		lvl = errutil.LevelError
+	case status == http.StatusOK, status == http.StatusNotModified:
+		if isSlow {
+			lvl = errutil.LevelWarn
+		} else if !l.cfg.RouterLogging {
+			lvl = errutil.LevelNever
+		}
 	}
 
 	logParams := []any{
@@ -127,6 +130,13 @@ func (l *loggerImpl) prepareLogParams(c *contextmodel.ReqContext, duration time.
 
 	if handler, exist := middleware.RouteOperationName(c.Req); exist {
 		logParams = append(logParams, "handler", handler)
+	}
+
+	if isSlow {
+		logParams = append(logParams,
+			"slow_request", true,
+			"slow_request_threshold", l.cfg.SlowRequestThreshold.String(),
+		)
 	}
 
 	rmd := requestmeta.GetRequestMetaData(c.Req.Context())

@@ -715,6 +715,26 @@ func TestNewCfgFromINIFile(t *testing.T) {
 	require.Equal(t, "test.com", cfg.Domain)
 }
 
+func TestServerRequestHardeningSettings(t *testing.T) {
+	t.Run("defaults", func(t *testing.T) {
+		cfg, err := NewCfgFromBytes([]byte(`[server]`))
+		require.NoError(t, err)
+		require.Equal(t, int64(16*1024*1024), cfg.MaxRequestBodyBytes)
+		require.Equal(t, time.Duration(0), cfg.SlowRequestThreshold)
+	})
+
+	t.Run("explicit overrides", func(t *testing.T) {
+		cfg, err := NewCfgFromBytes([]byte(`
+[server]
+max_request_body_bytes = 0
+slow_request_threshold = 2s
+`))
+		require.NoError(t, err)
+		require.Equal(t, int64(0), cfg.MaxRequestBodyBytes)
+		require.Equal(t, 2*time.Second, cfg.SlowRequestThreshold)
+	})
+}
+
 func TestDynamicSection(t *testing.T) {
 	t.Parallel()
 

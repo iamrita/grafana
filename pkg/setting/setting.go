@@ -114,10 +114,12 @@ type Cfg struct {
 	RouterLogging     bool
 	Domain            string
 	CDNRootURL        *url.URL
-	ReadTimeout       time.Duration
-	EnableGzip        bool
-	EnforceDomain     bool
-	MinTLSVersion     string
+	ReadTimeout           time.Duration
+	MaxRequestBodyBytes   int64
+	SlowRequestThreshold  time.Duration
+	EnableGzip            bool
+	EnforceDomain         bool
+	MinTLSVersion         string
 
 	// Security settings
 	SecretKey             string
@@ -2182,6 +2184,8 @@ func (cfg *Cfg) readServerSettings(iniFile *ini.File) error {
 	}
 
 	cfg.ReadTimeout = server.Key("read_timeout").MustDuration(0)
+	cfg.MaxRequestBodyBytes = server.Key("max_request_body_bytes").MustInt64(16 * 1024 * 1024)
+	cfg.SlowRequestThreshold = server.Key("slow_request_threshold").MustDuration(0)
 
 	headersSection := cfg.Raw.Section("server.custom_response_headers")
 	keys := headersSection.Keys()

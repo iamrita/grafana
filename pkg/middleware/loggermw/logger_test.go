@@ -19,8 +19,9 @@ import (
 
 func Test_prepareLog(t *testing.T) {
 	type opts struct {
-		Features      []any
-		RouterLogging bool
+		Features              []any
+		RouterLogging         bool
+		SlowRequestThreshold  time.Duration
 	}
 
 	grafanaFlavoredErr := errutil.NotFound("test.notFound").Errorf("got error")
@@ -111,12 +112,73 @@ func Test_prepareLog(t *testing.T) {
 			},
 			expectedLevel: errutil.LevelInfo,
 		},
+		{
+			name: "disabled slow request threshold",
+			opts: opts{
+				RouterLogging: true,
+			},
+			req:      mustRequest(http.NewRequest(http.MethodGet, "/", nil)),
+			response: mockResponseWriter{status: http.StatusOK},
+			duration: 3 * time.Second,
+			expectAbsence: map[string]struct{}{
+				"slow_request":           {},
+				"slow_request_threshold": {},
+			},
+			expectedLevel: errutil.LevelInfo,
+		},
+		{
+			name: "successful request below slow threshold",
+			opts: opts{
+				RouterLogging:        true,
+				SlowRequestThreshold: 2 * time.Second,
+			},
+			req:      mustRequest(http.NewRequest(http.MethodGet, "/", nil)),
+			response: mockResponseWriter{status: http.StatusOK},
+			duration: time.Second,
+			expectAbsence: map[string]struct{}{
+				"slow_request":           {},
+				"slow_request_threshold": {},
+			},
+			expectedLevel: errutil.LevelInfo,
+		},
+		{
+			name: "successful slow request logs warning",
+			opts: opts{
+				RouterLogging:        true,
+				SlowRequestThreshold: 2 * time.Second,
+			},
+			req:      mustRequest(http.NewRequest(http.MethodGet, "/", nil)),
+			response: mockResponseWriter{status: http.StatusOK},
+			duration: 3 * time.Second,
+			expectFields: map[string]any{
+				"slow_request":           true,
+				"slow_request_threshold": "2s",
+			},
+			expectedLevel: errutil.LevelWarn,
+		},
+		{
+			name: "slow 5xx request remains error level",
+			opts: opts{
+				SlowRequestThreshold: 2 * time.Second,
+			},
+			req:  mustRequest(http.NewRequest(http.MethodGet, "/", nil)),
+			response: mockResponseWriter{
+				status: http.StatusInternalServerError,
+			},
+			duration: 3 * time.Second,
+			expectFields: map[string]any{
+				"slow_request":           true,
+				"slow_request_threshold": "2s",
+			},
+			expectedLevel: errutil.LevelError,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := setting.NewCfg()
 			cfg.RouterLogging = tc.opts.RouterLogging
+			cfg.SlowRequestThreshold = tc.opts.SlowRequestThreshold
 			l := Provide(cfg, featuremgmt.WithFeatures(tc.opts.Features...))
 
 			service, ok := l.(*loggerImpl)

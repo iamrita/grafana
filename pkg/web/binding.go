@@ -10,8 +10,21 @@ import (
 	"reflect"
 )
 
+// MaxRequestBodyBytes limits JSON request bodies during Bind.
+// A value of 0 disables the limit. Set from server configuration at startup.
+var MaxRequestBodyBytes int64
+
+// ErrRequestBodyTooLarge is returned when a JSON request body exceeds MaxRequestBodyBytes.
+var ErrRequestBodyTooLarge = errors.New("request body too large")
+
 // Bind deserializes JSON payload from the request
 func Bind(req *http.Request, v any) error {
+	return BindWithLimit(req, v, MaxRequestBodyBytes)
+}
+
+// BindWithLimit deserializes JSON payload from the request with an optional body size limit.
+// A maxBytes value of 0 disables the limit.
+func BindWithLimit(req *http.Request, v any, maxBytes int64) error {
 	if req.Body != nil {
 		m, _, err := mime.ParseMediaType(req.Header.Get("Content-type"))
 		if err != nil {
@@ -21,12 +34,28 @@ func Bind(req *http.Request, v any) error {
 			return errors.New("bad content type")
 		}
 		defer func() { _ = req.Body.Close() }()
-		err = json.NewDecoder(req.Body).Decode(v)
+		body := req.Body
+		if maxBytes > 0 {
+			body = http.MaxBytesReader(nil, req.Body, maxBytes)
+		}
+		err = json.NewDecoder(body).Decode(v)
 		if err != nil && !errors.Is(err, io.EOF) {
+			var maxBytesErr *http.MaxBytesError
+			if errors.As(err, &maxBytesErr) {
+				return ErrRequestBodyTooLarge
+			}
 			return err
 		}
 	}
 	return validate(v)
+}
+
+// StatusCodeFromBindError maps binding errors to HTTP status codes.
+func StatusCodeFromBindError(err error) int {
+	if errors.Is(err, ErrRequestBodyTooLarge) {
+		return http.StatusRequestEntityTooLarge
+	}
+	return http.StatusBadRequest
 }
 
 type Validator interface {
