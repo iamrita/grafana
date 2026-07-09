@@ -6,6 +6,25 @@ import { contextSrv } from '../services/context_srv';
 
 import { PreferencesService } from './PreferencesService';
 
+const SYSTEM_THEME_ID = 'system';
+
+export function getUserThemePreference(): string {
+  return config.bootData.user.theme;
+}
+
+export function isSystemThemePreference(): boolean {
+  return getUserThemePreference() === SYSTEM_THEME_ID;
+}
+
+function resolveSystemThemeId(): 'dark' | 'light' {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function updateUserThemePreference(themeId: string, isLight: boolean) {
+  config.bootData.user.theme = themeId;
+  config.bootData.user.lightTheme = isLight;
+}
+
 export async function changeTheme(themeId: string, runtimeOnly?: boolean) {
   const oldTheme = config.theme2;
 
@@ -39,6 +58,8 @@ export async function changeTheme(themeId: string, runtimeOnly?: boolean) {
     return;
   }
 
+  updateUserThemePreference(themeId, newTheme.isLight);
+
   if (!contextSrv.isSignedIn) {
     return;
   }
@@ -53,4 +74,31 @@ export async function changeTheme(themeId: string, runtimeOnly?: boolean) {
 export async function toggleTheme(runtimeOnly: boolean) {
   const currentTheme = config.theme2;
   changeTheme(currentTheme.isDark ? 'light' : 'dark', runtimeOnly);
+}
+
+let systemThemeListenerInitialized = false;
+
+/** @internal exported for tests */
+export function resetSystemThemeListenerForTests() {
+  systemThemeListenerInitialized = false;
+}
+
+export function initSystemThemeListener() {
+  if (systemThemeListenerInitialized || typeof window === 'undefined' || !window.matchMedia) {
+    return;
+  }
+
+  systemThemeListenerInitialized = true;
+
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const handleSystemThemeChange = () => {
+    if (!isSystemThemePreference()) {
+      return;
+    }
+
+    changeTheme(resolveSystemThemeId(), true);
+  };
+
+  mediaQuery.addEventListener('change', handleSystemThemeChange);
 }

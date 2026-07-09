@@ -3,7 +3,7 @@ import { css } from '@emotion/css';
 import { GrafanaTheme2, ThemeRegistryItem } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import { config, reportInteraction } from '@grafana/runtime';
-import { Drawer, TextLink, useStyles2, useTheme2 } from '@grafana/ui';
+import { Drawer, TextLink, useStyles2 } from '@grafana/ui';
 import { changeTheme } from 'app/core/services/theme';
 
 import { ThemeCard } from './ThemeCard';
@@ -16,7 +16,6 @@ interface Props {
 export function ThemeSelectorDrawer({ onClose }: Props) {
   const styles = useStyles2(getStyles);
   const themes = getSelectableThemes();
-  const currentTheme = useTheme2();
 
   const onChange = (theme: ThemeRegistryItem) => {
     reportInteraction('grafana_preferences_theme_changed', {
@@ -26,7 +25,8 @@ export function ThemeSelectorDrawer({ onClose }: Props) {
     changeTheme(theme.id, false);
   };
 
-  const subTitle = (
+  const hasExperimentalThemes = themes.some((theme) => theme.isExtra);
+  const subTitle = hasExperimentalThemes ? (
     <Trans i18nKey="shared-preferences.fields.theme-description">
       Enjoying the experimental themes? Tell us what you'd like to see{' '}
       <TextLink
@@ -37,7 +37,7 @@ export function ThemeSelectorDrawer({ onClose }: Props) {
         here.
       </TextLink>
     </Trans>
-  );
+  ) : undefined;
 
   return (
     <Drawer
@@ -53,7 +53,7 @@ export function ThemeSelectorDrawer({ onClose }: Props) {
             isExperimental={themeOption.isExtra}
             key={themeOption.id}
             onSelect={() => onChange(themeOption)}
-            isSelected={currentTheme.name === themeOption.name}
+            isSelected={config.bootData.user.theme === themeOption.id}
           />
         ))}
       </div>

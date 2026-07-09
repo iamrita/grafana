@@ -40,6 +40,15 @@ describe('ProfileButton', () => {
     document.body.removeChild(mainView);
   });
 
+  it('should show the change theme menu item', async () => {
+    render(<ProfileButton {...defaultProps} />);
+
+    const profileButton = screen.getByRole('button', { name: /profile/i });
+    await user.click(profileButton);
+
+    expect(await screen.findByRole('menuitem', { name: /change theme/i })).toBeInTheDocument();
+  });
+
   it('should return focus to the profile button when the news feed drawer is closed', async () => {
     render(<ProfileButton {...defaultProps} />);
 

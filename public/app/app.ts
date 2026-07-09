@@ -81,6 +81,7 @@ import { backendSrv } from './core/services/backend_srv';
 import { contextSrv, RedirectToUrlKey } from './core/services/context_srv';
 import { initEchoSrv } from './core/services/echo/init';
 import { KeybindingSrv } from './core/services/keybindingSrv';
+import { initSystemThemeListener } from './core/services/theme';
 import { startMeasure, stopMeasure } from './core/utils/metrics';
 import { initAlerting } from './features/alerting/unified/initAlerting';
 import { getTimeSrv } from './features/dashboard/services/TimeSrv';
@@ -276,6 +277,7 @@ export class GrafanaApp {
       const keybindingsService = new KeybindingSrv(locationService, chromeService);
       const newAssetsChecker = new NewFrontendAssetsChecker();
       newAssetsChecker.start();
+      initSystemThemeListener();
 
       // Read initial kiosk mode from url at app startup
       chromeService.setKioskModeFromUrl(queryParams.kiosk);
