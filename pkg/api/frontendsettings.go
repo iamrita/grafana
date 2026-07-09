@@ -103,6 +103,9 @@ func sortedHash(vals []string, hash hash.Hash) string {
 }
 
 func (hs *HTTPServer) GetFrontendSettings(c *contextmodel.ReqContext) {
+	c, span := hs.injectSpan(c, "api.GetFrontendSettings")
+	defer span.End()
+
 	settings, err := hs.getFrontendSettings(c)
 	if err != nil {
 		c.JsonApiErr(400, "Failed to get frontend settings", err)
@@ -171,6 +174,9 @@ func (hs *HTTPServer) getFrontendSettings(c *contextmodel.ReqContext) (*dtos.Fro
 			Translations:    panel.Translations,
 		}
 	}
+
+	c, buildSpan := hs.injectSpan(c, "api.buildFrontendSettingsDTO")
+	defer buildSpan.End()
 
 	hideVersion := hs.Cfg.Anonymous.HideVersion && !c.IsSignedIn
 	version := setting.BuildVersion
@@ -495,6 +501,9 @@ func (hs *HTTPServer) getFSDataSources(c *contextmodel.ReqContext, availablePlug
 	}
 
 	dataSources := make(map[string]plugins.DataSourceDTO)
+
+	c, decryptSpan := hs.injectSpan(c, "api.decryptDataSourceSecrets")
+	defer decryptSpan.End()
 
 	for _, ds := range orgDataSources {
 		url := ds.URL
