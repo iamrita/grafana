@@ -15,6 +15,7 @@ export function getSelectableThemes() {
     allowedExtraThemes.push('desertbloom');
     allowedExtraThemes.push('gildedgrove');
     allowedExtraThemes.push('sapphiredusk');
+    allowedExtraThemes.push('oceanblue');
     allowedExtraThemes.push('tron');
     allowedExtraThemes.push('gloom');
   }
