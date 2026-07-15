@@ -2,11 +2,16 @@ package sync
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 	"golang.org/x/sync/singleflight"
 
@@ -83,11 +88,16 @@ func TestOAuthTokenSync_SyncOAuthTokenHook(t *testing.T) {
 			identity:                    &authn.Identity{ID: "1", Type: claims.TypeUser, SessionToken: &auth.UserToken{}, AuthenticatedBy: login.AzureADAuthModule},
 			expectedTryRefreshErr:       oauthtoken.ErrNoRefreshTokenFound,
 			expectTryRefreshTokenCalled: true,
-			expectRevokeTokenCalled:     true,
-			expectedErr:                 oauthtoken.ErrNoRefreshTokenFound,
+			expectRevokeTokenCalled:     false,
 		},
-
-		// TODO: address coverage of oauthtoken sync
+		{
+			desc:                        "should not invalidate session if token refresh lock retries are exhausted",
+			identity:                    &authn.Identity{ID: "1", Type: claims.TypeUser, SessionToken: &auth.UserToken{}, AuthenticatedBy: login.AzureADAuthModule},
+			expectedTryRefreshErr:       oauthtoken.ErrRetriesExhausted,
+			expectTryRefreshTokenCalled: true,
+			expectRevokeTokenCalled:     false,
+			expectedErr:                 authn.ErrExpiredAccessToken,
+		},
 	}
 
 	for _, tt := range tests {
@@ -141,4 +151,151 @@ func TestOAuthTokenSync_SyncOAuthTokenHook(t *testing.T) {
 			assert.Equal(t, tt.expectRevokeTokenCalled, revokeTokenCalled)
 		})
 	}
+}
+
+func TestOAuthTokenSync_SyncOAuthTokenHookCachesSuccessfulCheck(t *testing.T) {
+	var refreshCalls atomic.Int32
+	token := &oauth2.Token{AccessToken: "access", Expiry: time.Now().Add(time.Hour)}
+	service := &oauthtokentest.MockOauthTokenService{
+		TryTokenRefreshFunc: func(context.Context, identity.Requester, *oauthtoken.TokenRefreshMetadata) (*oauth2.Token, error) {
+			refreshCalls.Add(1)
+			return token, nil
+		},
+	}
+
+	syncService := newOAuthTokenSyncForTest(service)
+	id := &authn.Identity{
+		ID:              "1",
+		Type:            claims.TypeUser,
+		SessionToken:    &auth.UserToken{Id: 1},
+		AuthenticatedBy: login.AzureADAuthModule,
+	}
+
+	require.NoError(t, syncService.SyncOauthTokenHook(context.Background(), id, nil))
+	require.NoError(t, syncService.SyncOauthTokenHook(context.Background(), id, nil))
+	assert.Equal(t, int32(1), refreshCalls.Load())
+}
+
+func TestOAuthTokenSync_SyncOAuthTokenHookDeduplicatesConcurrentChecks(t *testing.T) {
+	const requests = 20
+
+	var refreshCalls atomic.Int32
+	refreshStarted := make(chan struct{})
+	releaseRefresh := make(chan struct{})
+	token := &oauth2.Token{AccessToken: "access", Expiry: time.Now().Add(time.Hour)}
+	service := &oauthtokentest.MockOauthTokenService{
+		TryTokenRefreshFunc: func(context.Context, identity.Requester, *oauthtoken.TokenRefreshMetadata) (*oauth2.Token, error) {
+			if refreshCalls.Add(1) == 1 {
+				close(refreshStarted)
+			}
+			<-releaseRefresh
+			return token, nil
+		},
+	}
+
+	syncService := newOAuthTokenSyncForTest(service)
+	id := &authn.Identity{
+		ID:              "1",
+		Type:            claims.TypeUser,
+		SessionToken:    &auth.UserToken{Id: 1},
+		AuthenticatedBy: login.AzureADAuthModule,
+	}
+
+	start := make(chan struct{})
+	errs := make(chan error, requests)
+	var wg sync.WaitGroup
+	for range requests {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			errs <- syncService.SyncOauthTokenHook(context.Background(), id, nil)
+		}()
+	}
+
+	close(start)
+	<-refreshStarted
+	// Give the released goroutines time to join the in-flight singleflight call.
+	time.Sleep(50 * time.Millisecond)
+	close(releaseRefresh)
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+	assert.Equal(t, int32(1), refreshCalls.Load())
+}
+
+func TestOAuthTokenSync_getOAuthTokenCacheTTL(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name  string
+		token *oauth2.Token
+		want  time.Duration
+	}{
+		{
+			name: "uses maximum TTL when token has no expiry",
+			token: &oauth2.Token{
+				AccessToken: "access",
+			},
+			want: maxOAuthTokenCacheTTL,
+		},
+		{
+			name: "uses access token expiry with skew when sooner",
+			token: &oauth2.Token{
+				AccessToken: "access",
+				Expiry:      now.Add(time.Minute),
+			},
+			want: time.Minute - oauthtoken.ExpiryDelta,
+		},
+		{
+			name: "uses ID token expiry with skew when sooner",
+			token: (&oauth2.Token{
+				AccessToken: "access",
+				Expiry:      now.Add(4 * time.Minute),
+			}).WithExtra(map[string]any{
+				"id_token": fakeIDToken(t, now.Add(2*time.Minute)),
+			}),
+			want: 2*time.Minute - oauthtoken.ExpiryDelta,
+		},
+		{
+			name:  "uses maximum TTL for a nil token",
+			token: nil,
+			want:  maxOAuthTokenCacheTTL,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getOAuthTokenCacheTTL(tt.token)
+			assert.InDelta(t, tt.want.Seconds(), got.Seconds(), 1)
+		})
+	}
+}
+
+func newOAuthTokenSyncForTest(service oauthtoken.OAuthTokenService) *OAuthTokenSync {
+	return &OAuthTokenSync{
+		log:               log.NewNopLogger(),
+		service:           service,
+		sessionService:    &authtest.FakeUserAuthTokenService{},
+		socialService:     &socialtest.FakeSocialService{},
+		singleflightGroup: new(singleflight.Group),
+		tracer:            tracing.InitializeTracerForTest(),
+		cache:             localcache.New(maxOAuthTokenCacheTTL, 15*time.Minute),
+		features:          featuremgmt.WithFeatures(),
+	}
+}
+
+func fakeIDToken(t *testing.T, expiry time.Time) string {
+	t.Helper()
+
+	header, err := json.Marshal(map[string]string{"alg": "HS256"})
+	require.NoError(t, err)
+	payload, err := json.Marshal(map[string]int64{"exp": expiry.Unix()})
+	require.NoError(t, err)
+
+	return base64.RawURLEncoding.EncodeToString(header) + "." +
+		base64.RawURLEncoding.EncodeToString(payload) + "." +
+		base64.RawURLEncoding.EncodeToString([]byte("signature"))
 }

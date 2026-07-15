@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
 	claims "github.com/grafana/authlib/types"
@@ -87,6 +89,7 @@ func TestIntegration_TryTokenRefresh(t *testing.T) {
 		setup           func(env *environment)
 		expectedToken   *oauth2.Token
 		expectedErr     error
+		expectedMetric  string
 	}
 
 	userIdentity := &authn.Identity{
@@ -237,6 +240,32 @@ func TestIntegration_TryTokenRefresh(t *testing.T) {
 			expectedToken: unexpiredTokenWithIDToken,
 		},
 		{
+			desc:            "should record a failed token refresh",
+			identity:        userIdentity,
+			refreshMetadata: &TokenRefreshMetadata{ExternalSessionID: 1, AuthModule: login.GenericOAuthModule, AuthID: "subject"},
+			setup: func(env *environment) {
+				env.socialService.ExpectedAuthInfoProvider = &social.OAuthInfo{
+					UseRefreshToken: true,
+				}
+				env.authInfoService.On("GetAuthInfo", mock.Anything, mock.Anything).Return(&login.UserAuth{
+					AuthModule:        login.GenericOAuthModule,
+					AuthId:            "subject",
+					UserId:            1234,
+					OAuthAccessToken:  expiredToken.AccessToken,
+					OAuthRefreshToken: expiredToken.RefreshToken,
+					OAuthExpiry:       expiredToken.Expiry,
+				}, nil).Once()
+				env.authInfoService.On("UpdateAuthInfo", mock.Anything, mock.MatchedBy(func(cmd *login.UpdateAuthInfoCommand) bool {
+					return cmd.UserId == 1234 && cmd.AuthModule == login.GenericOAuthModule &&
+						cmd.AuthId == "subject" && cmd.OAuthToken.AccessToken == "" &&
+						cmd.OAuthToken.RefreshToken == "" && cmd.OAuthToken.Expiry.IsZero()
+				})).Return(nil).Once()
+				env.socialConnector.On("TokenSource", mock.Anything, mock.Anything).Return(errorTokenSource{err: assert.AnError}).Once()
+			},
+			expectedErr:    assert.AnError,
+			expectedMetric: "false",
+		},
+		{
 			desc:            "should refresh token when the id token is expired",
 			identity:        &authn.Identity{ID: "1234", Type: claims.TypeUser, AuthenticatedBy: login.GenericOAuthModule},
 			refreshMetadata: &TokenRefreshMetadata{ExternalSessionID: 1, AuthModule: login.GenericOAuthModule},
@@ -356,6 +385,10 @@ func TestIntegration_TryTokenRefresh(t *testing.T) {
 
 			// token refresh
 			actualToken, err := env.service.TryTokenRefresh(context.Background(), tt.identity, tt.refreshMetadata)
+
+			if tt.expectedMetric != "" {
+				assertTokenRefreshMetric(t, env.service.tokenRefreshDuration, login.GenericOAuthModule, tt.expectedMetric)
+			}
 
 			if tt.expectedErr != nil {
 				assert.ErrorIs(t, err, tt.expectedErr)
@@ -688,6 +721,32 @@ func verifyUpdateExternalSessionCommand(token *oauth2.Token) func(*auth.UpdateEx
 			cmd.Token.RefreshToken == token.RefreshToken &&
 			cmd.Token.Expiry.Equal(token.Expiry) &&
 			idToken == token.Extra("id_token")
+	}
+}
+
+type errorTokenSource struct {
+	err error
+}
+
+func (s errorTokenSource) Token() (*oauth2.Token, error) {
+	return nil, s.err
+}
+
+func assertTokenRefreshMetric(t *testing.T, metric *prometheus.HistogramVec, authModule, expectedLabel string) {
+	t.Helper()
+
+	for _, label := range []string{"true", "false"} {
+		observer := metric.WithLabelValues(authModule, label)
+		promMetric, ok := observer.(prometheus.Metric)
+		require.True(t, ok)
+
+		value := &dto.Metric{}
+		require.NoError(t, promMetric.Write(value))
+		if label == expectedLabel {
+			assert.Equal(t, uint64(1), value.GetHistogram().GetSampleCount())
+		} else {
+			assert.Equal(t, uint64(0), value.GetHistogram().GetSampleCount())
+		}
 	}
 }
 

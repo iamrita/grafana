@@ -91,6 +91,13 @@ func (s *OAuthTokenSync) SyncOauthTokenHook(ctx context.Context, id *authn.Ident
 	_, err, _ = s.singleflightGroup.Do(cacheKey, func() (interface{}, error) {
 		ctxLogger.Debug("Singleflight request for OAuth token sync")
 
+		// A request may have missed the cache immediately before another
+		// singleflight call populated it. Check again after taking ownership of
+		// the key so a delayed request does not perform a duplicate refresh.
+		if _, ok := s.cache.Get(cacheKey); ok {
+			return nil, nil
+		}
+
 		updateCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 15*time.Second)
 		defer cancel()
 
@@ -101,6 +108,14 @@ func (s *OAuthTokenSync) SyncOauthTokenHook(ctx context.Context, id *authn.Ident
 		})
 		if refreshErr != nil {
 			if errors.Is(refreshErr, context.Canceled) {
+				return nil, nil
+			}
+
+			if errors.Is(refreshErr, oauthtoken.ErrNoRefreshTokenFound) {
+				// OAuth providers may omit refresh tokens unless they are
+				// explicitly required. Keep the Grafana session valid and
+				// avoid repeating the same check on every request.
+				s.cache.Set(cacheKey, true, maxOAuthTokenCacheTTL)
 				return nil, nil
 			}
 

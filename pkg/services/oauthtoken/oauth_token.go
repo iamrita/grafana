@@ -445,7 +445,7 @@ func (o *Service) tryGetOrRefreshOAuthToken(ctx context.Context, persistedToken 
 	// TokenSource handles refreshing the token if it has expired
 	token, refreshErr := connect.TokenSource(ctx, persistedToken).Token()
 	duration := time.Since(start)
-	o.tokenRefreshDuration.WithLabelValues(tokenRefreshMetadata.AuthModule, fmt.Sprintf("%t", err == nil)).Observe(duration.Seconds())
+	o.tokenRefreshDuration.WithLabelValues(tokenRefreshMetadata.AuthModule, fmt.Sprintf("%t", refreshErr == nil)).Observe(duration.Seconds())
 
 	if refreshErr != nil {
 		span.SetAttributes(attribute.Bool("token_refreshed", false))
