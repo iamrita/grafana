@@ -261,7 +261,7 @@ describe('Silences', () => {
 
     await user.click(screen.getByRole('button', { name: /unsilence selected/i }));
     const confirmDialog = screen.getByRole('dialog', { name: /unsilence selected silences/i });
-    expect(within(confirmDialog).getByText(/immediately expire 3 selected silence/i)).toBeInTheDocument();
+    expect(within(confirmDialog).getByText(/immediately expire 3 silences/i)).toBeInTheDocument();
 
     await user.click(within(confirmDialog).getByRole('button', { name: /^unsilence$/i }));
 
