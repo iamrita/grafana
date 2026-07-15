@@ -1,19 +1,25 @@
 import { css } from '@emotion/css';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { GrafanaTheme2, dateMath } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
+import { config } from '@grafana/runtime';
 import {
   Alert,
+  Button,
+  Checkbox,
   CollapsableSection,
+  ConfirmModal,
   Divider,
   Icon,
   Link,
   LinkButton,
   LoadingPlaceholder,
   Stack,
+  Text,
   useStyles2,
 } from '@grafana/ui';
+import { useAppNotification } from 'app/core/copy/appNotification';
 import { useQueryParams } from 'app/core/hooks/useQueryParams';
 import { alertSilencesApi } from 'app/features/alerting/unified/api/alertSilencesApi';
 import { featureDiscoveryApi } from 'app/features/alerting/unified/api/featureDiscoveryApi';
@@ -46,6 +52,23 @@ type SilenceTableColumnProps = DynamicTableColumnProps<SilenceTableItem>;
 type SilenceTableItemProps = DynamicTableItemProps<SilenceTableItem>;
 
 const API_QUERY_OPTIONS = { pollingInterval: SILENCES_POLL_INTERVAL_MS, refetchOnFocus: true };
+const BULK_UNSILENCE_CONCURRENCY = 5;
+
+async function settleInBatches<T>(tasks: Array<() => Promise<T>>): Promise<Array<PromiseSettledResult<T>>> {
+  if (tasks.length === 0) {
+    return [];
+  }
+
+  const currentResults = await Promise.allSettled(tasks.slice(0, BULK_UNSILENCE_CONCURRENCY).map((task) => task()));
+  const remainingResults = await settleInBatches(tasks.slice(BULK_UNSILENCE_CONCURRENCY));
+  return [...currentResults, ...remainingResults];
+}
+
+function getSilenceCountText(count: number) {
+  return count === 1
+    ? t('alerting.silences-table.bulk-actions.silence-count-one', '1 silence')
+    : t('alerting.silences-table.bulk-actions.silence-count-other', '{{count}} silences', { count });
+}
 
 const SilencesTable = () => {
   const { selectedAlertmanager: alertManagerSourceName = '' } = useAlertmanager();
@@ -161,6 +184,7 @@ const SilencesTable = () => {
             items={itemsNotExpired}
             alertManagerSourceName={alertManagerSourceName}
             dataTestId="not-expired-table"
+            allowBulkActions={Boolean(config.featureToggles.alertingBulkActionsInUI)}
           />
           {itemsExpired.length > 0 && (
             <CollapsableSection
@@ -181,6 +205,7 @@ const SilencesTable = () => {
                 items={itemsExpired}
                 alertManagerSourceName={alertManagerSourceName}
                 dataTestId="expired-table"
+                allowBulkActions={false}
               />
             </CollapsableSection>
           )}
@@ -195,29 +220,178 @@ function SilenceList({
   items,
   alertManagerSourceName,
   dataTestId,
+  allowBulkActions,
 }: {
   items: SilenceTableItemProps[];
   alertManagerSourceName: string;
   dataTestId: string;
+  allowBulkActions: boolean;
 }) {
   const columns = useColumns(alertManagerSourceName);
+  const [updateSupported, updateAllowed] = useAlertmanagerAbility(AlertmanagerAction.UpdateSilence);
+  const [expireSilence] = alertSilencesApi.endpoints.expireSilence.useMutation();
+  const notifyApp = useAppNotification();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isUnsilencing, setIsUnsilencing] = useState(false);
+  const isGrafanaFlavoredAlertmanager = alertManagerSourceName === GRAFANA_RULES_SOURCE_NAME;
+
+  const selectableIds = useMemo(() => {
+    if (!allowBulkActions || !updateSupported) {
+      return [];
+    }
+
+    return items
+      .filter(({ data: silence }) =>
+        isGrafanaFlavoredAlertmanager ? Boolean(silence.accessControl?.write) : updateAllowed
+      )
+      .map(({ data: silence }) => silence.id);
+  }, [allowBulkActions, isGrafanaFlavoredAlertmanager, items, updateAllowed, updateSupported]);
+
+  useEffect(() => {
+    setSelectedIds((previous) => {
+      const next = new Set(Array.from(previous).filter((id) => selectableIds.includes(id)));
+      return next.size === previous.size ? previous : next;
+    });
+  }, [selectableIds]);
+
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+  const selectionColumn = useMemo(
+    (): SilenceTableColumnProps => ({
+      id: 'select',
+      label: t('alerting.silences-table.bulk-actions.select-column', 'Select'),
+      renderCell: ({ data: silence }) => {
+        if (!selectableIds.includes(silence.id)) {
+          return null;
+        }
+
+        return (
+          <Checkbox
+            aria-label={t('alerting.silences-table.bulk-actions.select-silence', 'Select silence {{silenceId}}', {
+              silenceId: silence.id,
+            })}
+            value={selectedIds.has(silence.id)}
+            disabled={isUnsilencing}
+            onChange={(event) => {
+              const isSelected = event.currentTarget.checked;
+              setSelectedIds((previous) => {
+                const next = new Set(previous);
+                isSelected ? next.add(silence.id) : next.delete(silence.id);
+                return next;
+              });
+            }}
+          />
+        );
+      },
+      size: '72px',
+    }),
+    [isUnsilencing, selectableIds, selectedIds]
+  );
+  const displayedColumns = selectableIds.length > 0 ? [selectionColumn, ...columns] : columns;
+
+  const onConfirmUnsilence = async () => {
+    setIsUnsilencing(true);
+    const ids = Array.from(selectedIds);
+    const results = await settleInBatches(
+      ids.map(
+        (silenceId) => () =>
+          expireSilence({
+            datasourceUid: getDatasourceAPIUid(alertManagerSourceName),
+            silenceId,
+            suppressNotifications: true,
+          }).unwrap()
+      )
+    );
+    const failedIds = ids.filter((_, index) => results[index].status === 'rejected');
+    const successCount = ids.length - failedIds.length;
+
+    setSelectedIds(new Set(failedIds));
+    setIsUnsilencing(false);
+    setIsConfirmOpen(false);
+
+    if (successCount > 0) {
+      notifyApp.success(
+        t('alerting.silences-table.bulk-actions.unsilence-success', 'Successfully unsilenced {{silenceCount}}', {
+          silenceCount: getSilenceCountText(successCount),
+        })
+      );
+    }
+    if (failedIds.length > 0) {
+      notifyApp.error(
+        t('alerting.silences-table.bulk-actions.unsilence-error', 'Failed to unsilence {{silenceCount}}', {
+          silenceCount: getSilenceCountText(failedIds.length),
+        })
+      );
+    }
+  };
+
+  const selectedSilenceCount = getSilenceCountText(selectedIds.size);
+
   if (!!items.length) {
     return (
-      <DynamicTable
-        pagination={{ itemsPerPage: 25 }}
-        items={items}
-        cols={columns}
-        isExpandable
-        dataTestId={dataTestId}
-        renderExpandedContent={({ data }) => {
-          return (
-            <>
-              <Divider />
-              <SilenceDetails silence={data} />
-            </>
-          );
-        }}
-      />
+      <Stack direction="column">
+        {selectableIds.length > 0 && (
+          <Stack alignItems="center" justifyContent="space-between">
+            <Checkbox
+              aria-label={t('alerting.silences-table.bulk-actions.select-all', 'Select all silences')}
+              label={t('alerting.silences-table.bulk-actions.select-all', 'Select all silences')}
+              value={allSelected}
+              indeterminate={selectedIds.size > 0 && !allSelected}
+              disabled={isUnsilencing}
+              onChange={(event) => {
+                setSelectedIds(event.currentTarget.checked ? new Set(selectableIds) : new Set());
+              }}
+            />
+            <Stack alignItems="center">
+              <Text color="secondary">
+                {t('alerting.silences-table.bulk-actions.selection-count', '{{silenceCount}} selected', {
+                  silenceCount: selectedSilenceCount,
+                })}
+              </Text>
+              <Button
+                variant="destructive"
+                icon="bell"
+                disabled={selectedIds.size === 0 || isUnsilencing}
+                onClick={() => setIsConfirmOpen(true)}
+              >
+                <Trans i18nKey="alerting.silences-table.bulk-actions.unsilence-selected">Unsilence selected</Trans>
+              </Button>
+            </Stack>
+          </Stack>
+        )}
+        <DynamicTable
+          pagination={{ itemsPerPage: 25 }}
+          items={items}
+          cols={displayedColumns}
+          isExpandable
+          dataTestId={dataTestId}
+          renderExpandedContent={({ data }) => {
+            return (
+              <>
+                <Divider />
+                <SilenceDetails silence={data} />
+              </>
+            );
+          }}
+        />
+        <ConfirmModal
+          isOpen={isConfirmOpen}
+          title={t('alerting.silences-table.bulk-actions.confirm-title', 'Unsilence selected silences?')}
+          body={t(
+            'alerting.silences-table.bulk-actions.confirm-body',
+            'This will immediately expire {{silenceCount}}.',
+            { silenceCount: selectedSilenceCount }
+          )}
+          confirmText={
+            isUnsilencing
+              ? t('alerting.silences-table.bulk-actions.unsilencing', 'Unsilencing...')
+              : t('alerting.silences-table.bulk-actions.confirm', 'Unsilence')
+          }
+          confirmButtonVariant="destructive"
+          onConfirm={onConfirmUnsilence}
+          onDismiss={() => setIsConfirmOpen(false)}
+        />
+      </Stack>
     );
   } else {
     return <Trans i18nKey="silences.table.no-matching-silences">No matching silences found;</Trans>;

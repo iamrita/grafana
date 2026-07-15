@@ -5,7 +5,7 @@ import { byLabelText, byPlaceholderText, byRole, byTestId, byText } from 'testin
 
 import { DataSourceApi, dateTime } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
-import { locationService } from '@grafana/runtime';
+import { config, locationService } from '@grafana/runtime';
 import { mockAlertRuleApi, setupMswServer } from 'app/features/alerting/unified/mockApi';
 import { waitForServerRequest } from 'app/features/alerting/unified/mocks/server/events';
 import {
@@ -111,6 +111,7 @@ const addAdditionalMatcher = async () => {
 const server = setupMswServer();
 
 beforeEach(() => {
+  config.featureToggles.alertingBulkActionsInUI = true;
   const dsSrv = setupDataSources(dataSources.am, dataSources[MOCK_DATASOURCE_NAME_BROKEN_ALERTMANAGER]);
   const origGet = dsSrv.get.bind(dsSrv);
   jest.spyOn(dsSrv, 'get').mockImplementation((ref, scopedVars) => {
@@ -239,6 +240,41 @@ describe('Silences', () => {
     expect(notExpiredTable).toBeInTheDocument();
 
     expect(ui.addSilenceButton.query()).not.toBeInTheDocument();
+  });
+
+  it('bulk unsilences selected silences that the user can update', async () => {
+    const expiredSilenceIds: string[] = [];
+    server.use(
+      http.delete<{ uuid: string }>('/api/alertmanager/:datasourceUid/api/v2/silence/:uuid', ({ params }) => {
+        expiredSilenceIds.push(params.uuid);
+        return HttpResponse.json({ message: 'silence expired' });
+      })
+    );
+
+    const { user } = renderSilences();
+
+    expect(await ui.notExpiredTable.find()).toBeInTheDocument();
+    expect(screen.getAllByRole('checkbox', { name: /select silence /i })).toHaveLength(3);
+
+    await user.click(screen.getByRole('checkbox', { name: /select all silences/i }));
+    expect(screen.getByText('3 silences selected')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /unsilence selected/i }));
+    const confirmDialog = screen.getByRole('dialog', { name: /unsilence selected silences/i });
+    expect(within(confirmDialog).getByText(/immediately expire 3 selected silence/i)).toBeInTheDocument();
+
+    await user.click(within(confirmDialog).getByRole('button', { name: /^unsilence$/i }));
+
+    await waitFor(() => expect(expiredSilenceIds).toHaveLength(3));
+    expect(await screen.findByText('0 silences selected')).toBeInTheDocument();
+    expect(expiredSilenceIds).toEqual(
+      expect.arrayContaining([
+        MOCK_SILENCE_ID_EXISTING,
+        'ce031625-61c7-47cd-9beb-8760bccf0ed7',
+        MOCK_SILENCE_ID_EXISTING_ALERT_RULE_UID,
+      ])
+    );
+    expect(expiredSilenceIds).not.toContain(MOCK_SILENCE_ID_LACKING_PERMISSIONS);
   });
 
   it('handles error case when broken alertmanager is used', async () => {

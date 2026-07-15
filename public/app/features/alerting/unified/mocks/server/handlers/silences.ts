@@ -50,5 +50,10 @@ export const silenceCreateHandler = () =>
     HttpResponse.json({ silenceId: '4bda5b38-7939-4887-9ec2-16323b8e3b4e' })
   );
 
-const handlers = [silencesListHandler(), silenceGetHandler(), silenceCreateHandler()];
+export const silenceExpireHandler = () =>
+  http.delete('/api/alertmanager/:datasourceUid/api/v2/silence/:uuid', () =>
+    HttpResponse.json({ message: 'silence expired' })
+  );
+
+const handlers = [silencesListHandler(), silenceGetHandler(), silenceCreateHandler(), silenceExpireHandler()];
 export default handlers;

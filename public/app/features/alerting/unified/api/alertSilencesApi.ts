@@ -88,11 +88,18 @@ export const alertSilencesApi = alertingApi.injectEndpoints({
       {
         datasourceUid: string;
         silenceId: string;
+        suppressNotifications?: boolean;
       }
     >({
-      query: ({ datasourceUid, silenceId }) => ({
+      query: ({ datasourceUid, silenceId, suppressNotifications }) => ({
         url: `/api/alertmanager/${datasourceUid}/api/v2/silence/${silenceId}`,
         method: 'DELETE',
+        notificationOptions: suppressNotifications
+          ? {
+              showErrorAlert: false,
+              showSuccessAlert: false,
+            }
+          : undefined,
       }),
       invalidatesTags: ['AlertmanagerSilences'],
     }),
