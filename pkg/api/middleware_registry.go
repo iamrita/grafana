@@ -177,7 +177,7 @@ var middlewareRegistrationTable = []middlewareRegistration{
 		name:         "middleware.ValidateHostHeader",
 		registration: "Use",
 		condition:    "server.enforce_domain is enabled",
-		description:  "Rejects host headers that don't match the configured domain.",
+		description:  "Redirects host headers that don't match the configured domain.",
 		apply: func(hs *HTTPServer, m *web.Mux) {
 			if hs.Cfg.EnforceDomain {
 				m.Use(middleware.ValidateHostHeader(hs.Cfg))

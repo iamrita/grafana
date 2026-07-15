@@ -58,7 +58,7 @@ func generateMiddlewareDocumentation() string {
 
 Grafana registers global HTTP middleware in the following order. The source registration table enforces this order at runtime. To change the pipeline, edit ` + "`middlewareRegistrationTable`" + ` in ` + "`pkg/api/middleware_registry.go`" + `, then run ` + "`go test ./pkg/api -run TestMiddlewareRegistrationDocumentation -update-middleware-docs`" + ` to regenerate this document.
 
-Middleware registered with ` + "`UseMiddleware`" + ` runs as a conventional before-and-after wrapper. Middleware registered with ` + "`Use`" + ` runs as a handler in the request pipeline and can return early.
+` + "`UseMiddleware`" + ` registers wrapper middleware directly. ` + "`Use`" + ` is the legacy adapter for handlers and also accepts wrapper middleware. Adapted handlers can return a response without calling the rest of the pipeline.
 
 | Order | Middleware | Registration | Condition | Purpose |
 | ---: | --- | --- | --- | --- |
