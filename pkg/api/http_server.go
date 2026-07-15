@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -44,7 +43,6 @@ import (
 	"github.com/grafana/grafana/pkg/middleware"
 	"github.com/grafana/grafana/pkg/middleware/csrf"
 	"github.com/grafana/grafana/pkg/middleware/loggermw"
-	"github.com/grafana/grafana/pkg/middleware/requestmeta"
 	"github.com/grafana/grafana/pkg/plugins"
 	"github.com/grafana/grafana/pkg/plugins/pluginscdn"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
@@ -660,73 +658,6 @@ func (hs *HTTPServer) applyRoutes() {
 	hs.RouteRegister.Register(hs.web, hs.namedMiddlewares...)
 	// lastly not found route
 	hs.web.NotFound(middleware.ProvideRouteOperationName("notfound"), middleware.ReqSignedIn, hs.NotFoundHandler)
-}
-
-func (hs *HTTPServer) addMiddlewaresAndStaticRoutes() {
-	m := hs.web
-
-	m.Use(requestmeta.SetupRequestMetadata())
-	m.Use(middleware.RequestTracing(hs.tracer, middleware.ShouldTraceWithExceptions))
-	m.Use(middleware.RequestMetrics(hs.Features, hs.Cfg, hs.promRegister))
-
-	m.UseMiddleware(hs.LoggerMiddleware.Middleware())
-
-	if hs.Cfg.EnableGzip {
-		m.UseMiddleware(middleware.Gziper())
-	}
-
-	m.UseMiddleware(middleware.Recovery(hs.Cfg, hs.License))
-	m.UseMiddleware(hs.Csrf.Middleware())
-
-	hs.mapStatic(m, hs.Cfg.StaticRootPath, "build", "public/build")
-	hs.mapStatic(m, hs.Cfg.StaticRootPath, "", "public", "/public/views/swagger.html")
-	hs.mapStatic(m, hs.Cfg.StaticRootPath, "robots.txt", "robots.txt")
-	hs.mapStatic(m, hs.Cfg.StaticRootPath, "mockServiceWorker.js", "mockServiceWorker.js")
-
-	if hs.Cfg.ImageUploadProvider == "local" {
-		hs.mapStatic(m, hs.Cfg.ImagesDir, "", "/public/img/attachments")
-	}
-
-	if len(hs.Cfg.CustomResponseHeaders) > 0 {
-		m.Use(middleware.AddCustomResponseHeaders(hs.Cfg))
-	}
-
-	m.Use(middleware.AddDefaultResponseHeaders(hs.Cfg))
-
-	if hs.Cfg.ServeFromSubPath && hs.Cfg.AppSubURL != "" {
-		m.SetURLPrefix(hs.Cfg.AppSubURL)
-		m.UseMiddleware(middleware.SubPathRedirect(hs.Cfg))
-	}
-
-	m.UseMiddleware(web.Renderer(filepath.Join(hs.Cfg.StaticRootPath, "views"), "[[", "]]"))
-
-	// These endpoints are used for monitoring the Grafana instance
-	// and should not be redirected or rejected.
-	m.Use(hs.healthzHandler)
-	m.Use(hs.apiHealthHandler)
-	m.Use(hs.metricsEndpoint)
-	m.Use(hs.pluginMetricsEndpoint)
-	m.Use(hs.frontendLogEndpoints())
-
-	m.UseMiddleware(hs.ContextHandler.Middleware)
-	m.Use(middleware.OrgRedirect(hs.Cfg, hs.userService))
-
-	// needs to be after context handler
-	if hs.Cfg.EnforceDomain {
-		m.Use(middleware.ValidateHostHeader(hs.Cfg))
-	}
-	// handle action urls
-	m.UseMiddleware(middleware.ValidateActionUrl(hs.Cfg, hs.log))
-
-	m.Use(middleware.HandleNoCacheHeaders)
-
-	if hs.Cfg.CSPEnabled || hs.Cfg.CSPReportOnlyEnabled {
-		m.UseMiddleware(middleware.ContentSecurityPolicy(hs.Cfg, hs.log))
-	}
-
-	for _, mw := range hs.middlewares {
-		m.Use(mw)
-	}
 }
 
 func (hs *HTTPServer) metricsEndpoint(ctx *web.Context) {

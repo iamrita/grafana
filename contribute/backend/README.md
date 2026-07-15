@@ -16,6 +16,7 @@ For anyone who reviews code for the Grafana backend, get a basic understanding o
 - [Services](/contribute/backend/services.md)
 - [Communication](/contribute/backend/communication.md)
 - [Database](/contribute/backend/database.md)
+- [HTTP middleware](/contribute/backend/http-middleware.md)
 - [HTTP API](/pkg/api/README.md)
 
 ## Guidelines for contributors who make or review large changes to the backend
