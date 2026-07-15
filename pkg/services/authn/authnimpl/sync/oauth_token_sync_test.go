@@ -176,6 +176,29 @@ func TestOAuthTokenSync_SyncOAuthTokenHookCachesSuccessfulCheck(t *testing.T) {
 	assert.Equal(t, int32(1), refreshCalls.Load())
 }
 
+func TestOAuthTokenSync_syncOAuthTokenRechecksCacheInsideSingleflight(t *testing.T) {
+	var refreshCalls atomic.Int32
+	service := &oauthtokentest.MockOauthTokenService{
+		TryTokenRefreshFunc: func(context.Context, identity.Requester, *oauthtoken.TokenRefreshMetadata) (*oauth2.Token, error) {
+			refreshCalls.Add(1)
+			return &oauth2.Token{AccessToken: "access"}, nil
+		},
+	}
+
+	syncService := newOAuthTokenSyncForTest(service)
+	id := &authn.Identity{
+		ID:              "1",
+		Type:            claims.TypeUser,
+		SessionToken:    &auth.UserToken{Id: 1},
+		AuthenticatedBy: login.AzureADAuthModule,
+	}
+	cacheKey := "token-check-user:1"
+	syncService.cache.Set(cacheKey, true, maxOAuthTokenCacheTTL)
+
+	require.NoError(t, syncService.syncOAuthToken(context.Background(), id, cacheKey, log.NewNopLogger()))
+	assert.Equal(t, int32(0), refreshCalls.Load())
+}
+
 func TestOAuthTokenSync_SyncOAuthTokenHookDeduplicatesConcurrentChecks(t *testing.T) {
 	const requests = 20
 

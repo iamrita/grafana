@@ -88,7 +88,16 @@ func (s *OAuthTokenSync) SyncOauthTokenHook(ctx context.Context, id *authn.Ident
 		return nil
 	}
 
-	_, err, _ = s.singleflightGroup.Do(cacheKey, func() (interface{}, error) {
+	err = s.syncOAuthToken(ctx, id, cacheKey, ctxLogger)
+	if err != nil {
+		return authn.ErrExpiredAccessToken.Errorf("OAuth access token could not be refreshed: %w", err)
+	}
+
+	return nil
+}
+
+func (s *OAuthTokenSync) syncOAuthToken(ctx context.Context, id *authn.Identity, cacheKey string, ctxLogger log.Logger) error {
+	_, err, _ := s.singleflightGroup.Do(cacheKey, func() (interface{}, error) {
 		ctxLogger.Debug("Singleflight request for OAuth token sync")
 
 		// A request may have missed the cache immediately before another
@@ -139,11 +148,7 @@ func (s *OAuthTokenSync) SyncOauthTokenHook(ctx context.Context, id *authn.Ident
 		return nil, nil
 	})
 
-	if err != nil {
-		return authn.ErrExpiredAccessToken.Errorf("OAuth access token could not be refreshed: %w", err)
-	}
-
-	return nil
+	return err
 }
 
 func getOAuthTokenCacheTTL(token *oauth2.Token) time.Duration {
