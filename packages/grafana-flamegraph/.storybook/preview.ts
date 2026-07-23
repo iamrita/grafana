@@ -12,6 +12,7 @@ if (process.env.NODE_ENV === 'development') {
   allowedExtraThemes.push('desertbloom');
   allowedExtraThemes.push('gildedgrove');
   allowedExtraThemes.push('gloom');
+  allowedExtraThemes.push('oceanblue');
   allowedExtraThemes.push('sapphiredusk');
   allowedExtraThemes.push('tron');
 }
