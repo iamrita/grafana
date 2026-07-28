@@ -266,6 +266,44 @@ func TestValidateJob(t *testing.T) {
 			},
 		},
 		{
+			name: "delete action with invalid ref",
+			job: &provisioning.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-job",
+				},
+				Spec: provisioning.JobSpec{
+					Action:     provisioning.JobActionDelete,
+					Repository: "test-repo",
+					Delete: &provisioning.DeleteJobOptions{
+						Ref:   "feature..branch",
+						Paths: []string{"dashboard.json"},
+					},
+				},
+			},
+			wantErr: true,
+			validateError: func(t *testing.T, err error) {
+				require.Contains(t, err.Error(), "spec.delete.ref")
+				require.Contains(t, err.Error(), "invalid git ref")
+			},
+		},
+		{
+			name: "delete action with valid commit hash ref",
+			job: &provisioning.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-job",
+				},
+				Spec: provisioning.JobSpec{
+					Action:     provisioning.JobActionDelete,
+					Repository: "test-repo",
+					Delete: &provisioning.DeleteJobOptions{
+						Ref:   "fedcba0987654321fedcba0987654321fedcba09",
+						Paths: []string{"dashboard.json"},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "delete action with resource missing name",
 			job: &provisioning.Job{
 				ObjectMeta: metav1.ObjectMeta{
@@ -377,6 +415,28 @@ func TestValidateJob(t *testing.T) {
 			wantErr: true,
 			validateError: func(t *testing.T, err error) {
 				require.Contains(t, err.Error(), "spec.move.targetPath")
+			},
+		},
+		{
+			name: "move action with invalid ref",
+			job: &provisioning.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-job",
+				},
+				Spec: provisioning.JobSpec{
+					Action:     provisioning.JobActionMove,
+					Repository: "test-repo",
+					Move: &provisioning.MoveJobOptions{
+						Ref:        "../../../etc/passwd",
+						Paths:      []string{"dashboard.json"},
+						TargetPath: "new-location/",
+					},
+				},
+			},
+			wantErr: true,
+			validateError: func(t *testing.T, err error) {
+				require.Contains(t, err.Error(), "spec.move.ref")
+				require.Contains(t, err.Error(), "invalid git ref")
 			},
 		},
 		{

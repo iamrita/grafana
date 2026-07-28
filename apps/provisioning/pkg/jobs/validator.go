@@ -115,6 +115,10 @@ func validateExportJobOptions(opts *provisioning.ExportJobOptions) field.ErrorLi
 func validateDeleteJobOptions(opts *provisioning.DeleteJobOptions) field.ErrorList {
 	list := field.ErrorList{}
 
+	if opts.Ref != "" && !git.IsValidGitRef(opts.Ref) {
+		list = append(list, field.Invalid(field.NewPath("spec", "delete", "ref"), opts.Ref, "invalid git ref"))
+	}
+
 	// At least one of paths or resources must be specified
 	if len(opts.Paths) == 0 && len(opts.Resources) == 0 {
 		list = append(list, field.Required(field.NewPath("spec", "delete"), "at least one path or resource must be specified"))
@@ -144,6 +148,10 @@ func validateDeleteJobOptions(opts *provisioning.DeleteJobOptions) field.ErrorLi
 // validateMoveJobOptions validates move job options
 func validateMoveJobOptions(opts *provisioning.MoveJobOptions) field.ErrorList {
 	list := field.ErrorList{}
+
+	if opts.Ref != "" && !git.IsValidGitRef(opts.Ref) {
+		list = append(list, field.Invalid(field.NewPath("spec", "move", "ref"), opts.Ref, "invalid git ref"))
+	}
 
 	// At least one of paths or resources must be specified
 	if len(opts.Paths) == 0 && len(opts.Resources) == 0 {
