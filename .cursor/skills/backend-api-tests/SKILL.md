@@ -27,7 +27,7 @@ import (
 
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
-    
+
     "github.com/grafana/grafana/pkg/web/webtest"
 )
 
@@ -72,9 +72,9 @@ Use for handler tests with authentication context:
 func TestUpdateUser(t *testing.T) {
     loggedInUserScenario(t, "When user updates profile", "PATCH", "/api/user", "/api/user", func(sc *scenarioContext) {
         sc.userService = usertest.NewUserServiceFake()
-        
+
         sc.fakeReqWithParams("PATCH", sc.url, map[string]string{}).exec()
-        
+
         assert.Equal(t, http.StatusOK, sc.resp.Code)
     }, mock.AnythingOfType("*authn.Identity"))
 }
@@ -109,16 +109,16 @@ func TestValidateInput(t *testing.T) {
 
 Import fakes from test packages:
 
-| Service | Fake | Import |
-|---------|------|--------|
-| User | `usertest.NewUserServiceFake()` | `github.com/grafana/grafana/pkg/services/user/usertest` |
-| Auth | `authntest.FakeService{}` | `github.com/grafana/grafana/pkg/services/authn/authntest` |
-| Dashboard | `dashboards.FakeDashboardService{}` | `github.com/grafana/grafana/pkg/services/dashboards` |
-| Folder | `foldertest.FakeFolderService{}` | `github.com/grafana/grafana/pkg/services/folder/foldertest` |
-| Quota | `quotatest.New(false, nil)` | `github.com/grafana/grafana/pkg/services/quota/quotatest` |
-| DB | `dbtest.NewFakeDB()` | `github.com/grafana/grafana/pkg/infra/db/dbtest` |
-| Plugins | `pluginstore.FakePluginStore{}` | `github.com/grafana/grafana/pkg/plugins/pluginstore` |
-| Preferences | `preftest.NewPreferenceServiceFake()` | `github.com/grafana/grafana/pkg/services/pref/preftest` |
+| Service     | Fake                                  | Import                                                      |
+| ----------- | ------------------------------------- | ----------------------------------------------------------- |
+| User        | `usertest.NewUserServiceFake()`       | `github.com/grafana/grafana/pkg/services/user/usertest`     |
+| Auth        | `authntest.FakeService{}`             | `github.com/grafana/grafana/pkg/services/authn/authntest`   |
+| Dashboard   | `dashboards.FakeDashboardService{}`   | `github.com/grafana/grafana/pkg/services/dashboards`        |
+| Folder      | `foldertest.FakeFolderService{}`      | `github.com/grafana/grafana/pkg/services/folder/foldertest` |
+| Quota       | `quotatest.New(false, nil)`           | `github.com/grafana/grafana/pkg/services/quota/quotatest`   |
+| DB          | `dbtest.NewFakeDB()`                  | `github.com/grafana/grafana/pkg/infra/db/dbtest`            |
+| Plugins     | `pluginstore.FakePluginStore{}`       | `github.com/grafana/grafana/pkg/plugins/pluginstore`        |
+| Preferences | `preftest.NewPreferenceServiceFake()` | `github.com/grafana/grafana/pkg/services/pref/preftest`     |
 
 ## HTTP Test Helpers
 
@@ -202,7 +202,7 @@ For tests requiring real services, use the integration test pattern:
 ```go
 func TestIntegrationFeature(t *testing.T) {
     testutil.SkipIntegrationTestInShortMode(t)
-    
+
     // Integration test code
 }
 ```
@@ -226,6 +226,7 @@ Before submitting tests:
 ## Reference Files
 
 For more examples, see:
+
 - `pkg/api/common_test.go` - Test utilities and scenarios
 - `pkg/api/dashboard_test.go` - Dashboard API tests
 - `pkg/api/datasources_test.go` - Datasource API tests
