@@ -17,7 +17,7 @@ func TestAlertRuleVersion_EqualSpec(t *testing.T) {
 		Condition:                   "cond",
 		Data:                        "data",
 		IntervalSeconds:             60,
-		Record:                      "record",
+		Record:                      util.Pointer("record"),
 		NoDataState:                 "state1",
 		ExecErrState:                "state2",
 		For:                         time.Minute,
@@ -95,6 +95,20 @@ func TestAlertRuleVersion_EqualSpec(t *testing.T) {
 			}(),
 			b:      baseVersion,
 			expect: false,
+		},
+		{
+			name: "nil and empty record are equal",
+			a: func() alertRuleVersion {
+				v := baseVersion
+				v.Record = nil
+				return v
+			}(),
+			b: func() alertRuleVersion {
+				v := baseVersion
+				v.Record = util.Pointer("")
+				return v
+			}(),
+			expect: true,
 		},
 		{
 			name:   "different NotificationSettings",

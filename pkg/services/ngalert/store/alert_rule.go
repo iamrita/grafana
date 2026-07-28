@@ -1142,12 +1142,12 @@ func (st DBstore) buildListAlertRulesQuery(sess *db.Session, query *ngmodels.Lis
 		}
 	}
 
-	// FIXME: record is nullable but we don't save it as null when it's nil
+	// Record is nullable; treat NULL and empty string as alerting rules.
 	switch query.RuleType {
 	case ngmodels.RuleTypeFilterAlerting:
-		q = q.Where("record = ''")
+		q = q.Where("(record IS NULL OR record = '')")
 	case ngmodels.RuleTypeFilterRecording:
-		q = q.Where("record != ''")
+		q = q.Where("(record IS NOT NULL AND record != '')")
 	case ngmodels.RuleTypeFilterAll:
 		// no additional filter
 	default:

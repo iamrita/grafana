@@ -392,6 +392,30 @@ func TestResetPolicyTree(t *testing.T) {
 		require.ErrorIs(t, err, expectedErr)
 	})
 
+	t.Run("returns error when transaction fails", func(t *testing.T) {
+		defaultConfig := getDefaultConfigRevision().Config
+		data, err := legacy_storage.SerializeAlertmanagerConfig(*defaultConfig)
+		require.NoError(t, err)
+
+		sut, store, prov := createNotificationPolicyServiceSut()
+		sut.settings = setting.UnifiedAlertingSettings{
+			DefaultConfiguration: string(data),
+		}
+		store.GetFn = func(ctx context.Context, orgID int64) (*legacy_storage.ConfigRevision, error) {
+			return &legacy_storage.ConfigRevision{Config: currentRevision.Config}, nil
+		}
+		expectedErr := errors.New("save failed")
+		store.SaveFn = func(ctx context.Context, revision *legacy_storage.ConfigRevision) error {
+			return expectedErr
+		}
+		prov.GetProvenanceFunc = func(ctx context.Context, o models.Provisionable, org int64) (models.Provenance, error) {
+			return models.ProvenanceNone, nil
+		}
+
+		_, err = sut.ResetPolicyTree(context.Background(), orgID, models.ProvenanceNone)
+		require.ErrorIs(t, err, expectedErr)
+	})
+
 	t.Run("replaces route with one from the default config and copies receivers if do not exist", func(t *testing.T) {
 		defaultConfig := getDefaultConfigRevision().Config
 		data, err := legacy_storage.SerializeAlertmanagerConfig(*defaultConfig)
