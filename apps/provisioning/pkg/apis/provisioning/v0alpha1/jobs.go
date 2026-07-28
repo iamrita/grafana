@@ -157,11 +157,9 @@ type ExportJobOptions struct {
 	// The source folder (or empty) to export
 	Folder string `json:"folder,omitempty"`
 
-	// FIXME: we should validate this in admission hooks
 	// Target branch for export (only git)
 	Branch string `json:"branch,omitempty"`
 
-	// FIXME: we should validate this in admission hooks
 	// Prefix in target file system
 	Path string `json:"path,omitempty"`
 }
@@ -186,7 +184,6 @@ type DeleteJobOptions struct {
 	// - dashboard.json (for a file)
 	// - a/b/c/other-dashboard.json (for a file)
 	// - nested/deep/ (for a directory)
-	// FIXME: we should validate this in admission hooks
 	Paths []string `json:"paths,omitempty"`
 
 	// Resources to delete
@@ -222,7 +219,6 @@ type MoveJobOptions struct {
 	// - dashboard.json (for a file)
 	// - a/b/c/other-dashboard.json (for a file)
 	// - nested/deep/ (for a directory)
-	// FIXME: we should validate this in admission hooks
 	Paths []string `json:"paths,omitempty"`
 
 	// Destination path for the move (e.g. "new-location/")
