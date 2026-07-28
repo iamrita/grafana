@@ -363,7 +363,7 @@ test-go-unit-pretty: check-tparse
 .PHONY: test-go-integration
 test-go-integration: ## Run integration tests for backend with flags.
 	@echo "test backend integration tests"
-	$(GO) test $(GO_RACE_FLAG) $(GO_TEST_FLAGS) -count=1 -run "^TestIntegration" -covermode=atomic -coverprofile=$(GO_INTEGRATION_COVER_PROFILE) -timeout=5m \
+	$(GO) test $(GO_RACE_FLAG) $(GO_TEST_FLAGS) -tags=integration -count=1 -run "^TestIntegration" -covermode=atomic -coverprofile=$(GO_INTEGRATION_COVER_PROFILE) -timeout=5m \
 		$(shell ./scripts/ci/backend-tests/pkgs-with-tests-named.sh -b TestIntegration | ./scripts/ci/backend-tests/shard.sh -n$(SHARD) -m$(SHARDS) -s)
 
 .PHONY: test-go-integration-alertmanager
@@ -386,14 +386,14 @@ test-go-integration-postgres: devenv-postgres ## Run integration tests for postg
 	@echo "test backend integration postgres tests"
 	$(GO) clean -testcache
 	GRAFANA_TEST_DB=postgres \
-	$(GO) test $(GO_RACE_FLAG) $(GO_TEST_FLAGS) -p=1 -count=1 -run "^TestIntegration" -covermode=atomic -timeout=10m \
+	$(GO) test $(GO_RACE_FLAG) $(GO_TEST_FLAGS) -tags=integration -p=1 -count=1 -run "^TestIntegration" -covermode=atomic -timeout=10m \
 		$(shell ./scripts/ci/backend-tests/pkgs-with-tests-named.sh -b TestIntegration | ./scripts/ci/backend-tests/shard.sh -n$(SHARD) -m$(SHARDS) -s)
 
 .PHONY: test-go-integration-mysql
 test-go-integration-mysql: devenv-mysql ## Run integration tests for mysql backend with flags.
 	@echo "test backend integration mysql tests"
 	GRAFANA_TEST_DB=mysql \
-	$(GO) test $(GO_RACE_FLAG) $(GO_TEST_FLAGS) -p=1 -count=1 -run "^TestIntegration" -covermode=atomic -timeout=10m \
+	$(GO) test $(GO_RACE_FLAG) $(GO_TEST_FLAGS) -tags=integration -p=1 -count=1 -run "^TestIntegration" -covermode=atomic -timeout=10m \
 		$(shell ./scripts/ci/backend-tests/pkgs-with-tests-named.sh -b TestIntegration | ./scripts/ci/backend-tests/shard.sh -n$(SHARD) -m$(SHARDS) -s)
 
 .PHONY: test-go-integration-redis
