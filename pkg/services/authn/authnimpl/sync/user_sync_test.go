@@ -1654,6 +1654,129 @@ func TestUserSync_ValidateUserProvisioningHook(t *testing.T) {
 	}
 }
 
+func TestUserSync_ValidateUserProvisioningHook_DynamicSCIMConfig(t *testing.T) {
+	ctx := context.Background()
+	orgID := int64(1)
+
+	createDynamicSCIMUtil := func(userSyncEnabled, rejectNonProvisioned bool, k8sErr bool) *scimutil.SCIMUtil {
+		mockK8s := &MockK8sHandler{}
+		if k8sErr {
+			mockK8s.On("Get", mock.Anything, "default", orgID, mock.AnythingOfType("v1.GetOptions"), mock.Anything).
+				Return(nil, errors.New("k8s error"))
+		} else {
+			obj := &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{
+						"enableUserSync":            userSyncEnabled,
+						"enableGroupSync":           false,
+						"rejectNonProvisionedUsers": rejectNonProvisioned,
+					},
+				},
+			}
+			mockK8s.On("Get", mock.Anything, "default", orgID, mock.AnythingOfType("v1.GetOptions"), mock.Anything).
+				Return(obj, nil)
+		}
+		return scimutil.NewSCIMUtil(mockK8s)
+	}
+
+	identity := func() *authn.Identity {
+		return &authn.Identity{
+			OrgID:           orgID,
+			AuthenticatedBy: login.SAMLAuthModule,
+			AuthID:          "auth-1",
+			ExternalUID:     "ext-uid-1",
+			ClientParams: authn.ClientParams{
+				SyncUser: true,
+			},
+		}
+	}
+
+	tests := []struct {
+		name          string
+		staticEnabled bool
+		staticReject  bool
+		scimUtil      *scimutil.SCIMUtil
+		provisioned   bool
+		externalUID   string
+		expectedErr   error
+	}{
+		{
+			name:          "dynamic config disables user sync and skips validation",
+			staticEnabled: true,
+			staticReject:  true,
+			scimUtil:      createDynamicSCIMUtil(false, true, false),
+			provisioned:   false,
+		},
+		{
+			name:          "dynamic config enables reject for non-provisioned user",
+			staticEnabled: true,
+			staticReject:  false,
+			scimUtil:      createDynamicSCIMUtil(true, true, false),
+			provisioned:   false,
+			expectedErr:   errUserNotProvisioned,
+		},
+		{
+			name:          "dynamic config disables reject even when static enables it",
+			staticEnabled: true,
+			staticReject:  true,
+			scimUtil:      createDynamicSCIMUtil(true, false, false),
+			provisioned:   false,
+		},
+		{
+			name:          "provisioned user passes when dynamic reject is enabled",
+			staticEnabled: true,
+			staticReject:  true,
+			scimUtil:      createDynamicSCIMUtil(true, true, false),
+			provisioned:   true,
+			externalUID:   "ext-uid-1",
+		},
+		{
+			name:          "k8s error falls back to static reject setting",
+			staticEnabled: true,
+			staticReject:  false,
+			scimUtil:      createDynamicSCIMUtil(true, true, true),
+			provisioned:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			userSync := initUserSyncService()
+			userSync.isUserProvisioningEnabled = tt.staticEnabled
+			userSync.rejectNonProvisionedUsers = tt.staticReject
+			userSync.staticConfig = &StaticSCIMConfig{
+				IsUserProvisioningEnabled: tt.staticEnabled,
+				RejectNonProvisionedUsers: tt.staticReject,
+			}
+			userSync.scimUtil = tt.scimUtil
+
+			externalUID := tt.externalUID
+			if externalUID == "" {
+				externalUID = "ext-uid-1"
+			}
+
+			userSync.userService = NewLegacyUserProxy(&usertest.FakeUserService{
+				ExpectedUser: &user.User{
+					ID:            1,
+					IsProvisioned: tt.provisioned,
+				},
+			})
+			userSync.authInfoService = &authinfotest.FakeService{
+				ExpectedUserAuth: &login.UserAuth{
+					UserId:      1,
+					AuthModule:  login.SAMLAuthModule,
+					AuthId:      "auth-1",
+					ExternalUID: externalUID,
+				},
+			}
+
+			id := identity()
+			err := userSync.ValidateUserProvisioningHook(ctx, id, nil)
+			require.ErrorIs(t, err, tt.expectedErr)
+		})
+	}
+}
+
 func TestUserSync_SCIMUtilIntegration(t *testing.T) {
 	ctx := context.Background()
 	orgID := int64(1)

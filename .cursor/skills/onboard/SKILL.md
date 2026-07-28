@@ -6,13 +6,14 @@ description: Onboard new developers to any codebase. Run ths skill anytime you s
 # Developer Onboarding
 
 Welcome new developers to this codebase. This skill helps you:
+
 1. Discover and run setup instructions
 2. Understand the technical architecture
 3. Explore key features using Plan mode
 
 ## Step 1: Discover Project Setup
 
-Search for setup documentation in the repository. You can use the code-explorer subagent here. 
+Search for setup documentation in the repository. You can use the code-explorer subagent here.
 
 1. **Find documentation files** - Look for:
    - `README.md` or `README` at the root
@@ -47,8 +48,7 @@ Search for setup documentation in the repository. You can use the code-explorer 
 
 ## Step 2: Explore Architecture
 
-Analyze the codebase structure and present an architecture overview. You can use the code-explorer subagent here. 
-
+Analyze the codebase structure and present an architecture overview. You can use the code-explorer subagent here.
 
 1. **List top-level directories** to understand project organization
 
@@ -60,11 +60,11 @@ Analyze the codebase structure and present an architecture overview. You can use
 
 3. **Create a directory summary table** like:
 
-   | Directory | Purpose |
-   |-----------|---------|
-   | `src/` | Main source code |
-   | `tests/` | Test suites |
-   | `docs/` | Documentation |
+   | Directory | Purpose          |
+   | --------- | ---------------- |
+   | `src/`    | Main source code |
+   | `tests/`  | Test suites      |
+   | `docs/`   | Documentation    |
 
 4. **Generate a Mermaid diagram** if the architecture is complex enough to warrant one. Use this template and adapt based on what you discover:
 
@@ -137,9 +137,9 @@ Discover and share common development workflows:
 - **Hot reload**: Note if dev servers support hot reloading
 - **Configuration**: Point to configuration files and how to override settings
 
-## Step 6: Run the app 
+## Step 6: Run the app
 
-- Run the app in the internal Cursor browser. Do this automatically and do not prompt the user to have to do this. 
+- Run the app in the internal Cursor browser. Do this automatically and do not prompt the user to have to do this.
 
 ## Additional Resources
 

@@ -616,6 +616,15 @@ func TestSCIMUtil_unstructuredToSCIMConfig(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "object with invalid spec type",
+			obj: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": "invalid",
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, tt := range tests {

@@ -299,3 +299,45 @@ func TestTeamAPIEndpoint_UpdateTeamPreferences(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 	})
 }
+
+func TestDeleteProvisionedTeamWhenGroupSyncEnabled(t *testing.T) {
+	server := SetupAPITestServer(t, &teamtest.FakeService{
+		ExpectedTeamDTO: &team.TeamDTO{ID: 1, UID: "a00001", IsProvisioned: true},
+	}, func(tapi *TeamAPI) {
+		tapi.cfg.Raw.Section("auth.scim").Key("group_sync_enabled").SetValue("true")
+	})
+
+	t.Run("should not be able to delete a provisioned team when group sync is enabled", func(t *testing.T) {
+		req := webtest.RequestWithSignedInUser(
+			server.NewRequest(http.MethodDelete, fmt.Sprintf(detailTeamURL, 1), nil),
+			authedUserWithPermissions(1, 1, []accesscontrol.Permission{
+				{Action: accesscontrol.ActionTeamsDelete, Scope: "teams:id:1"},
+			}),
+		)
+		res, err := server.SendJSON(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		require.NoError(t, res.Body.Close())
+	})
+}
+
+func TestUpdateProvisionedTeamNameWhenGroupSyncEnabled(t *testing.T) {
+	server := SetupAPITestServer(t, &teamtest.FakeService{
+		ExpectedTeamDTO: &team.TeamDTO{ID: 1, UID: "a00001", Name: "Provisioned Team", IsProvisioned: true},
+	}, func(tapi *TeamAPI) {
+		tapi.cfg.Raw.Section("auth.scim").Key("group_sync_enabled").SetValue("true")
+	})
+
+	t.Run("should not be able to rename a provisioned team when group sync is enabled", func(t *testing.T) {
+		req := webtest.RequestWithSignedInUser(
+			server.NewRequest(http.MethodPut, fmt.Sprintf(detailTeamURL, 1), strings.NewReader(`{"name": "Renamed Team"}`)),
+			authedUserWithPermissions(1, 1, []accesscontrol.Permission{
+				{Action: accesscontrol.ActionTeamsWrite, Scope: "teams:id:1"},
+			}),
+		)
+		res, err := server.SendJSON(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		require.NoError(t, res.Body.Close())
+	})
+}

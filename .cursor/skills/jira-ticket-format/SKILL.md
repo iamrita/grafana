@@ -53,30 +53,36 @@ When creating Jira tickets, format the description using this structure:
 
 ```markdown
 ## Context
+
 Users cannot export reports in PDF format, requiring manual copy-paste into documents. This blocks the Q3 compliance audit workflow.
 
 ## Scope
+
 - Add PDF export button to report viewer
 - Support all existing report types
 - Out of scope: Custom PDF templates (follow-up ticket)
 
 ## Acceptance Criteria
+
 - [ ] PDF export button visible on report viewer toolbar
 - [ ] Exported PDF includes all visible report data
 - [ ] PDF filename follows pattern: `{report-name}-{date}.pdf`
 - [ ] Export works for reports up to 1000 rows
 
 ## Notes
+
 - Design: [Figma link]
 - Related: PROJ-123 (CSV export implementation)
 - Use existing print stylesheet as base
 
 ## Security Considerations
+
 - PDFs may contain sensitive data; ensure exports respect user permissions
 - Audit log PDF exports for compliance
 
 ## Risks and Mitigation
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Large reports timeout | Medium | Medium | Add progress indicator, async generation for >500 rows |
+
+| Risk                  | Likelihood | Impact | Mitigation                                             |
+| --------------------- | ---------- | ------ | ------------------------------------------------------ |
+| Large reports timeout | Medium     | Medium | Add progress indicator, async generation for >500 rows |
 ```
