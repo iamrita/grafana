@@ -1,6 +1,6 @@
 ---
 name: cloud-agent-post-change-lint
-description: Enforces post-change lint verification for cloud agent runs. Use whenever a cloud agent edits code, applies patches, or completes implementation work, especially when the user asks to launch a cloud agent. Make sure this runs before any changes are pushed to Github or before a draft PR is made. 
+description: Enforces post-change lint verification for cloud agent runs. Use whenever a cloud agent edits code, applies patches, or completes implementation work, especially when the user asks to launch a cloud agent. Make sure this runs before any changes are pushed to Github or before a draft PR is made.
 ---
 
 # Cloud Agent Post-Change Lint

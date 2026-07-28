@@ -21,11 +21,13 @@ Run `git status` and `git diff --name-only HEAD` to identify modified `.ts` and 
 ### Step 2: Run ESLint
 
 For the full project:
+
 ```bash
 yarn lint:ts
 ```
 
 For specific files (more focused):
+
 ```bash
 yarn eslint <file-path> --cache
 ```
@@ -39,11 +41,13 @@ yarn typecheck
 ### Step 4: Auto-fix (when appropriate)
 
 If issues are fixable, suggest running:
+
 ```bash
 yarn lint:fix
 ```
 
 Or for specific files:
+
 ```bash
 yarn eslint <file-path> --fix
 ```
@@ -53,22 +57,26 @@ yarn eslint <file-path> --fix
 Organize findings by severity:
 
 ### Critical Errors
+
 - Type errors that will break compilation
 - Undefined variables or missing imports
 - Invalid syntax
 
 ### Warnings
+
 - Unused variables or imports
 - Missing return types
 - Code style violations
 
 ### Suggestions
+
 - Potential improvements
 - Better patterns to use
 
 ## Key Rules for Grafana
 
 When reviewing lint output, pay attention to:
+
 - Import ordering (Grafana uses specific import conventions)
 - React hooks rules (dependencies, ordering)
 - TypeScript strict mode violations
@@ -78,6 +86,7 @@ When reviewing lint output, pay attention to:
 ## Providing Fixes
 
 For each issue:
+
 1. Show the exact file and line number
 2. Explain what the issue is
 3. Provide the corrected code
