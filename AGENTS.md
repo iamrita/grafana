@@ -152,5 +152,5 @@ Build a specific plugin: `yarn workspace @grafana-plugins/<name> dev`
 ### Testing gotchas
 
 - **Frontend tests**: The `yarn test` script includes `--watch` by default. Always use `yarn jest --no-watch` or add `--watchAll=false` to run tests once and exit.
-- **Backend tests**: Some packages (e.g. `pkg/api/`) have slow test compilation (~2 min) due to large dependency graphs. Use targeted test runs with `-run TestName` where possible.
+- **Backend tests**: Some packages (e.g. `pkg/api/`) have slow test compilation due to large dependency graphs. Use targeted test runs with `-run TestName` where possible. Integration tests in `pkg/api/` that require a database use the `integration` build tag; run them with `go test -tags=integration ./pkg/api/...`. See `pkg/api/TESTING.md`.
 - All standard build/test/lint commands are documented in the Commands section above.
