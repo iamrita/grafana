@@ -17,6 +17,9 @@ weight: 200
 
 Grafana has default and custom configuration files.
 You can customize your Grafana instance by modifying the custom configuration file or by using environment variables.
+
+For the authoritative precedence order of configuration sources, refer to [Configuration precedence](#configuration-precedence).
+
 To see the list of settings for a Grafana instance, refer to [View server settings](/docs/grafana/<GRAFANA_VERSION>/administration/stats-and-license#view-server-settings).
 
 {{< admonition type="note" >}}
@@ -71,10 +74,30 @@ For example:
 ;http_port = 3000
 ```
 
+## Configuration precedence
+
+Grafana applies configuration from multiple sources. When the same setting is defined in more than one place, the source with the highest precedence wins.
+
+Precedence order (lowest to highest):
+
+1. `conf/defaults.ini`
+1. `cfg:default.*` command-line defaults
+1. `conf/custom.ini` (when no `--config` flag) or the file passed to `--config`
+1. `GF_*` environment variables
+1. `cfg:*` command-line overrides
+1. `${VAR}` / `$__env{}` / `$__file{}` variable expansion
+
+For example, if `defaults.ini` sets `server.domain` to `default.example.com`, `custom.ini` sets it to `custom.example.com`, and `GF_SERVER_DOMAIN=env.example.com` is set, the resolved value is `env.example.com`.
+
+The authoritative implementation and table-driven tests live in the Grafana source at `pkg/setting/config_layers.go` and `pkg/setting/config_precedence_test.go`.
+
 ## Override configuration with environment variables
 
-Don't use environment variables to _add_ new configuration settings.
-Instead, use environmental variables to _override_ existing options.
+Environment variables override values from `defaults.ini` and `custom.ini`.
+You can also use environment variables to add new keys to sections that already exist in the configuration file.
+
+Don't use environment variables to create entirely new configuration sections.
+Instead, use environmental variables to override existing options or add keys to existing sections.
 
 To override an option:
 
