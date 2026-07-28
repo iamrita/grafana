@@ -46,16 +46,19 @@ The snapshot returns element refs (e.g., `ref="button[0]"`) needed for interacti
 ### Step 4: Interact with Elements
 
 **Click buttons/CTAs:**
+
 ```
 browser_click → element: "Submit button", ref: "button[0]"
 ```
 
 **Fill form fields:**
+
 ```
 browser_fill → element: "Email input", ref: "input[0]", value: "test@example.com"
 ```
 
 **Hover for tooltips/dropdowns:**
+
 ```
 browser_hover → element: "Menu trigger", ref: "button[1]"
 ```
@@ -69,6 +72,7 @@ browser_snapshot → take_screenshot_afterwards: true
 ```
 
 Compare screenshots and verify:
+
 - Visual changes occurred as expected
 - Error states display correctly
 - Loading states transition properly
@@ -95,14 +99,14 @@ browser_unlock
 
 ## Common Viewport Sizes
 
-| Device | Width | Height |
-|--------|-------|--------|
-| Mobile (iPhone SE) | 375 | 667 |
-| Mobile (iPhone 14) | 390 | 844 |
-| Tablet (iPad) | 768 | 1024 |
-| Desktop (small) | 1280 | 720 |
-| Desktop (large) | 1440 | 900 |
-| Desktop (wide) | 1920 | 1080 |
+| Device             | Width | Height |
+| ------------------ | ----- | ------ |
+| Mobile (iPhone SE) | 375   | 667    |
+| Mobile (iPhone 14) | 390   | 844    |
+| Tablet (iPad)      | 768   | 1024   |
+| Desktop (small)    | 1280  | 720    |
+| Desktop (large)    | 1440  | 900    |
+| Desktop (wide)     | 1920  | 1080   |
 
 ## Waiting for Content
 
@@ -154,20 +158,20 @@ Task Progress:
 
 ## Tool Reference
 
-| Tool | Purpose |
-|------|---------|
-| `browser_navigate` | Open URL, optionally screenshot |
-| `browser_lock` | Prevent user interference during tests |
-| `browser_unlock` | Release browser when done |
-| `browser_snapshot` | Get page structure and element refs |
-| `browser_take_screenshot` | Capture visual state |
-| `browser_click` | Click buttons, links, CTAs |
-| `browser_fill` | Enter text in inputs (clears first) |
-| `browser_type` | Append text to inputs |
-| `browser_hover` | Trigger hover states |
-| `browser_scroll` | Scroll page or elements into view |
-| `browser_resize` | Change viewport dimensions |
-| `browser_wait_for` | Wait for text/conditions |
+| Tool                      | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| `browser_navigate`        | Open URL, optionally screenshot        |
+| `browser_lock`            | Prevent user interference during tests |
+| `browser_unlock`          | Release browser when done              |
+| `browser_snapshot`        | Get page structure and element refs    |
+| `browser_take_screenshot` | Capture visual state                   |
+| `browser_click`           | Click buttons, links, CTAs             |
+| `browser_fill`            | Enter text in inputs (clears first)    |
+| `browser_type`            | Append text to inputs                  |
+| `browser_hover`           | Trigger hover states                   |
+| `browser_scroll`          | Scroll page or elements into view      |
+| `browser_resize`          | Change viewport dimensions             |
+| `browser_wait_for`        | Wait for text/conditions               |
 
 ## Critical Rules
 

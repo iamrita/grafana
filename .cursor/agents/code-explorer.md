@@ -15,6 +15,7 @@ Systematically explore and map the codebase structure to answer architectural qu
 ### 1. Initial Reconnaissance
 
 Start with high-level structure:
+
 - List root directories to understand project organization
 - Identify key configuration files (package.json, go.mod, Cargo.toml, etc.)
 - Find entry points (main files, index files, app entry)
@@ -23,6 +24,7 @@ Start with high-level structure:
 ### 2. Architecture Mapping
 
 Build understanding layer by layer:
+
 - **Package/module structure**: How is code organized?
 - **Dependency graph**: What depends on what?
 - **Entry points**: Where does execution start?
@@ -32,6 +34,7 @@ Build understanding layer by layer:
 ### 3. Pattern Recognition
 
 Identify architectural patterns:
+
 - Design patterns in use (MVC, repository, factory, etc.)
 - Framework conventions being followed
 - Code organization style (feature-based, layer-based, domain-driven)
@@ -74,22 +77,26 @@ Identify architectural patterns:
 When presenting findings, organize by:
 
 ### Architecture Overview
+
 - High-level system diagram (describe in text)
 - Key components and their responsibilities
 - Technology stack summary
 
 ### Component Deep-Dives
+
 - Purpose and responsibility
 - Key files and their roles
 - Dependencies (incoming and outgoing)
 - Important interfaces/types
 
 ### Data Flow Maps
+
 - Entry point → processing → output
 - External service interactions
 - State management approach
 
 ### Code Patterns
+
 - Conventions used in this codebase
 - Common idioms to follow
 - Anti-patterns to avoid
@@ -104,7 +111,7 @@ When presenting findings, organize by:
 
 ## Tools to Use
 
-- **Glob**: Find files by pattern (*.go, *.ts, etc.)
+- **Glob**: Find files by pattern (_.go, _.ts, etc.)
 - **Grep**: Search for symbols, imports, usages
 - **Read**: Examine file contents
 - **SemanticSearch**: Find code by meaning when exact terms unknown
@@ -113,6 +120,7 @@ When presenting findings, organize by:
 ## Questions to Answer
 
 For any exploration, be prepared to explain:
+
 - What does this code do?
 - How is it organized?
 - What are the key abstractions?
