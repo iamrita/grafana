@@ -20,7 +20,7 @@ type alertRule struct {
 	DashboardUID                *string `xorm:"dashboard_uid"`
 	PanelID                     *int64  `xorm:"panel_id"`
 	RuleGroup                   string
-	RuleGroupIndex              int    `xorm:"rule_group_idx"`
+	RuleGroupIndex              int `xorm:"rule_group_idx"`
 	Record                      *string
 	NoDataState                 string
 	ExecErrState                string
