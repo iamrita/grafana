@@ -201,6 +201,21 @@ func TestIntegrationProvisioningStore(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, models.ProvenanceNone, p)
 			})
+
+			t.Run("SetProvenance rolls back when outer transaction fails", func(t *testing.T) {
+				rule := models.AlertRule{UID: "txn-rollback-test"}
+				err := dbStore.InTransaction(context.Background(), func(ctx context.Context) error {
+					if err := store.SetProvenance(ctx, &rule, 1, models.ProvenanceFile); err != nil {
+						return err
+					}
+					return fmt.Errorf("force rollback")
+				})
+				require.Error(t, err)
+
+				p, err := store.GetProvenance(context.Background(), &rule, 1)
+				require.NoError(t, err)
+				require.Equal(t, models.ProvenanceNone, p)
+			})
 		})
 	}
 }

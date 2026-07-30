@@ -97,9 +97,9 @@ func convertAlertRuleToModel(ar alertRule, l log.Logger, opts AlertRuleConvertOp
 		}
 	}
 
-	if ar.Record != "" {
+	if ar.Record != nil && *ar.Record != "" {
 		var record models.Record
-		err = json.Unmarshal([]byte(ar.Record), &record)
+		err = json.Unmarshal([]byte(*ar.Record), &record)
 		if err != nil {
 			return models.AlertRule{}, fmt.Errorf("failed to parse record: %w", err)
 		}
@@ -210,7 +210,8 @@ func alertRuleFromModelsAlertRule(ar models.AlertRule) (alertRule, error) {
 		if err != nil {
 			return alertRule{}, fmt.Errorf("failed to marshal record: %w", err)
 		}
-		result.Record = string(recordData)
+		record := string(recordData)
+		result.Record = &record
 	}
 
 	if len(ar.Annotations) > 0 {

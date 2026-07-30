@@ -723,6 +723,57 @@ func TestUpdateMuteTimings(t *testing.T) {
 		})
 	})
 
+	t.Run("skips save when mute timing is unchanged", func(t *testing.T) {
+		sut, store, prov := createMuteTimingSvcSut()
+		store.GetFn = func(ctx context.Context, orgID int64) (*legacy_storage.ConfigRevision, error) {
+			return &legacy_storage.ConfigRevision{Config: initialConfig()}, nil
+		}
+		prov.EXPECT().GetProvenance(mock.Anything, mock.Anything, mock.Anything).Return(expectedProvenance, nil)
+
+		unchangedTiming := definitions.MuteTimeInterval{
+			MuteTimeInterval: definitions.AmMuteTimeInterval(original),
+			Version:          originalVersion,
+			Provenance:       definitions.Provenance(expectedProvenance),
+		}
+
+		result, err := sut.UpdateMuteTiming(context.Background(), unchangedTiming, orgID)
+		require.NoError(t, err)
+		require.EqualValues(t, original, result.MuteTimeInterval)
+		require.EqualValues(t, expectedProvenance, result.Provenance)
+		require.EqualValues(t, originalVersion, result.Version)
+
+		require.Len(t, store.Calls, 1)
+		require.Equal(t, "Get", store.Calls[0].Method)
+		prov.AssertNotCalled(t, "SetProvenance", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("updates provenance only when mute timing content is unchanged", func(t *testing.T) {
+		sut, store, prov := createMuteTimingSvcSut()
+		store.GetFn = func(ctx context.Context, orgID int64) (*legacy_storage.ConfigRevision, error) {
+			return &legacy_storage.ConfigRevision{Config: initialConfig()}, nil
+		}
+		prov.EXPECT().GetProvenance(mock.Anything, mock.Anything, mock.Anything).Return(models.ProvenanceNone, nil)
+		prov.EXPECT().SetProvenance(mock.Anything, mock.Anything, mock.Anything, models.ProvenanceAPI).RunAndReturn(
+			func(ctx context.Context, _ models.Provisionable, _ int64, _ models.Provenance) error {
+				assertInTransaction(t, ctx)
+				return nil
+			})
+
+		unchangedTiming := definitions.MuteTimeInterval{
+			MuteTimeInterval: definitions.AmMuteTimeInterval(original),
+			Version:          originalVersion,
+			Provenance:       definitions.Provenance(models.ProvenanceAPI),
+		}
+
+		result, err := sut.UpdateMuteTiming(context.Background(), unchangedTiming, orgID)
+		require.NoError(t, err)
+		require.EqualValues(t, models.ProvenanceAPI, result.Provenance)
+
+		require.Len(t, store.Calls, 1)
+		require.Equal(t, "Get", store.Calls[0].Method)
+		prov.AssertCalled(t, "SetProvenance", mock.Anything, mock.Anything, orgID, models.ProvenanceAPI)
+	})
+
 	t.Run("saves mute timing and provenance in a transaction if optimistic concurrency passes", func(t *testing.T) {
 		sut, store, prov := createMuteTimingSvcSut()
 		store.GetFn = func(ctx context.Context, orgID int64) (*legacy_storage.ConfigRevision, error) {

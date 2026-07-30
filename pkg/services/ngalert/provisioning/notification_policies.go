@@ -141,8 +141,8 @@ func (nps *NotificationPolicyService) ResetPolicyTree(ctx context.Context, orgID
 	})
 
 	if err != nil {
-		return definitions.Route{}, nil
-	} // TODO should be error?
+		return definitions.Route{}, err
+	}
 
 	return *route, nil
 }
