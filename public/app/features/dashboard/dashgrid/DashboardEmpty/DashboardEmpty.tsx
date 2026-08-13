@@ -6,9 +6,10 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { selectors } from '@grafana/e2e-selectors';
 import { Trans } from '@grafana/i18n';
 import { config } from '@grafana/runtime';
-import { Button, useStyles2, Text, Box, Stack, TextLink, Icon } from '@grafana/ui';
+import { Button, useStyles2, Text, Box, Stack, TextLink, Icon, LinkButton } from '@grafana/ui';
 import { DashboardModel } from 'app/features/dashboard/state/DashboardModel';
 import { DashboardScene } from 'app/features/dashboard-scene/scene/DashboardScene';
+import { DashboardInteractions } from 'app/features/dashboard-scene/utils/interactions';
 
 import { BasicProvisionedDashboardsEmptyPage } from '../DashboardLibrary/BasicProvisionedDashboardsEmptyPage';
 import { SuggestedDashboards } from '../DashboardLibrary/SuggestedDashboards';
@@ -166,6 +167,41 @@ const OldLayoutEmpty = ({
         >
           <Trans i18nKey="dashboard.empty.add-visualization-button">Add visualization</Trans>
         </Button>
+      </Stack>
+    </Box>
+
+    <Box
+      borderRadius="lg"
+      borderColor="strong"
+      borderStyle="dashed"
+      padding={3}
+      data-testid="quick-start-with-examples-card"
+    >
+      <Stack direction="column" alignItems="center" gap={1}>
+        <Icon name="apps" size="xl" />
+        <Text element="h3" textAlignment="center" weight="medium">
+          <Trans i18nKey="dashboard.empty.quick-start-header">Quick start with examples</Trans>
+        </Text>
+        <Box marginBottom={2}>
+          <Text element="p" textAlignment="center" color="secondary">
+            <Trans i18nKey="dashboard.empty.quick-start-body">
+              Explore pre-built dashboards from the Grafana community to get started faster.
+            </Trans>
+          </Text>
+        </Box>
+        <LinkButton
+          icon="external-link-alt"
+          fill="outline"
+          href="https://grafana.com/grafana/dashboards/"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid={selectors.pages.AddDashboard.itemButton('Quick start with examples button')}
+          onClick={() => {
+            DashboardInteractions.emptyDashboardButtonClicked({ item: 'quick_start_examples' });
+          }}
+        >
+          <Trans i18nKey="dashboard.empty.quick-start-button">Browse example dashboards</Trans>
+        </LinkButton>
       </Stack>
     </Box>
 

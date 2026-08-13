@@ -98,6 +98,35 @@ it('renders with all buttons enabled when canCreate is true', () => {
   expect(screen.getByRole('button', { name: 'Add library panel' })).not.toBeDisabled();
 });
 
+it('renders a Quick start with examples card in the default empty state', () => {
+  mockSearchParams.delete('dashboardLibraryDatasourceUid');
+  setup();
+
+  expect(screen.getByTestId('quick-start-with-examples-card')).toBeInTheDocument();
+  expect(screen.getByText('Quick start with examples')).toBeInTheDocument();
+  expect(
+    screen.getByText('Explore pre-built dashboards from the Grafana community to get started faster.')
+  ).toBeInTheDocument();
+
+  const cta = screen.getByRole('link', { name: 'Browse example dashboards' });
+  expect(cta).toHaveAttribute('href', 'https://grafana.com/grafana/dashboards/');
+  expect(cta).toHaveAttribute('target', '_blank');
+  expect(cta).toHaveAttribute('rel', 'noopener noreferrer');
+});
+
+it('reports interaction and keeps grafana.com destination when Quick start CTA is clicked', () => {
+  setup();
+
+  act(() => {
+    fireEvent.click(screen.getByRole('link', { name: 'Browse example dashboards' }));
+  });
+
+  expect(reportInteraction).toHaveBeenCalledWith('dashboards_emptydashboard_clicked', {
+    item: 'quick_start_examples',
+    isDynamicDashboard: false,
+  });
+});
+
 it('renders with all buttons disabled when canCreate is false', () => {
   setup({ canCreate: false });
 
