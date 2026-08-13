@@ -40,7 +40,10 @@ export interface GrafanaThemeCommons {
       md: number; // 4/3
       lg: number; // 1.5
     };
-    // TODO: Refactor to use size instead of custom defs
+    /**
+     * Heading font sizes for h1–h6.
+     * @deprecated Use GrafanaTheme2 `theme.typography.h1`–`h6` (e.g. `theme.typography.h5.fontSize`) instead. Will be removed in the next major version.
+     */
     heading: {
       h1: string;
       h2: string;

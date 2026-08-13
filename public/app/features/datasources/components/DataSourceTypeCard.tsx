@@ -68,7 +68,7 @@ export function DataSourceTypeCard({ onClick, dataSourcePlugin }: Props) {
 function getStyles(theme: GrafanaTheme2) {
   return {
     heading: css({
-      fontSize: theme.v1.typography.heading.h5,
+      fontSize: theme.typography.h5.fontSize,
       fontWeight: 'inherit',
     }),
     figure: css({
