@@ -3,12 +3,17 @@ package api
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/web"
 )
 
 const middlewareDocumentationPath = "../../contribute/backend/http-middleware.md"
@@ -34,6 +39,140 @@ func TestMiddlewareRegistrationTable(t *testing.T) {
 		}
 		seen[registration.name] = struct{}{}
 	}
+}
+
+func TestMiddlewareRegistrationOrder(t *testing.T) {
+	expected := []string{
+		"requestmeta.SetupRequestMetadata",
+		"middleware.RequestTracing",
+		"middleware.RequestMetrics",
+		"LoggerMiddleware.Middleware",
+		"middleware.Gziper",
+		"middleware.Recovery",
+		"Csrf.Middleware",
+		"HTTPServer.mapStatic",
+		"middleware.AddCustomResponseHeaders",
+		"middleware.AddDefaultResponseHeaders",
+		"middleware.SubPathRedirect",
+		"web.Renderer",
+		"HTTPServer monitoring endpoints",
+		"ContextHandler.Middleware",
+		"middleware.OrgRedirect",
+		"middleware.ValidateHostHeader",
+		"middleware.ValidateActionUrl",
+		"middleware.HandleNoCacheHeaders",
+		"middleware.ContentSecurityPolicy",
+		"HTTPServer.middlewares",
+	}
+
+	actual := make([]string, 0, len(middlewareRegistrationTable))
+	for _, registration := range middlewareRegistrationTable {
+		actual = append(actual, registration.name)
+	}
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestConditionalMiddlewareRegistrations(t *testing.T) {
+	t.Run("gzip follows the server configuration", func(t *testing.T) {
+		registration := findMiddlewareRegistration(t, "middleware.Gziper")
+
+		for _, tc := range []struct {
+			name          string
+			enabled       bool
+			wantEncoding  string
+			wantVaryValue string
+		}{
+			{
+				name:    "disabled",
+				enabled: false,
+			},
+			{
+				name:          "enabled",
+				enabled:       true,
+				wantEncoding:  "gzip",
+				wantVaryValue: "Accept-Encoding",
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				cfg := setting.NewCfg()
+				cfg.EnableGzip = tc.enabled
+				mux := web.New()
+				registration.apply(&HTTPServer{Cfg: cfg}, mux)
+				mux.Get("/", func(rw http.ResponseWriter) {
+					_, err := rw.Write([]byte("response"))
+					require.NoError(t, err)
+				})
+
+				request := httptest.NewRequest(http.MethodGet, "/", nil)
+				request.Header.Set("Accept-Encoding", "gzip")
+				response := httptest.NewRecorder()
+				mux.ServeHTTP(response, request)
+
+				assert.Equal(t, tc.wantEncoding, response.Header().Get("Content-Encoding"))
+				assert.Equal(t, tc.wantVaryValue, response.Header().Get("Vary"))
+			})
+		}
+	})
+
+	t.Run("custom response headers require configuration", func(t *testing.T) {
+		registration := findMiddlewareRegistration(t, "middleware.AddCustomResponseHeaders")
+
+		for _, tc := range []struct {
+			name       string
+			headers    map[string]string
+			wantHeader string
+		}{
+			{
+				name: "not configured",
+			},
+			{
+				name:       "configured",
+				headers:    map[string]string{"X-Grafana-Test": "registered"},
+				wantHeader: "registered",
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				cfg := setting.NewCfg()
+				cfg.CustomResponseHeaders = tc.headers
+				mux := web.New()
+				registration.apply(&HTTPServer{Cfg: cfg}, mux)
+				mux.Get("/", func(rw http.ResponseWriter) {
+					rw.WriteHeader(http.StatusNoContent)
+				})
+
+				response := httptest.NewRecorder()
+				mux.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+
+				assert.Equal(t, tc.wantHeader, response.Header().Get("X-Grafana-Test"))
+			})
+		}
+	})
+}
+
+func TestExtensionMiddlewaresKeepInsertionOrder(t *testing.T) {
+	registration := findMiddlewareRegistration(t, "HTTPServer.middlewares")
+	var calls []string
+	server := &HTTPServer{
+		middlewares: []web.Handler{
+			func() {
+				calls = append(calls, "first")
+			},
+			func() {
+				calls = append(calls, "second")
+			},
+		},
+	}
+	mux := web.New()
+	registration.apply(server, mux)
+	mux.Get("/", func(rw http.ResponseWriter) {
+		calls = append(calls, "route")
+		rw.WriteHeader(http.StatusNoContent)
+	})
+
+	mux.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+
+	assert.Equal(t, []string{"first", "second", "route"}, calls)
 }
 
 func TestMiddlewareRegistrationDocumentation(t *testing.T) {
@@ -77,4 +216,17 @@ Grafana registers global HTTP middleware in the following order. The source regi
 	}
 
 	return doc.String()
+}
+
+func findMiddlewareRegistration(t *testing.T, name string) middlewareRegistration {
+	t.Helper()
+
+	for _, registration := range middlewareRegistrationTable {
+		if registration.name == name {
+			return registration
+		}
+	}
+
+	t.Fatalf("middleware registration %q was not found", name)
+	return middlewareRegistration{}
 }
