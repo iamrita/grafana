@@ -99,7 +99,7 @@ func TestConditionalMiddlewareRegistrations(t *testing.T) {
 				cfg.EnableGzip = tc.enabled
 				mux := web.New()
 				registration.apply(&HTTPServer{Cfg: cfg}, mux)
-				mux.Get("/", func(rw http.ResponseWriter) {
+				mux.Get("/", func(rw http.ResponseWriter, _ *http.Request) {
 					_, err := rw.Write([]byte("response"))
 					require.NoError(t, err)
 				})
@@ -137,7 +137,7 @@ func TestConditionalMiddlewareRegistrations(t *testing.T) {
 				cfg.CustomResponseHeaders = tc.headers
 				mux := web.New()
 				registration.apply(&HTTPServer{Cfg: cfg}, mux)
-				mux.Get("/", func(rw http.ResponseWriter) {
+				mux.Get("/", func(rw http.ResponseWriter, _ *http.Request) {
 					rw.WriteHeader(http.StatusNoContent)
 				})
 
@@ -155,17 +155,17 @@ func TestExtensionMiddlewaresKeepInsertionOrder(t *testing.T) {
 	var calls []string
 	server := &HTTPServer{
 		middlewares: []web.Handler{
-			func() {
+			func(_ *web.Context) {
 				calls = append(calls, "first")
 			},
-			func() {
+			func(_ *web.Context) {
 				calls = append(calls, "second")
 			},
 		},
 	}
 	mux := web.New()
 	registration.apply(server, mux)
-	mux.Get("/", func(rw http.ResponseWriter) {
+	mux.Get("/", func(rw http.ResponseWriter, _ *http.Request) {
 		calls = append(calls, "route")
 		rw.WriteHeader(http.StatusNoContent)
 	})
