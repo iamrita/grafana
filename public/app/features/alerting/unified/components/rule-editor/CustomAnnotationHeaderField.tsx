@@ -2,13 +2,16 @@ import { css } from '@emotion/css';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Input, useStyles2 } from '@grafana/ui';
+import { useStyles2 } from '@grafana/ui';
+
+import { AnnotationKeyInput } from './AnnotationKeyInput';
 
 interface CustomAnnotationHeaderFieldProps {
-  field: { onChange: () => void; onBlur: () => void; value: string; name: string };
+  field: { onChange: (value: string) => void; onBlur: () => void; value: string; name: string };
+  existingKeys: string[];
 }
 
-const CustomAnnotationHeaderField = ({ field }: CustomAnnotationHeaderFieldProps) => {
+const CustomAnnotationHeaderField = ({ field, existingKeys }: CustomAnnotationHeaderFieldProps) => {
   const styles = useStyles2(getStyles);
 
   return (
@@ -18,15 +21,14 @@ const CustomAnnotationHeaderField = ({ field }: CustomAnnotationHeaderFieldProps
           Custom annotation name and content
         </Trans>
       </span>
-      <Input
-        placeholder={t(
-          'alerting.custom-annotation-header-field.placeholder-enter-custom-annotation-name',
-          'Enter custom annotation name...'
-        )}
-        width={18}
-        {...field}
-        className={styles.customAnnotationInput}
-      />
+      <div className={styles.customAnnotationInput}>
+        <AnnotationKeyInput
+          value={field.value}
+          onChange={field.onChange}
+          existingKeys={existingKeys}
+          aria-label={t('alerting.custom-annotation-header-field.aria-label', 'Custom annotation name')}
+        />
+      </div>
     </div>
   );
 };
