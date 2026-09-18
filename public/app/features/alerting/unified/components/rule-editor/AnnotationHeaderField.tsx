@@ -32,7 +32,12 @@ const AnnotationHeaderField = ({
             defaultValue={annotationField.key}
             render={({ field: { ref, ...field } }) => {
               if (!annotationLabels[annotation]) {
-                return <CustomAnnotationHeaderField field={field} />;
+                return (
+                  <CustomAnnotationHeaderField
+                    field={field}
+                    existingKeys={annotations.filter((_, i) => i !== index).map((a) => a.key)}
+                  />
+                );
               }
 
               let label;

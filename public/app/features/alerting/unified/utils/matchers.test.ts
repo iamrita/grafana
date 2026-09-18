@@ -213,6 +213,13 @@ describe('parsePromQLStyleMatcher', () => {
       '"foo{}bar"="baz qux"'
     );
   });
+
+  it('always quotes matcher values, including empty strings', () => {
+    expect(encodeMatcher({ name: 'foo', operator: MatcherOperator.equal, value: '' })).toBe('foo=""');
+    expect(encodeMatcher({ name: 'severity', operator: MatcherOperator.equal, value: 'critical' })).toBe(
+      'severity="critical"'
+    );
+  });
 });
 
 describe('parsePromQLStyleMatcherLooseSafe', () => {

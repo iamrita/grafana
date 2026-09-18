@@ -1,14 +1,16 @@
 /**
- * @TODO move this to some shared package, currently copied from Grafana core (app/api/utils)
+ * K8s API URL helpers. Namespace/base path live in @grafana/api-clients;
+ * this wrapper keeps Grafana subpath support for alerting clients.
  */
 
+import { getAPINamespace, getAPIBaseURL as getSharedAPIBaseURL } from '@grafana/api-clients';
 import { config } from '@grafana/runtime';
 
-export const getAPINamespace = () => config.namespace;
+export { getAPINamespace };
 
 export const getAPIBaseURL = (group: string, version: string) => {
   const subPath = config.appSubUrl || '';
-  return `${subPath}/apis/${group}/${version}/namespaces/${getAPINamespace()}` as const;
+  return `${subPath}${getSharedAPIBaseURL(group, version)}` as const;
 };
 
 // By including the version in the reducer path we can prevent cache bugs when different versions of the API are used for the same entities

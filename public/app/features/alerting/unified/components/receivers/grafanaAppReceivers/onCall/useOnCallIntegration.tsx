@@ -55,8 +55,6 @@ function useOnCallPluginStatus() {
     if (!isOnCallEnabled) {
       return OnCallIntegrationStatus.Disabled;
     }
-    // TODO Support for V2 integration should be added when the OnCall team introduces the necessary changes
-
     return onCallFeatures.includes(ONCALL_INTEGRATION_V2_FEATURE)
       ? OnCallIntegrationStatus.V2
       : OnCallIntegrationStatus.V1;

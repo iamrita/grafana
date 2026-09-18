@@ -194,7 +194,8 @@ export function unquoteIfRequired(input: string) {
 
 export const encodeMatcher = ({ name, operator, value }: MatcherFieldValue) => {
   const encodedLabelName = quoteWithEscapeIfRequired(name);
-  // @TODO why not use quoteWithEscapeIfRequired?
+  // Values are always quoted. quoteWithEscapeIfRequired would leave empty values
+  // unquoted (`foo=`), which is ambiguous when encoding and parsing matchers.
   const encodedLabelValue = quoteWithEscape(value);
 
   return `${encodedLabelName}${operator}${encodedLabelValue}`;

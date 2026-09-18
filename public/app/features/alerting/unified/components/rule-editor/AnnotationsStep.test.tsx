@@ -58,6 +58,15 @@ describe('AnnotationsField', function () {
     expect(screen.getByLabelText(/Runbook URL/)).toBeInTheDocument();
   });
 
+  it('lets users add a custom annotation name with Select allowCustomValue', async () => {
+    const { user } = render(<FormWrapper formValues={{ annotations: [] }} />);
+
+    await user.click(screen.getByRole('button', { name: /Add custom annotation/i }));
+
+    expect(screen.getByLabelText('Custom annotation name')).toBeInTheDocument();
+    expect(screen.queryByText('+ Add new')).not.toBeInTheDocument();
+  });
+
   describe('Dashboard and panel picker', function () {
     it('should display dashboard and panel selector when select button clicked', async function () {
       mockDashboardApi(server).search([]);
