@@ -14,7 +14,9 @@ const isSupportedType = (uid: string): uid is keyof typeof buildInfoResponse => 
   return uid in buildInfoResponse;
 };
 
-// TODO: Add more accurate endpoint responses as tests require
+const PROMETHEUS_METRIC_NAMES = ['up', 'alertmanager_alerts', 'grafana_alerting_rule_evaluations_total'];
+const PROMETHEUS_LABELS = ['__name__', 'job', 'instance', 'alertname'];
+
 export const datasourceBuildInfoHandler = () =>
   http.get<{ datasourceUid: keyof typeof buildInfoResponse | string }>(
     '/api/datasources/proxy/uid/:datasourceUid/api/v1/status/buildinfo',
@@ -24,26 +26,29 @@ export const datasourceBuildInfoHandler = () =>
         const response = buildInfoResponse[datasourceUid];
         return HttpResponse.json(response);
       }
-      return HttpResponse.json({});
+      return HttpResponse.json({ status: 'success', data: {} });
     }
   );
 
-// TODO: Add more accurate endpoint responses as tests require
 const labelValuesHandler = () =>
-  http.get('/api/datasources/uid/:datasourceUid/resources/api/v1/label/__name__/values', ({ params }) => {
-    return HttpResponse.json({ status: 'sucess', data: [] });
+  http.get('/api/datasources/uid/:datasourceUid/resources/api/v1/label/__name__/values', () => {
+    return HttpResponse.json({ status: 'success', data: PROMETHEUS_METRIC_NAMES });
   });
 
-// TODO: Add more accurate endpoint responses as tests require
 const resourcesLabelsHandler = () =>
   http.get('/api/datasources/uid/:datasourceUid/resources/api/v1/labels', () =>
-    HttpResponse.json({ status: 'success', data: [] })
+    HttpResponse.json({ status: 'success', data: PROMETHEUS_LABELS })
   );
 
-// TODO: Add more accurate endpoint responses as tests require
 const resourcesMetadataHandler = () =>
   http.get('/api/datasources/uid/:datasourceUid/resources/api/v1/metadata', () =>
-    HttpResponse.json({ status: 'success', data: {} })
+    HttpResponse.json({
+      status: 'success',
+      data: {
+        up: [{ type: 'gauge', help: '1 if the instance is healthy', unit: '' }],
+        alertmanager_alerts: [{ type: 'gauge', help: 'How many alerts by state', unit: '' }],
+      },
+    })
   );
 
 const datasourcesHandlers = [

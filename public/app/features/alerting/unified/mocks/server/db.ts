@@ -185,7 +185,6 @@ const grafanaRecordingRule = Factory.define<RulerGrafanaRuleDTO<GrafanaRecording
   },
   for: '5m',
   labels: { 'label-key-1': 'label-value-1' },
-  annotations: {}, // @TODO recording rules don't have annotations, we need to fix this type definition
 }));
 
 const grafanaAlertingRuleFactory = Factory.define<RulerGrafanaRuleDTO<GrafanaAlertingRuleDefinition>>(

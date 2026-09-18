@@ -3,17 +3,50 @@ import { HttpResponse, http } from 'msw';
 import { Description, ResourcePermission } from 'app/core/components/AccessControl/types';
 import { AccessControlAction } from 'app/types/accessControl';
 
-// TODO: Expand this out to more realistic use cases as we work on RBAC for contact points
+const sharedAssignments = {
+  users: true,
+  serviceAccounts: true,
+  teams: true,
+  builtInRoles: true,
+};
+
 const resourceDescriptionsMap: Record<string, Description> = {
   receivers: {
-    assignments: {
-      users: true,
-      serviceAccounts: true,
-      teams: true,
-      builtInRoles: true,
-    },
+    assignments: sharedAssignments,
     permissions: ['View', 'Edit', 'Admin'],
   },
+  folders: {
+    assignments: sharedAssignments,
+    permissions: ['View', 'Edit', 'Admin'],
+  },
+  timeintervals: {
+    assignments: sharedAssignments,
+    permissions: ['View', 'Edit'],
+  },
+};
+
+const viewerReceiverPermission: ResourcePermission = {
+  id: 123,
+  roleName: 'somerole:name',
+  isManaged: true,
+  isInherited: false,
+  isServiceAccount: false,
+  builtInRole: 'Viewer',
+  actions: [AccessControlAction.AlertingReceiversRead, AccessControlAction.AlertingNotificationsRead],
+  permission: 'View',
+};
+
+const editorReceiverPermission: ResourcePermission = {
+  ...viewerReceiverPermission,
+  id: 124,
+  builtInRole: 'Editor',
+  actions: [
+    AccessControlAction.AlertingReceiversRead,
+    AccessControlAction.AlertingReceiversWrite,
+    AccessControlAction.AlertingNotificationsRead,
+    AccessControlAction.AlertingNotificationsWrite,
+  ],
+  permission: 'Edit',
 };
 
 /**
@@ -22,18 +55,26 @@ const resourceDescriptionsMap: Record<string, Description> = {
  * */
 const resourceDetailsMap: Record<string, Record<string, ResourcePermission[]>> = {
   receivers: {
-    'lotsa-emails': [
+    'lotsa-emails': [viewerReceiverPermission],
+    'grafana-default-email': [editorReceiverPermission],
+    'provisioned-contact-point': [viewerReceiverPermission],
+  },
+  folders: {
+    'e3d1f4fd-9e7c-4f63-9a9e-2b5a1d2e6a9c': [
       {
-        id: 123,
-        roleName: 'somerole:name',
+        id: 200,
+        roleName: 'folder:alerting',
         isManaged: true,
         isInherited: false,
         isServiceAccount: false,
-        builtInRole: 'Viewer',
+        builtInRole: 'Editor',
         actions: [AccessControlAction.FoldersRead, AccessControlAction.AlertingRuleRead],
-        permission: 'View',
+        permission: 'Edit',
       },
     ],
+  },
+  timeintervals: {
+    'Some interval': [viewerReceiverPermission],
   },
 };
 
@@ -49,7 +90,7 @@ const getAccessControlResourceDetailsHandler = () =>
   http.get<{ resourceType: string; resourceId: string }>(
     `/api/access-control/:resourceType/:resourceId`,
     ({ params }) => {
-      const matchedResourceDetails = resourceDetailsMap[params.resourceType][params.resourceId];
+      const matchedResourceDetails = resourceDetailsMap[params.resourceType]?.[params.resourceId];
       return matchedResourceDetails
         ? HttpResponse.json(matchedResourceDetails)
         : HttpResponse.json(

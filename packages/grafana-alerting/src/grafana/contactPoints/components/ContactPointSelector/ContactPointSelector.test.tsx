@@ -1,6 +1,6 @@
 import { setupMockServer } from '@grafana/test-utils/server';
 
-import { render, screen, within } from '../../../../../tests/test-utils';
+import { mockComboboxLayout, render, screen, within } from '../../../../../tests/test-utils';
 import { getContactPointDescription } from '../../utils';
 
 import { ContactPointSelector } from './ContactPointSelector';
@@ -18,18 +18,7 @@ beforeEach(() => {
 });
 
 beforeAll(() => {
-  // @TODO remove or move this, required for testing combobox 😮‍💨
-  const mockGetBoundingClientRect = jest.fn(() => ({
-    width: 120,
-    height: 120,
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
-  }));
-  Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
-    value: mockGetBoundingClientRect,
-  });
+  mockComboboxLayout();
 });
 
 describe('listing contact points', () => {

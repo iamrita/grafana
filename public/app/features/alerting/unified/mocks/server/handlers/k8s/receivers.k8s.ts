@@ -10,6 +10,7 @@ import { KnownProvenance } from 'app/features/alerting/unified/types/knownProven
 import { GRAFANA_RULES_SOURCE_NAME } from 'app/features/alerting/unified/utils/datasource';
 import { K8sAnnotations } from 'app/features/alerting/unified/utils/k8s/constants';
 import { receiverConfigToK8sIntegration } from 'app/features/alerting/unified/utils/k8s/utils';
+import { GrafanaManagedContactPoint, GrafanaManagedReceiverConfig } from 'app/plugins/datasource/alertmanager/types';
 
 const usedByPolicies = ['grafana-default-email'];
 const usedByRules = ['grafana-default-email'];
@@ -30,7 +31,7 @@ const getReceiversList = () => {
       const canUse = provenance !== KnownProvenance.ConvertedPrometheus;
       return {
         apiVersion: `${API_GROUP}/${API_VERSION}`,
-        kind: 'Receiver',
+        kind: 'Receiver' as const,
         metadata: {
           // This isn't exactly accurate, but its the cleanest way to use the same data for AM config and K8S responses
           uid: contactPoint.name,
@@ -54,6 +55,43 @@ const getReceiversList = () => {
   return getK8sResponse<Receiver>('ReceiverList', mappedReceivers);
 };
 
+const findMappedReceiver = (name: string) => {
+  return getReceiversList().items.find((receiver) => receiver.metadata.uid === name || receiver.metadata.name === name);
+};
+
+const k8sReceiverToContactPoint = (receiver: Receiver): GrafanaManagedContactPoint => {
+  const name = receiver.spec.title;
+  const integrations: GrafanaManagedReceiverConfig[] = (receiver.spec.integrations ?? []).map((integration) => ({
+    uid: integration.uid,
+    name,
+    type: integration.type,
+    disableResolveMessage: integration.disableResolveMessage ?? false,
+    settings: (integration.settings as GrafanaManagedReceiverConfig['settings']) ?? {},
+    secureFields: integration.secureFields ?? {},
+    version: integration.version,
+  }));
+
+  return {
+    name,
+    id: receiver.metadata?.name ?? receiver.metadata?.uid ?? name,
+    grafana_managed_receiver_configs: integrations,
+  };
+};
+
+const persistReceivers = (receivers: GrafanaManagedContactPoint[]) => {
+  const config = getAlertmanagerConfig(GRAFANA_RULES_SOURCE_NAME);
+  setAlertmanagerConfig(GRAFANA_RULES_SOURCE_NAME, {
+    ...config,
+    alertmanager_config: {
+      ...config.alertmanager_config,
+      receivers,
+    },
+  });
+};
+
+const getPersistedReceivers = () =>
+  getAlertmanagerConfig(GRAFANA_RULES_SOURCE_NAME).alertmanager_config?.receivers ?? [];
+
 const listNamespacedReceiverHandler = () =>
   http.get<{ namespace: string }>(`${ALERTING_API_SERVER_BASE_URL}/namespaces/:namespace/receivers`, () => {
     return HttpResponse.json(getReceiversList());
@@ -64,8 +102,7 @@ const getNamespacedReceiverHandler = () =>
     `${ALERTING_API_SERVER_BASE_URL}/namespaces/:namespace/receivers/:name`,
     ({ params }) => {
       const { name } = params;
-      const receivers = getReceiversList();
-      const matchedReceiver = receivers.items.find((receiver) => receiver.metadata.uid === name);
+      const matchedReceiver = findMappedReceiver(name);
       if (!matchedReceiver) {
         return HttpResponse.json({}, { status: 404 });
       }
@@ -77,14 +114,21 @@ const updateNamespacedReceiverHandler = () =>
   http.put<{ namespace: string; name: string }>(
     `${ALERTING_API_SERVER_BASE_URL}/namespaces/:namespace/receivers/:name`,
     async ({ params, request }) => {
-      // TODO: Make this update the internal config so API calls "persist"
       const { name } = params;
-      const parsedReceivers = getReceiversList();
-      const matchedReceiver = parsedReceivers.items.find((receiver) => receiver.metadata.uid === name);
-      if (!matchedReceiver) {
+      const existing = getPersistedReceivers();
+      const index = existing.findIndex((receiver) => receiver.name === name);
+      if (index === -1) {
         return HttpResponse.json({}, { status: 404 });
       }
-      return HttpResponse.json(parsedReceivers);
+
+      const body: Receiver = await request.clone().json();
+      const updatedReceivers = existing.map((receiver, receiverIndex) =>
+        receiverIndex === index ? k8sReceiverToContactPoint(body) : receiver
+      );
+      persistReceivers(updatedReceivers);
+
+      const persisted = findMappedReceiver(body.spec.title) ?? findMappedReceiver(name);
+      return HttpResponse.json(persisted);
     }
   );
 
@@ -92,8 +136,16 @@ const createNamespacedReceiverHandler = () =>
   http.post<{ namespace: string }>(
     `${ALERTING_API_SERVER_BASE_URL}/namespaces/:namespace/receivers`,
     async ({ request }) => {
-      const body = await request.clone().json();
-      return HttpResponse.json(body);
+      const body: Receiver = await request.clone().json();
+      const created = k8sReceiverToContactPoint(body);
+      const existing = getPersistedReceivers();
+
+      if (existing.some((receiver) => receiver.name === created.name)) {
+        return HttpResponse.json({ message: 'receiver already exists' }, { status: 409 });
+      }
+
+      persistReceivers([...existing, created]);
+      return HttpResponse.json(findMappedReceiver(created.name) ?? body, { status: 201 });
     }
   );
 
@@ -109,15 +161,8 @@ const deleteNamespacedReceiverHandler = () =>
       }
 
       const newConfig = config.alertmanager_config?.receivers?.filter((receiver) => receiver.name !== name);
-      setAlertmanagerConfig(GRAFANA_RULES_SOURCE_NAME, {
-        ...config,
-        alertmanager_config: {
-          ...config.alertmanager_config,
-          receivers: newConfig,
-        },
-      });
-      const parsedReceivers = getReceiversList();
-      return HttpResponse.json(parsedReceivers);
+      persistReceivers(newConfig ?? []);
+      return HttpResponse.json(getReceiversList());
     }
   );
 
