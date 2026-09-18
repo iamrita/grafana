@@ -2,7 +2,7 @@ import { HttpResponse, JsonBodyType, StrictResponse, http } from 'msw';
 
 import { TemplatesTestPayload } from 'app/features/alerting/unified/api/templateApi';
 import receiversMock from 'app/features/alerting/unified/components/contact-points/mocks/receivers.mock.json';
-import { MOCK_SILENCE_ID_EXISTING, mockAlertmanagerAlert } from 'app/features/alerting/unified/mocks';
+import { MOCK_SILENCE_ID_EXISTING, mockAlertGroup, mockAlertmanagerAlert } from 'app/features/alerting/unified/mocks';
 import { defaultGrafanaAlertingConfigurationStatusResponse } from 'app/features/alerting/unified/mocks/alertmanagerApi';
 import {
   getAlertmanagerConfig,
@@ -118,6 +118,29 @@ const validateGrafanaAlertmanagerConfig = (config: AlertManagerCortexConfig) => 
   return null;
 };
 
+/** External Alertmanagers reject Grafana-managed receiver fields and still check interval uniqueness. */
+const validateExternalAlertmanagerConfig = (config: AlertManagerCortexConfig) => {
+  const { alertmanager_config } = config;
+  const { receivers = [], time_intervals = [], mute_time_intervals = [] } = alertmanager_config;
+
+  if (
+    receivers.some(
+      (receiver) =>
+        'grafana_managed_receiver_configs' in receiver && Boolean(receiver.grafana_managed_receiver_configs?.length)
+    )
+  ) {
+    return ALERTMANAGER_UPDATE_ERROR_RESPONSE;
+  }
+
+  const intervals = [...time_intervals, ...mute_time_intervals];
+  const intervalsByName = new Set(intervals.map((interval) => interval.name));
+  if (intervalsByName.size !== intervals.length) {
+    return ALERTMANAGER_UPDATE_ERROR_RESPONSE;
+  }
+
+  return null;
+};
+
 export const updateAlertmanagerConfigHandler = (responseOverride?: typeof ALERTMANAGER_UPDATE_ERROR_RESPONSE) =>
   http.post<{ name: string }>('/api/alertmanager/:name/config/api/v1/alerts', async ({ request, params }) => {
     if (responseOverride) {
@@ -125,9 +148,10 @@ export const updateAlertmanagerConfigHandler = (responseOverride?: typeof ALERTM
     }
     const { name: alertmanagerName } = params;
     const body: AlertManagerCortexConfig = await request.clone().json();
-    // TODO: Validate the config depending on alertmanager type
-    // e.g. validate other AMs differently where required for tests
-    const potentialError = validateGrafanaAlertmanagerConfig(body);
+    const potentialError =
+      alertmanagerName === GRAFANA_RULES_SOURCE_NAME
+        ? validateGrafanaAlertmanagerConfig(body)
+        : validateExternalAlertmanagerConfig(body);
     if (!potentialError) {
       // Only update the mock entity the endpoint is going to "succeed"
       setAlertmanagerConfig(alertmanagerName, body);
@@ -180,11 +204,25 @@ const testReceiversHandler = () =>
     });
   });
 
-const getGroupsHandler = () =>
-  http.get<{ datasourceUid: string }>('/api/alertmanager/:datasourceUid/api/v2/alerts/groups', () =>
-    // TODO: Scaffold out response with better data as required by tests
-    HttpResponse.json([])
-  );
+export const getGroupsHandler = () =>
+  http.get<{ datasourceUid: string }>('/api/alertmanager/:datasourceUid/api/v2/alerts/groups', ({ params }) => {
+    if (params.datasourceUid === MOCK_DATASOURCE_UID_BROKEN_ALERTMANAGER) {
+      return HttpResponse.json({ traceId: '' }, { status: 502 });
+    }
+
+    return HttpResponse.json([
+      mockAlertGroup({
+        labels: { foo: 'bar', buzz: 'bazz' },
+        receiver: { name: 'grafana-default-email' },
+        alerts: [
+          mockAlertmanagerAlert({
+            labels: { foo: 'bar', buzz: 'bazz' },
+            status: { state: AlertState.Suppressed, silencedBy: [MOCK_SILENCE_ID_EXISTING], inhibitedBy: [] },
+          }),
+        ],
+      }),
+    ]);
+  });
 
 const handlers = [
   alertmanagerAlertsListHandler(),
