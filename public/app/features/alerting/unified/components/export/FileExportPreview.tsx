@@ -40,8 +40,31 @@ export function FileExportPreview({ format, textDefinition, downloadFileName, on
     return provider.formatter ? provider.formatter(textDefinition) : textDefinition;
   }, [provider, textDefinition]);
 
+  const isEmpty = !textDefinition.trim();
+
+  if (isEmpty) {
+    return (
+      <div className={styles.container}>
+        <Alert
+          title={t('alerting.file-export-preview.empty-title', 'Nothing to export')}
+          severity="info"
+          bottomSpacing={0}
+          topSpacing={0}
+        >
+          <Trans i18nKey="alerting.file-export-preview.empty-description">
+            No content is available for this export.
+          </Trans>
+        </Alert>
+        <div className={styles.actions}>
+          <Button variant="secondary" onClick={onClose}>
+            <Trans i18nKey="alerting.common.cancel">Cancel</Trans>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    // TODO Handle empty content
     <div className={styles.container}>
       <FileExportInlineDocumentation exportProvider={provider} />
       <div className={styles.content}>

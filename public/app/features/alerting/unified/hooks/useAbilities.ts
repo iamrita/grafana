@@ -14,8 +14,8 @@ import {
 import { useFolder } from 'app/features/alerting/unified/hooks/useFolder';
 import { AlertmanagerChoice } from 'app/plugins/datasource/alertmanager/types';
 import { AccessControlAction } from 'app/types/accessControl';
-import { CombinedRule, RuleGroupIdentifierV2 } from 'app/types/unified-alerting';
-import { GrafanaPromRuleDTO, RulerRuleDTO } from 'app/types/unified-alerting-dto';
+import { CombinedRule, CombinedRuleGroup, RuleGroupIdentifierV2 } from 'app/types/unified-alerting';
+import { GrafanaPromRuleDTO, RulerRuleDTO, RulerRuleGroupDTO } from 'app/types/unified-alerting-dto';
 
 import { alertmanagerApi } from '../api/alertmanagerApi';
 import { useGetPluginSettingsQuery } from '../api/pluginsApi';
@@ -25,6 +25,7 @@ import { getGroupOriginName, groupIdentifier } from '../utils/groupIdentifier';
 import { isAdmin } from '../utils/misc';
 import {
   getRulePluginOrigin,
+  isFederatedRuleGroup,
   isProvisionedPromRule,
   isProvisionedRule,
   prometheusRuleType,
@@ -241,9 +242,10 @@ export function useAlertRuleAbilities(rule: CombinedRule, actions: AlertRuleActi
 export function useRulerRuleAbility(
   rule: RulerRuleDTO | undefined,
   groupIdentifier: RuleGroupIdentifierV2,
-  action: AlertRuleAction
+  action: AlertRuleAction,
+  group?: CombinedRuleGroup | RulerRuleGroupDTO
 ): Ability {
-  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier);
+  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier, group);
 
   return useMemo(() => {
     return abilities[action];
@@ -253,9 +255,10 @@ export function useRulerRuleAbility(
 export function useRulerRuleAbilities(
   rule: RulerRuleDTO | undefined,
   groupIdentifier: RuleGroupIdentifierV2,
-  actions: AlertRuleAction[]
+  actions: AlertRuleAction[],
+  group?: CombinedRuleGroup | RulerRuleGroupDTO
 ): Ability[] {
-  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier);
+  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier, group);
 
   return useMemo(() => {
     return actions.map((action) => abilities[action]);
@@ -271,12 +274,13 @@ export function useAllAlertRuleAbilities(rule: CombinedRule): Abilities<AlertRul
   // We need to investigate further if some of these calls are redundant
   // In the meantime, memoizing the result helps
   const groupIdentifierV2 = useMemo(() => groupIdentifier.fromCombinedRule(rule), [rule]);
-  return useAllRulerRuleAbilities(rule.rulerRule, groupIdentifierV2);
+  return useAllRulerRuleAbilities(rule.rulerRule, groupIdentifierV2, rule.group);
 }
 
 export function useAllRulerRuleAbilities(
   rule: RulerRuleDTO | undefined,
-  groupIdentifier: RuleGroupIdentifierV2
+  groupIdentifier: RuleGroupIdentifierV2,
+  group?: CombinedRuleGroup | RulerRuleGroupDTO
 ): Abilities<AlertRuleAction> {
   const rulesSourceName = getGroupOriginName(groupIdentifier);
 
@@ -296,9 +300,7 @@ export function useAllRulerRuleAbilities(
 
   const abilities = useMemo<Abilities<AlertRuleAction>>(() => {
     const isProvisioned = rule ? isProvisionedRule(rule) : false;
-    // TODO: Add support for federated rules
-    // const isFederated = isFederatedRuleGroup();
-    const isFederated = false;
+    const isFederated = group ? isFederatedRuleGroup(group) : false;
     const isGrafanaManagedAlertRule = rulerRuleType.grafana.rule(rule);
 
     // Treat as plugin-provided only if:
@@ -348,6 +350,7 @@ export function useAllRulerRuleAbilities(
     pluginOrigin,
     pluginCheckLoading,
     isPluginInstalled,
+    group,
   ]);
 
   return abilities;

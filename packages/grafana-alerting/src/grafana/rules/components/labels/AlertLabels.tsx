@@ -17,6 +17,7 @@ export interface AlertLabelsProps {
   size?: LabelSize;
   onClick?: ([value, key]: [string | undefined, string | undefined]) => void;
   commonLabelsMode?: 'expand' | 'tooltip';
+  maxItems?: number;
 }
 
 export const AlertLabels = ({
@@ -26,9 +27,11 @@ export const AlertLabels = ({
   size,
   onClick,
   commonLabelsMode = 'expand',
+  maxItems,
 }: AlertLabelsProps) => {
   const styles = useStyles2(getStyles, size);
   const [showCommonLabels, setShowCommonLabels] = useState(false);
+  const [showAllLabels, setShowAllLabels] = useState(false);
 
   const computedCommonLabels = useMemo(
     () => (displayCommonLabels && Array.isArray(labelSets) && labelSets.length > 1 ? findCommonLabels(labelSets) : {}),
@@ -40,6 +43,10 @@ export const AlertLabels = ({
     .reject(isPrivateLabel)
     .reject(([key]) => (showCommonLabels ? false : key in computedCommonLabels))
     .value();
+
+  const shouldTruncateLabels = Boolean(maxItems && !showAllLabels && labelsToShow.length > maxItems);
+  const visibleLabels = shouldTruncateLabels ? labelsToShow.slice(0, maxItems) : labelsToShow;
+  const hiddenLabelCount = labelsToShow.length - visibleLabels.length;
 
   const commonLabelsCount = Object.keys(computedCommonLabels).length;
   const hasCommonLabels = commonLabelsCount > 0;
@@ -58,7 +65,7 @@ export const AlertLabels = ({
 
   return (
     <div className={styles.wrapper} role="list" aria-label={t('alerting.alert-labels.aria-label-labels', 'Labels')}>
-      {labelsToShow.map(([label, value]) => {
+      {visibleLabels.map(([label, value]) => {
         return (
           <AlertLabel
             key={label + value}
@@ -71,6 +78,29 @@ export const AlertLabels = ({
           />
         );
       })}
+      {hiddenLabelCount > 0 && (
+        <div role="listitem">
+          <Button
+            variant="secondary"
+            fill="text"
+            onClick={() => setShowAllLabels(true)}
+            size="sm"
+            tooltip={t('alerting.alert-labels.show-more-tooltip', 'Show all labels')}
+            tooltipPlacement="top"
+          >
+            <Trans i18nKey="alerting.alert-labels.more-labels-count" count={hiddenLabelCount}>
+              +{'{{count}}'} more
+            </Trans>
+          </Button>
+        </div>
+      )}
+      {showAllLabels && maxItems && labelsToShow.length > maxItems && (
+        <div role="listitem">
+          <Button variant="secondary" fill="text" onClick={() => setShowAllLabels(false)} size="sm">
+            <Trans i18nKey="alerting.alert-labels.show-fewer">Show fewer</Trans>
+          </Button>
+        </div>
+      )}
 
       {!showCommonLabels && hasCommonLabels && (
         <div role="listitem">

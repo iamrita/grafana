@@ -21,4 +21,22 @@ describe('AlertLabels', () => {
       expect(screen.getByText('+2 common labels')).toBeInTheDocument();
     });
   });
+
+  it('truncates labels and can reveal the rest', async () => {
+    const labels = { a: '1', b: '2', c: '3', d: '4' };
+
+    render(<AlertLabels labels={labels} maxItems={2} />);
+
+    expect(screen.getByRole('listitem', { name: 'a: 1' })).toBeInTheDocument();
+    expect(screen.getByRole('listitem', { name: 'b: 2' })).toBeInTheDocument();
+    expect(screen.queryByRole('listitem', { name: 'c: 3' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+2 more' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '+2 more' }));
+    await waitFor(() => {
+      expect(screen.getByRole('listitem', { name: 'c: 3' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('listitem', { name: 'd: 4' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toBeInTheDocument();
+  });
 });
