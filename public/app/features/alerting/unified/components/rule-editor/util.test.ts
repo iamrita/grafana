@@ -1,3 +1,4 @@
+import { createDataFrame, FieldType, LoadingState } from '@grafana/data';
 import { ExpressionDatasourceRef } from '@grafana/runtime/internal';
 import { ClassicCondition, ExpressionQuery } from 'app/features/expressions/types';
 import { AlertQuery } from 'app/types/unified-alerting-dto';
@@ -5,6 +6,7 @@ import { AlertQuery } from 'app/types/unified-alerting-dto';
 import { NEW_REDUCER_REF } from './query-and-alert-condition/reducer';
 import {
   containsPathSeparator,
+  errorFromCurrentCondition,
   findRenamedDataQueryReferences,
   getThresholdsForQueries,
   queriesWithUpdatedReferences,
@@ -406,6 +408,47 @@ function createThresholdExample(thresholdType: string): [AlertQuery[], string] {
 
   return [[dataQuery, reduceExpression, thresholdExpression], thresholdExpression.refId];
 }
+
+describe('errorFromCurrentCondition', () => {
+  it('returns undefined when there are no series', () => {
+    expect(
+      errorFromCurrentCondition({
+        series: [],
+        state: LoadingState.Done,
+      })
+    ).toBeUndefined();
+  });
+
+  it('rejects time series frames used as the alert condition', () => {
+    const error = errorFromCurrentCondition({
+      series: [
+        createDataFrame({
+          fields: [
+            { name: 'time', type: FieldType.time, values: [1, 2, 3] },
+            { name: 'value', type: FieldType.number, values: [1, 2, 3] },
+          ],
+        }),
+      ],
+      state: LoadingState.Done,
+    });
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error?.message).toMatch(/you cannot use time series data as an alert condition/i);
+  });
+
+  it('allows instant (non time-series) frames', () => {
+    expect(
+      errorFromCurrentCondition({
+        series: [
+          createDataFrame({
+            fields: [{ name: 'value', type: FieldType.number, values: [1] }],
+          }),
+        ],
+        state: LoadingState.Done,
+      })
+    ).toBeUndefined();
+  });
+});
 
 describe('findRenamedReferences', () => {
   it('should find the renamed ids', () => {

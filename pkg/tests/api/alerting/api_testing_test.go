@@ -251,7 +251,9 @@ func TestGrafanaRuleConfig(t *testing.T) {
 			t.Skip("Enterprise-only test")
 		}
 
-		t.Skip("flakey tests - skipping") //TODO: Fix tests and remove skip.
+		// OSS builds skip above. Enterprise still flakes on permission-cache
+		// timing after ReloadCachedPermissions; keep skipped until that path is deterministic.
+		t.Skip("flakey enterprise permission cache")
 
 		testUserId := createUser(t, env.SQLStore, env.Cfg, user.CreateUserCommand{
 			DefaultOrgRole: "DOESNOTEXIST", // Needed so that the SignedInUser has OrgId=1. Otherwise, datasource will not be found.

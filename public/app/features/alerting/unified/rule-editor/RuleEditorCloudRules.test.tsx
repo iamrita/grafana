@@ -84,7 +84,6 @@ describe('RuleEditor cloud', () => {
     await user.type(ui.inputs.annotationValue(0).get(), 'some summary');
     await user.type(ui.inputs.annotationValue(1).get(), 'some description');
 
-    // TODO remove skipPointerEventsCheck once https://github.com/jsdom/jsdom/issues/3232 is fixed
     await user.click(ui.buttons.addLabel.get());
 
     // save and check what was sent to backend
@@ -129,7 +128,6 @@ describe('RuleEditor cloud', () => {
     await user.type(ui.inputs.annotationValue(0).get(), 'some summary');
     await user.type(ui.inputs.annotationValue(1).get(), 'some description');
 
-    // TODO remove skipPointerEventsCheck once https://github.com/jsdom/jsdom/issues/3232 is fixed
     await user.click(ui.buttons.addLabel.get());
 
     // save and check what was sent to backend

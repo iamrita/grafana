@@ -16,38 +16,47 @@ export const TIME_INTERVAL_NAME_HAPPY_PATH = 'Some interval';
 export const TIME_INTERVAL_UID_FILE_PROVISIONED = 'd7b8515fc39e90f7';
 export const TIME_INTERVAL_NAME_FILE_PROVISIONED = 'A provisioned interval';
 
-const allTimeIntervals = getK8sResponse<TimeInterval>('TimeIntervalList', [
-  {
-    apiVersion: `${API_GROUP}/${API_VERSION}`,
-    kind: 'TimeInterval',
-    metadata: {
-      annotations: {
-        [K8sAnnotations.Provenance]: KnownProvenance.None,
-        [K8sAnnotations.CanUse]: 'true',
+function createDefaultTimeIntervals() {
+  return getK8sResponse<TimeInterval>('TimeIntervalList', [
+    {
+      apiVersion: `${API_GROUP}/${API_VERSION}`,
+      kind: 'TimeInterval',
+      metadata: {
+        annotations: {
+          [K8sAnnotations.Provenance]: KnownProvenance.None,
+          [K8sAnnotations.CanUse]: 'true',
+        },
+        name: base64UrlEncode(TIME_INTERVAL_NAME_HAPPY_PATH),
+        uid: TIME_INTERVAL_UID_HAPPY_PATH,
+        namespace: 'default',
+        resourceVersion: 'e0270bfced786660',
       },
-      name: base64UrlEncode(TIME_INTERVAL_NAME_HAPPY_PATH),
-      uid: TIME_INTERVAL_UID_HAPPY_PATH,
-      namespace: 'default',
-      resourceVersion: 'e0270bfced786660',
+      spec: { name: TIME_INTERVAL_NAME_HAPPY_PATH, time_intervals: [] },
     },
-    spec: { name: TIME_INTERVAL_NAME_HAPPY_PATH, time_intervals: [] },
-  },
-  {
-    apiVersion: `${API_GROUP}/${API_VERSION}`,
-    kind: 'TimeInterval',
-    metadata: {
-      annotations: {
-        [K8sAnnotations.Provenance]: 'file',
-        [K8sAnnotations.CanUse]: 'true',
+    {
+      apiVersion: `${API_GROUP}/${API_VERSION}`,
+      kind: 'TimeInterval',
+      metadata: {
+        annotations: {
+          [K8sAnnotations.Provenance]: 'file',
+          [K8sAnnotations.CanUse]: 'true',
+        },
+        name: base64UrlEncode(TIME_INTERVAL_NAME_FILE_PROVISIONED),
+        uid: TIME_INTERVAL_UID_FILE_PROVISIONED,
+        namespace: 'default',
+        resourceVersion: 'a76d2fcc6731aa0c',
       },
-      name: base64UrlEncode(TIME_INTERVAL_NAME_FILE_PROVISIONED),
-      uid: TIME_INTERVAL_UID_FILE_PROVISIONED,
-      namespace: 'default',
-      resourceVersion: 'a76d2fcc6731aa0c',
+      spec: { name: TIME_INTERVAL_NAME_FILE_PROVISIONED, time_intervals: [] },
     },
-    spec: { name: TIME_INTERVAL_NAME_FILE_PROVISIONED, time_intervals: [] },
-  },
-]);
+  ]);
+}
+
+let allTimeIntervals = createDefaultTimeIntervals();
+
+/** Reset in-memory time intervals. Called from setupMswServer after each test. */
+export function resetTimeIntervals() {
+  allTimeIntervals = createDefaultTimeIntervals();
+}
 
 const getIntervalByName = (name: string) => {
   return allTimeIntervals.items.find((interval) => interval.metadata.name === name);
@@ -109,7 +118,13 @@ const createNamespacedTimeIntervalHandler = () =>
 const deleteNamespacedTimeIntervalHandler = () =>
   http.delete<{ namespace: string; name: string }>(
     `${ALERTING_API_SERVER_BASE_URL}/namespaces/:namespace/timeintervals/:name`,
-    () => {
+    ({ params }) => {
+      const { name } = params;
+      const remaining = allTimeIntervals.items.filter((interval) => interval.metadata.name !== name);
+      if (remaining.length === allTimeIntervals.items.length) {
+        return HttpResponse.json({}, { status: 404 });
+      }
+      allTimeIntervals = { ...allTimeIntervals, items: remaining };
       return HttpResponse.json({});
     }
   );

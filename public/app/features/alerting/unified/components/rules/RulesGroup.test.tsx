@@ -31,8 +31,12 @@ function mockUseHasRuler(hasRuler: boolean, rulerConfig: RulerDataSourceConfig) 
 
 beforeEach(() => {
   mocks.useHasRuler.mockReset();
-  // FIXME: scope down
-  grantUserPermissions(Object.values(AccessControlAction));
+  grantUserPermissions([
+    AccessControlAction.AlertingRuleRead,
+    AccessControlAction.AlertingRuleUpdate,
+    AccessControlAction.AlertingRuleExternalRead,
+    AccessControlAction.AlertingRuleExternalWrite,
+  ]);
 });
 
 const ui = {

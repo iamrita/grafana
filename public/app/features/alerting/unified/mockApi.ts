@@ -10,6 +10,7 @@ import {
 } from 'app/features/alerting/unified/mocks/server/entities/alertmanagers';
 import { resetRoutingTreeMap } from 'app/features/alerting/unified/mocks/server/entities/k8s/routingtrees';
 import { resetHistorianState } from 'app/features/alerting/unified/mocks/server/handlers/historian';
+import { resetTimeIntervals } from 'app/features/alerting/unified/mocks/server/handlers/k8s/timeIntervals.k8s';
 import { resetUserStorage } from 'app/features/alerting/unified/mocks/server/handlers/userStorage';
 import { DashboardDTO } from 'app/types/dashboard';
 import { FolderDTO } from 'app/types/folders';
@@ -264,6 +265,8 @@ export function setupMswServer() {
     resetRoutingTreeMap();
     resetUserStorage();
     resetHistorianState();
+    resetTimeIntervals();
+    window.localStorage.clear();
   });
 
   return server;
