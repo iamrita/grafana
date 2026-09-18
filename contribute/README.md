@@ -7,6 +7,7 @@ These are some good resources to explore for developers:
 - [Create a pull request](create-pull-request.md)
 - [Create a feature request](create-feature-request.md)
 - [Developer guide](developer-guide.md)
+- [Codebase architecture](architecture/overview.md) — system diagrams and request paths
 - [Triage issues](triage-issues.md)
 - [Merge a pull request](merge-pull-request.md)
 - [Making changes to the CI pipeline](drone-pipeline.md)
