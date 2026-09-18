@@ -334,6 +334,87 @@ describe('Policy', () => {
     expect(within(customPolicy).getByTestId('matches-all')).toBeInTheDocument();
   });
 
+  it('should show a warning for contradictory matchers', () => {
+    const routeTree: RouteWithID = {
+      id: '1',
+      receiver: 'email',
+      object_matchers: [
+        ['team', eq, 'ops'],
+        ['team', eq, 'platform'],
+      ],
+    };
+
+    renderPolicy(
+      <Policy
+        readOnly
+        currentRoute={routeTree}
+        alertManagerSourceName={GRAFANA_RULES_SOURCE_NAME}
+        onEditPolicy={noop}
+        onAddPolicy={noop}
+        onDeletePolicy={noop}
+        onShowAlertInstances={noop}
+      />
+    );
+
+    expect(screen.getByTestId('policy-warnings')).toBeInTheDocument();
+  });
+
+  it('should show a warning for an unreachable sibling policy', () => {
+    const routeTree: RouteWithID = {
+      id: '0',
+      receiver: 'email',
+      routes: [
+        { id: '1', receiver: 'email', object_matchers: [['team', eq, 'ops']] },
+        {
+          id: '2',
+          receiver: 'pager',
+          object_matchers: [
+            ['team', eq, 'ops'],
+            ['region', eq, 'emea'],
+          ],
+        },
+      ],
+    };
+
+    renderPolicy(
+      <Policy
+        readOnly
+        isDefaultPolicy
+        currentRoute={routeTree}
+        alertManagerSourceName={GRAFANA_RULES_SOURCE_NAME}
+        onEditPolicy={noop}
+        onAddPolicy={noop}
+        onDeletePolicy={noop}
+        onShowAlertInstances={noop}
+      />
+    );
+
+    const policies = screen.getAllByTestId('am-route-container');
+    expect(within(policies[0]).queryByTestId('policy-warnings')).not.toBeInTheDocument();
+    expect(within(policies[1]).getByTestId('policy-warnings')).toBeInTheDocument();
+  });
+
+  it('should show a warning for a leaf policy without a contact point', () => {
+    const routeTree: RouteWithID = {
+      id: '1',
+      object_matchers: [['team', eq, 'ops']],
+    };
+
+    renderPolicy(
+      <Policy
+        readOnly
+        currentRoute={routeTree}
+        alertManagerSourceName={GRAFANA_RULES_SOURCE_NAME}
+        onEditPolicy={noop}
+        onAddPolicy={noop}
+        onDeletePolicy={noop}
+        onShowAlertInstances={noop}
+      />
+    );
+
+    expect(screen.getByTestId('policy-warnings')).toBeInTheDocument();
+  });
+
   it('shows correct badge when policy has file provenance', () => {
     const mockRoute: RouteWithID = {
       id: 'test-route',

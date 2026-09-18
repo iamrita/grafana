@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { render } from 'test/test-utils';
+import { render, screen } from 'test/test-utils';
 import { byLabelText, byRole } from 'testing-library-selector';
 
 import { Button } from '@grafana/ui';
@@ -8,7 +8,7 @@ import { grantUserPermissions } from 'app/features/alerting/unified/mocks';
 import { GRAFANA_RULES_SOURCE_NAME } from 'app/features/alerting/unified/utils/datasource';
 import { AccessControlAction } from 'app/types/accessControl';
 
-import { RouteWithID } from '../../../../../plugins/datasource/alertmanager/types';
+import { MatcherOperator, RouteWithID } from '../../../../../plugins/datasource/alertmanager/types';
 import { AlertmanagerProvider } from '../../state/AlertmanagerContext';
 import { FormAmRoute } from '../../types/amroutes';
 
@@ -99,6 +99,21 @@ describe('EditNotificationPolicyForm', function () {
     expect(ui.error.getAll()).toHaveLength(1);
     expect(ui.error.get()).toHaveTextContent('Repeat interval should be higher or equal to Group interval');
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('should warn when matchers contradict each other', async function () {
+    renderRouteForm({
+      id: '1',
+      receiver: 'default',
+      object_matchers: [
+        ['team', MatcherOperator.equal, 'ops'],
+        ['team', MatcherOperator.equal, 'platform'],
+      ],
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'These matchers contradict each other and this policy will never match.'
+    );
   });
 
   it('should allow resetting existing timing options', async function () {

@@ -284,6 +284,40 @@ describe('contact points', () => {
       expect(screen.getByText(/No integrations configured/i)).toBeInTheDocument();
     });
 
+    it('should render details for receivers with metadata and a summary for those without', async () => {
+      const withMetadata: ReceiverConfigWithMetadata = {
+        name: 'email',
+        provenance: undefined,
+        type: 'email',
+        disableResolveMessage: false,
+        settings: { addresses: 'test1@test.com' },
+        [RECEIVER_META_KEY]: {
+          name: 'Email',
+          description: 'The email receiver',
+        },
+      };
+      const withoutMetadata: ReceiverConfigWithMetadata = {
+        name: 'slack',
+        provenance: undefined,
+        type: 'slack',
+        disableResolveMessage: false,
+        settings: { recipient: '#alerts' },
+      };
+
+      renderWithProvider(
+        <ContactPoint
+          contactPoint={{
+            ...basicContactPoint,
+            grafana_managed_receiver_configs: [withMetadata, withoutMetadata],
+          }}
+        />
+      );
+
+      expect(screen.getByText('Email')).toBeInTheDocument();
+      expect(screen.getByText(/Slack/i)).toBeInTheDocument();
+      expect(screen.queryByText(/No integrations configured/i)).not.toBeInTheDocument();
+    });
+
     it('should not show warning when at least one receiver is configured', async () => {
       const receiver: ReceiverConfigWithMetadata = {
         name: 'email',
