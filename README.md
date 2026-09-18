@@ -29,7 +29,7 @@ Grafana is a Go backend and a TypeScript/React frontend. Embedded SQLite is the 
 - [Git](https://git-scm.com/)
 - [Go](https://go.dev/dl/) (see [go.mod](go.mod) for the required version)
 - [Node.js 24.x](https://nodejs.org/) with [corepack](https://nodejs.org/api/corepack.html) enabled (see [.nvmrc](.nvmrc))
-- [Yarn 4.11.0](https://yarnpkg.com/) via corepack
+- [Yarn 4](https://yarnpkg.com/) via corepack (see `packageManager` in [package.json](package.json))
 - [GCC](https://gcc.gnu.org/) for CGo/SQLite compilation of the backend
 
 Enable Yarn, then install frontend dependencies:
