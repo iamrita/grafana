@@ -6,6 +6,7 @@ import { ContactPointSelector as GrafanaManagedContactPointSelector } from '@gra
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
 import {
+  Alert,
   Badge,
   Button,
   Field,
@@ -40,6 +41,7 @@ import {
 
 import { PromDurationInput } from './PromDurationInput';
 import { getFormStyles } from './formStyles';
+import { validateMatcherFields } from './policyIssues';
 import { routeTimingsFields } from './routeTimingsFields';
 
 export interface AmRoutesExpandedFormProps {
@@ -84,6 +86,7 @@ export const AmRoutesExpandedForm = ({ actionButtons, route, onSubmit, defaults 
     control,
     name: 'object_matchers',
   });
+  const matcherConflict = validateMatcherFields(watch('object_matchers') ?? []);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -174,6 +177,14 @@ export const AmRoutesExpandedForm = ({ actionButtons, route, onSubmit, defaults 
         >
           <Trans i18nKey="alerting.am-routes-expanded-form.add-matcher">Add matcher</Trans>
         </Button>
+        {matcherConflict !== true && (
+          <Alert
+            severity="warning"
+            title={t('alerting.am-routes-expanded-form.matcher-conflict-title', 'Contradictory matchers')}
+          >
+            {matcherConflict}
+          </Alert>
+        )}
       </Stack>
 
       <Field label={t('alerting.am-routes-expanded-form.label-contact-point', 'Contact point')}>

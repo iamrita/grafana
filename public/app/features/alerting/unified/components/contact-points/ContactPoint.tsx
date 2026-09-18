@@ -32,9 +32,6 @@ export const ContactPoint = ({ contactPoint }: ContactPointProps) => {
   const [deleteTrigger] = useDeleteContactPoint({ alertmanager: selectedAlertmanager! });
   const [DeleteModal, showDeleteModal] = useDeleteContactPointModal(deleteTrigger.execute);
 
-  // TODO probably not the best way to figure out if we want to show either only the summary or full metadata for the receivers?
-  const showFullMetadata = receivers.some((receiver) => Boolean(receiver[RECEIVER_META_KEY]));
-
   return (
     <div className={styles.contactPointWrapper} data-testid="contact-point">
       <Stack direction="column" gap={0}>
@@ -48,14 +45,26 @@ export const ContactPoint = ({ contactPoint }: ContactPointProps) => {
           }
         />
 
-        {showFullMetadata ? (
+        {receivers.length === 0 ? (
+          <div className={styles.integrationWrapper}>
+            <ContactPointReceiverSummary receivers={receivers} />
+          </div>
+        ) : (
           <div>
             {receivers.map((receiver, index) => {
               const diagnostics = receiver[RECEIVER_STATUS_KEY];
               const metadata = receiver[RECEIVER_META_KEY];
               const sendingResolved = !Boolean(receiver.disableResolveMessage);
               const pluginMetadata = receiver[RECEIVER_PLUGIN_META_KEY];
-              const key = metadata.name + index;
+              const key = `${metadata?.name ?? receiver.type}-${index}`;
+
+              if (!metadata) {
+                return (
+                  <div key={key} className={styles.integrationWrapper}>
+                    <ContactPointReceiverSummary receivers={[receiver]} />
+                  </div>
+                );
+              }
 
               return (
                 <ContactPointReceiver
@@ -69,10 +78,6 @@ export const ContactPoint = ({ contactPoint }: ContactPointProps) => {
                 />
               );
             })}
-          </div>
-        ) : (
-          <div className={styles.integrationWrapper}>
-            <ContactPointReceiverSummary receivers={receivers} />
           </div>
         )}
       </Stack>

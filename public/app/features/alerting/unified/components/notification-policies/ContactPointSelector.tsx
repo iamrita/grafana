@@ -5,6 +5,7 @@ import { t } from '@grafana/i18n';
 import { Alert, Select, SelectCommonProps, Text } from '@grafana/ui';
 import { ContactPointReceiverSummary } from 'app/features/alerting/unified/components/contact-points/ContactPoint';
 import { useAlertmanager } from 'app/features/alerting/unified/state/AlertmanagerContext';
+import { stringifyErrorLike } from 'app/features/alerting/unified/utils/misc';
 
 import { useContactPointsWithStatus } from '../contact-points/useContactPoints';
 import { ContactPointWithMetadata } from '../contact-points/utils';
@@ -45,13 +46,17 @@ export const ExternalAlertmanagerContactPointSelector = ({
   }, [options, selectedContactPointName]);
 
   useEffect(() => {
+    if (error) {
+      onError(error instanceof Error ? error : new Error(stringifyErrorLike(error)));
+      return;
+    }
+
     // If the contact points are fetched successfully and the selected contact point is not in the list, show an error
     if (!isLoading && selectedContactPointName && !matchedContactPoint) {
       onError(new Error(`Contact point "${selectedContactPointName}" could not be found`));
     }
-  }, [isLoading, matchedContactPoint, onError, selectedContactPointName]);
+  }, [error, isLoading, matchedContactPoint, onError, selectedContactPointName]);
 
-  // TODO error handling
   if (error) {
     return (
       <Alert
@@ -60,7 +65,9 @@ export const ExternalAlertmanagerContactPointSelector = ({
           'Failed to fetch contact points'
         )}
         severity="error"
-      />
+      >
+        {stringifyErrorLike(error)}
+      </Alert>
     );
   }
 

@@ -16,6 +16,7 @@ import {
   ReceiverFormValues,
 } from '../../../types/receiver-form';
 
+import { isDependencySatisfied } from './channelOptionDependencies';
 import { ConfiguredSecretInput, OptionField } from './fields/OptionField';
 
 export interface Props<R extends ChannelValues> {
@@ -132,10 +133,7 @@ const determineRequired = (
     return option.required ? 'Required' : false;
   }
 
-  // TODO: This doesn't work with nested secureFields.
-  const dependentOn = Boolean(settings[option.dependsOn]) || Boolean(secureFields[option.dependsOn]);
-
-  if (dependentOn) {
+  if (isDependencySatisfied(option.dependsOn, settings, secureFields)) {
     return false;
   }
 
@@ -157,6 +155,5 @@ const determineReadOnly = (
     return false;
   }
 
-  // TODO: This doesn't work with nested secureFields.
-  return Boolean(settings[option.dependsOn]) || Boolean(secureFields[option.dependsOn]);
+  return isDependencySatisfied(option.dependsOn, settings, secureFields);
 };
