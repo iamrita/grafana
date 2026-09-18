@@ -62,45 +62,18 @@ These are the directories that define the architecture. Ignore tooling and test 
 The frontend is a Yarn workspace React app. Feature folders own pages and domain state. Shared UI and data types live in `packages/`. Built-in datasource and panel plugins live next to the app under `public/app/plugins/`.
 
 ```mermaid
-flowchart LR
-    subgraph boot [Boot]
-        HTML["public/views/index.html<br/>grafanaBootData"]
-        Index["public/app/index.ts"]
-        Init["public/app/initApp.ts"]
-        App["public/app/app.ts<br/>GrafanaApp.init"]
-        HTML --> Index --> Init --> App
-    end
+flowchart TB
+    HTML["public/views/index.html<br/>grafanaBootData"] --> Index["public/app/index.ts"]
+    Index --> Init["public/app/initApp.ts"]
+    Init --> App["public/app/app.ts<br/>GrafanaApp.init"]
 
-    subgraph shell [App shell]
-        Wrapper["AppWrapper.tsx<br/>Redux, theme, router"]
-        Routes["routes/routes.tsx<br/>getAppRoutes"]
-        Store["store/configureStore.ts<br/>Redux + RTK Query"]
-        App --> Wrapper
-        Wrapper --> Routes
-        App --> Store
-    end
-
-    subgraph features [public/app/features]
-        Dash["dashboard / dashboard-scene"]
-        Explore["explore"]
-        Alert["alerting"]
-        PluginsFeat["plugins / datasources"]
-        Other["admin, auth, browse-dashboards, ..."]
-    end
-
-    subgraph shared [Shared libraries]
-        Data["@grafana/data"]
-        UI["@grafana/ui"]
-        Runtime["@grafana/runtime"]
-        Schema["@grafana/schema"]
-        Scenes["@grafana/scenes"]
-        APIClients["@grafana/api-clients"]
-    end
-
-    Routes --> features
-    features --> shared
-    Store --> APIClients
-    APIClients --> Runtime
+    App --> Wrapper["AppWrapper.tsx<br/>Redux, theme, router"]
+    App --> Store["store/configureStore.ts"]
+    Wrapper --> Routes["routes/routes.tsx"]
+    Routes --> Features["public/app/features<br/>dashboard, explore, alerting, plugins, ..."]
+    Store --> APIClients["@grafana/api-clients"]
+    Features --> Packages["@grafana/data, ui, runtime, schema, scenes"]
+    APIClients --> Runtime["@grafana/runtime<br/>BackendSrv"]
 ```
 
 ### Frontend entry points
