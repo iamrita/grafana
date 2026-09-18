@@ -73,11 +73,11 @@ const AlertmanagerConfigurationVersionManager = ({
     setConfirmRestore(false);
   };
 
-  const restoreVersion = (id: number) => {
+  const restoreVersion = async (id: number) => {
+    await resetAlertManagerConfigToOldVersion({ id }).unwrap();
     setActiveComparison(undefined);
     setActiveRestoreVersion(undefined);
-
-    resetAlertManagerConfigToOldVersion({ id });
+    hideConfirmation();
   };
 
   if (error) {
@@ -203,30 +203,30 @@ const AlertmanagerConfigurationVersionManager = ({
     },
   ];
 
-  if (restoreVersionState.isLoading) {
-    return (
-      <Alert
-        severity="info"
-        title={t(
-          'alerting.alertmanager-configuration-version-manager.title-restoring-alertmanager-configuration',
-          'Restoring Alertmanager configuration'
-        )}
-      >
-        <Trans i18nKey="alerting.alertmanager-configuration-version-manager.this-might-take-a-while">
-          This might take a while...
-        </Trans>
-      </Alert>
-    );
-  }
-
   return (
     <>
+      {restoreVersionState.isLoading && (
+        <Alert
+          severity="info"
+          title={t(
+            'alerting.alertmanager-configuration-version-manager.title-restoring-alertmanager-configuration',
+            'Restoring Alertmanager configuration'
+          )}
+        >
+          <Trans i18nKey="alerting.alertmanager-configuration-version-manager.this-might-take-a-while">
+            This might take a while...
+          </Trans>
+        </Alert>
+      )}
       {activeComparison ? (
         <CompareVersions
           left={activeComparison[0]}
           right={activeComparison[1]}
           disabled={restoreVersionState.isLoading}
           onCancel={() => {
+            if (restoreVersionState.isLoading) {
+              return;
+            }
             setActiveRestoreVersion(undefined);
             setActiveComparison(undefined);
             hideConfirmation();
@@ -238,26 +238,35 @@ const AlertmanagerConfigurationVersionManager = ({
       ) : (
         <InteractiveTable pageSize={VERSIONS_PAGE_SIZE} columns={columns} data={rows} getRowId={(row) => row.id} />
       )}
-      {/* TODO make this modal persist while restore is in progress */}
       <ConfirmModal
         isOpen={confirmRestore}
+        disabled={restoreVersionState.isLoading}
         title={t('alerting.alertmanager-configuration-version-manager.title-restore-version', 'Restore version')}
         body={t(
           'alerting.alertmanager-configuration-version-manager.body-restore-configuration-version-unsaved-changes',
           'Are you sure you want to restore the configuration to this version? All unsaved changes will be lost.'
         )}
-        confirmText={t(
-          'alerting.alertmanager-configuration-version-manager.confirmText-yes-restore-configuration',
-          'Yes, restore configuration'
-        )}
-        onConfirm={() => {
+        confirmText={
+          restoreVersionState.isLoading
+            ? t(
+                'alerting.alertmanager-configuration-version-manager.confirmText-restoring-configuration',
+                'Restoring...'
+              )
+            : t(
+                'alerting.alertmanager-configuration-version-manager.confirmText-yes-restore-configuration',
+                'Yes, restore configuration'
+              )
+        }
+        onConfirm={async () => {
           if (activeRestoreVersion) {
-            restoreVersion(activeRestoreVersion);
+            await restoreVersion(activeRestoreVersion);
           }
-
-          hideConfirmation();
         }}
-        onDismiss={() => hideConfirmation()}
+        onDismiss={() => {
+          if (!restoreVersionState.isLoading) {
+            hideConfirmation();
+          }
+        }}
       />
     </>
   );

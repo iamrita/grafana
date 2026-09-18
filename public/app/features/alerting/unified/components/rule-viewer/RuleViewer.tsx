@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { chain, truncate } from 'lodash';
+import { chain } from 'lodash';
 import { useEffect, useState } from 'react';
 import { useMeasure } from 'react-use';
 
@@ -238,14 +238,14 @@ const createMetadata = (rule: CombinedRule, styles: ReturnType<typeof getStyles>
   }
 
   if (runbookUrl) {
-    /* TODO instead of truncating the string, we should use flex and text overflow properly to allow it to take up all of the horizontal space available */
-    const truncatedUrl = truncate(runbookUrl, { length: 42 });
     const valueToAdd = isValidRunbookURL(runbookUrl) ? (
       <TextLink variant="bodySmall" className={styles.url} href={runbookUrl} external>
-        {truncatedUrl}
+        {runbookUrl}
       </TextLink>
     ) : (
-      <Text variant="bodySmall">{truncatedUrl}</Text>
+      <Text variant="bodySmall" className={styles.url}>
+        {runbookUrl}
+      </Text>
     );
     metadata.push({
       label: t('alerting.create-metadata.label.runbook-url', 'Runbook URL'),
@@ -304,8 +304,7 @@ const createMetadata = (rule: CombinedRule, styles: ReturnType<typeof getStyles>
   if (hasLabels) {
     metadata.push({
       label: t('alerting.create-metadata.label.labels', 'Labels'),
-      /* TODO truncate number of labels, maybe build in to component? */
-      value: <AlertLabels labels={labels} size="sm" />,
+      value: <AlertLabels labels={labels} size="sm" maxItems={5} />,
     });
   }
 
@@ -448,8 +447,8 @@ function usePageNav(rule: CombinedRule) {
   const isAlertType = prometheusRuleType.alertingRule(promRule);
   const numberOfInstance = isAlertType ? calculateTotalInstances(rule.instanceTotals) : undefined;
 
-  const namespaceName = decodeGrafanaNamespace(rule.namespace).name;
   const groupName = rule.group.name;
+  const namespaceNav = buildNamespaceBreadcrumb(rule.namespace);
 
   const isGrafanaAlertRule = rulerRuleType.grafana.alertingRule(rulerRule);
   const isGrafanaRecordingRule = rulerRuleType.grafana.recordingRule(rulerRule);
@@ -519,11 +518,7 @@ function usePageNav(rule: CombinedRule) {
     parentItem: {
       text: groupName,
       url: groupDetailsUrl,
-      // @TODO support nested folders here
-      parentItem: {
-        text: namespaceName,
-        url: createListFilterLink([['namespace', namespaceName]]),
-      },
+      parentItem: namespaceNav,
     },
   };
 
@@ -548,8 +543,31 @@ export const calculateTotalInstances = (stats: AlertInstanceTotals) => {
     .value();
 };
 
+export function buildNamespaceBreadcrumb(namespace: CombinedRule['namespace']): NavModelItem {
+  const { name, parents } = decodeGrafanaNamespace(namespace);
+  const segments = [...parents, name];
+
+  return segments.reduce<NavModelItem | undefined>((parentItem, folderName) => {
+    const item: NavModelItem = {
+      text: folderName,
+      url: createListFilterLink([['namespace', folderName]]),
+    };
+
+    if (parentItem) {
+      item.parentItem = parentItem;
+    }
+
+    return item;
+  }, undefined)!;
+}
+
 const getStyles = (theme: GrafanaTheme2) => ({
   url: css({
+    display: 'inline-block',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
     wordBreak: 'break-all',
   }),
   layout: css({

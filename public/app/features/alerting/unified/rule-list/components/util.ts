@@ -6,7 +6,7 @@ import { dateTime, dateTimeFormat, isValidDate } from '@grafana/data';
 import { RuleHealth } from 'app/types/unified-alerting';
 import { PromAlertingRuleState } from 'app/types/unified-alerting-dto';
 
-import { isNullDate, parsePrometheusDuration } from '../../utils/time';
+import { formatPrometheusDuration, isNullDate, parsePrometheusDuration } from '../../utils/time';
 
 type NextEvaluation = {
   humanized: string;
@@ -15,8 +15,6 @@ type NextEvaluation = {
 
 /**
  * Best effort estimate for when the next evaluation will occur
- * @TODO write a test for this
- * @TODO move this somewhere else probably
  */
 export function calculateNextEvaluationEstimate(
   lastEvaluation?: string,
@@ -60,6 +58,23 @@ export function calculateNextEvaluationEstimate(
     humanized: `in ${dateTime(nextEvaluationDate).locale('en').fromNow(true)}`,
     fullDate: dateTimeFormat(nextEvaluationDate, { format: 'YYYY-MM-DD HH:mm:ss' }),
   };
+}
+
+/**
+ * How long a firing rule has been evaluated in its current firing window.
+ * Uses lastEvaluation as the start of the most recent successful tick.
+ */
+export function calculateFiringDuration(lastEvaluation?: string): string | undefined {
+  if (!lastEvaluation || !isValidDate(lastEvaluation) || isNullDate(lastEvaluation)) {
+    return;
+  }
+
+  const elapsedMs = Date.now() - Date.parse(lastEvaluation);
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
+    return;
+  }
+
+  return formatPrometheusDuration(elapsedMs);
 }
 
 export function getRelativeEvaluationInterval(lastEvaluation?: string) {
