@@ -543,7 +543,7 @@ export const calculateTotalInstances = (stats: AlertInstanceTotals) => {
     .value();
 };
 
-function buildNamespaceBreadcrumb(namespace: CombinedRule['namespace']): NavModelItem {
+export function buildNamespaceBreadcrumb(namespace: CombinedRule['namespace']): NavModelItem {
   const { name, parents } = decodeGrafanaNamespace(namespace);
   const segments = [...parents, name];
 

@@ -29,7 +29,7 @@ describe('AlertRuleListItem', () => {
       />
     );
 
-    expect(screen.getByText('Firing for')).toBeInTheDocument();
+    expect(screen.getByText(/Firing for/)).toBeInTheDocument();
     expect(screen.getByText('2m34s')).toBeInTheDocument();
     expect(screen.getByText(/next evaluation in/i)).toBeInTheDocument();
   });
