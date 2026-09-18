@@ -161,16 +161,17 @@ const getAlertmanagerConfigUpdate = async (requests: Request[]): Promise<AlertMa
 describe('Mute timings', () => {
   beforeEach(() => {
     setupDataSources(dataSources.am);
-    // FIXME: scope down
-    grantUserPermissions(Object.values(AccessControlAction));
+    grantUserPermissions([
+      AccessControlAction.AlertingNotificationsRead,
+      AccessControlAction.AlertingNotificationsWrite,
+      AccessControlAction.AlertingNotificationsExternalRead,
+      AccessControlAction.AlertingNotificationsExternalWrite,
+      AccessControlAction.AlertingTimeIntervalsRead,
+      AccessControlAction.AlertingTimeIntervalsWrite,
+    ]);
 
     setAlertmanagerConfig(GRAFANA_RULES_SOURCE_NAME, defaultConfig);
     setAlertmanagerConfig(dataSources.am.uid, defaultConfig);
-
-    // TODO: Add this at a higher level to ensure that no tests depend on others running first
-    // Without this, the selected alertmanager in a previous test can affect the next, meaning tests
-    // pass/fail depending on the order they are run/if they are focused
-    window.localStorage.clear();
   });
 
   it('creates a new mute timing, with mute_time_intervals in config', async () => {

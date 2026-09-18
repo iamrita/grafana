@@ -1862,8 +1862,9 @@ func TestIntegrationRuleUpdate(t *testing.T) {
 
 			adminClient.DeleteDatasource(t, ds1.Body.Datasource.UID)
 
-			// expire datasource caching
-			<-time.After(datasourceService.DefaultCacheTTL + 1*time.Second) // TODO delete when TTL could be configured
+			// Datasource cache TTL is still hardcoded (DefaultCacheTTL). Sleep until the
+			// deleted source drops out of cache; skipCache is not exposed on this API path.
+			<-time.After(datasourceService.DefaultCacheTTL + 1*time.Second)
 
 			groupName = group.Name
 		}

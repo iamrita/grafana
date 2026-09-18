@@ -1,13 +1,11 @@
-import { render, screen, userEvent, within } from 'test/test-utils';
+import { render, screen, userEvent, waitFor, within } from 'test/test-utils';
 
-import { base64UrlEncode } from '@grafana/alerting';
 import { setupMswServer } from 'app/features/alerting/unified/mockApi';
 import {
   setMuteTimingsListError,
   setTimeIntervalsListEmpty,
 } from 'app/features/alerting/unified/mocks/server/configure';
 import { setAlertmanagerConfig } from 'app/features/alerting/unified/mocks/server/entities/alertmanagers';
-import { captureRequests } from 'app/features/alerting/unified/mocks/server/events';
 import { AccessControlAction } from 'app/types/accessControl';
 
 import { grantUserPermissions } from '../../mocks';
@@ -71,21 +69,15 @@ describe('MuteTimingsTable', () => {
     });
 
     it('allow cancelling deletion', async () => {
-      // TODO: Don't use captureRequests for this, move to stateful mock server instead
-      // and check that the interval is still in the list
-      const capture = captureRequests();
       const user = userEvent.setup();
       renderWithProvider();
+
+      expect(await screen.findByText(TIME_INTERVAL_NAME_HAPPY_PATH)).toBeInTheDocument();
 
       await user.click((await screen.findAllByText(/delete/i))[0]);
       await user.click(await screen.findByRole('button', { name: /cancel/i }));
 
-      const requests = await capture;
-      const amConfigUpdateRequest = requests.find(
-        (r) => r.url.includes('/alertmanager/grafana/config/api/v1/alerts') && r.method === 'POST'
-      );
-
-      expect(amConfigUpdateRequest).toBeUndefined();
+      expect(await screen.findByText(TIME_INTERVAL_NAME_HAPPY_PATH)).toBeInTheDocument();
     });
 
     it('shows list of intervals from API', async () => {
@@ -104,22 +96,17 @@ describe('MuteTimingsTable', () => {
     });
 
     it('deletes interval', async () => {
-      // TODO: Don't use captureRequests for this, move to stateful mock server instead
-      // and check that the interval is no longer in the list
-      const capture = captureRequests();
       const user = userEvent.setup();
       renderWithProvider();
+
+      expect(await screen.findByText(TIME_INTERVAL_NAME_HAPPY_PATH)).toBeInTheDocument();
 
       await user.click((await screen.findAllByText(/delete/i))[0]);
       await user.click(await screen.findByRole('button', { name: /delete/i }));
 
-      const requests = await capture;
-      const encodedName = base64UrlEncode(TIME_INTERVAL_NAME_HAPPY_PATH);
-      const deleteRequest = requests.find(
-        (r) => r.url.includes(`timeintervals/${encodedName}`) && r.method === 'DELETE'
-      );
-
-      expect(deleteRequest).toBeDefined();
+      await waitFor(() => {
+        expect(screen.queryByText(TIME_INTERVAL_NAME_HAPPY_PATH)).not.toBeInTheDocument();
+      });
     });
 
     it('shows empty state when no mute timings are configured', async () => {

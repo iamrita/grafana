@@ -28,8 +28,35 @@ Testing with RBAC disabled should be considered as an additional option when we 
 To enable or disable Role Based Access Control in tests use
 `enableRBAC` or `disableRBAC` from `public/app/features/alerting/unified/mocks.ts`
 
-To grant a permission to a user use `grantUserPermission` from the same file.
+To grant a permission to a user use `grantUserPermissions` from the same file.
+
+Grant **only the actions the test needs**. Do not grant `Object.values(AccessControlAction)` — a broad grant hides permission regressions and makes tests depend on unrelated abilities.
 
 ## Common patterns
 
-TODO
+### Isolated MSW state
+
+`setupMswServer()` resets alertmanager config, routing trees, user storage, historian, and time-interval fixtures after each test, and clears `localStorage` so a previously selected alertmanager cannot leak into the next case.
+
+If a handler mutates in-memory fixtures, add a matching `reset*` function and call it from `setupMswServer()`.
+
+Prefer asserting UI state after a mutation (item gone from the table) over `captureRequests()`, once the mock is stateful.
+
+### Querying and interacting
+
+- Prefer `*ByRole` / `findBy*` over test ids when a role exists
+- Use `userEvent.setup()` (or the `user` from `render()`)
+- Await loading and empty states explicitly — MSW will surface missing handlers as failed requests
+
+### Test data
+
+Use factories instead of hand-built objects:
+
+- `alertingFactory` from `mocks/server/db` for ruler rules and groups
+- `mockFolder`, `mockDataSource`, `mockGrafanaRulerRule` from `mocks.ts`
+
+### Skipped tests
+
+Do not leave `it.skip` / `describe.skip` for “migrate to MSW later”. Add a handler or move the coverage next to the hook/page that owns the behavior.
+
+If a skip must remain (blocked product work, enterprise-only), say why and point to the replacement coverage.

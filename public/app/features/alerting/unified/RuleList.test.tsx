@@ -1,6 +1,6 @@
 import { SerializedError } from '@reduxjs/toolkit';
 import { TestProvider } from 'test/helpers/TestProvider';
-import { render, screen, waitFor, within } from 'test/test-utils';
+import { render, screen, waitFor } from 'test/test-utils';
 import { byRole, byTestId, byText } from 'testing-library-selector';
 
 import { PluginExtensionTypes } from '@grafana/data';
@@ -21,7 +21,6 @@ import { fetchRules } from './api/prometheus';
 import * as apiRuler from './api/ruler';
 import { fetchRulerRules } from './api/ruler';
 import {
-  getPotentiallyPausedRulerRules,
   grantUserPermissions,
   mockDataSource,
   mockPromAlert,
@@ -29,7 +28,6 @@ import {
   mockPromRecordingRule,
   mockPromRuleGroup,
   mockPromRuleNamespace,
-  pausedPromRules,
   somePromRules,
   someRulerRules,
 } from './mocks';
@@ -102,7 +100,6 @@ const dataSources = {
 
 const ui = {
   ruleGroup: byTestId('rule-group'),
-  pausedRuleGroup: byText(/groupPaused/),
   cloudRulesSourceErrors: byTestId('cloud-rulessource-errors'),
   groupCollapseToggle: byTestId(selectors.components.AlertRules.groupToggle),
   ruleCollapseToggle: byTestId(selectors.components.AlertRules.toggle),
@@ -111,27 +108,8 @@ const ui = {
   expandedContent: byTestId(selectors.components.AlertRules.expandedContent),
   rulesFilterInput: byTestId('search-query-input'),
   moreErrorsButton: byRole('button', { name: /more errors/ }),
-  editCloudGroupIcon: byTestId('edit-group'),
   newRuleButton: byRole('link', { name: 'New alert rule' }),
   exportButton: byText(/export rules/i),
-  editGroupModal: {
-    dialog: byRole('dialog'),
-    namespaceInput: byRole('textbox', { name: /^Namespace/ }),
-    ruleGroupInput: byRole('textbox', { name: /Evaluation group/ }),
-    intervalInput: byRole('textbox', {
-      name: /Evaluation interval How often is the rule evaluated. Applies to every rule within the group./i,
-    }),
-    saveButton: byRole('button', { name: /Save/ }),
-  },
-  stateTags: {
-    paused: byText(/^Paused/),
-  },
-  actionButtons: {
-    more: byRole('button', { name: /More/ }),
-  },
-  moreActionItems: {
-    resume: byRole('menuitem', { name: /resume evaluation/i }),
-  },
 };
 
 setupMswServer();
@@ -547,201 +525,11 @@ describe('RuleList', () => {
     await waitFor(() => expect(ui.ruleGroup.get()).toHaveTextContent('group-2'));
   });
 
-  it.skip('uses entire group when reordering after filtering', async () => {
-    const { user } = await renderRuleList();
-
-    mocks.api.discoverFeaturesByUid.mockResolvedValue({
-      application: PromApplication.Cortex,
-      features: {
-        rulerApiEnabled: true,
-      },
-    });
-
-    mocks.api.fetchRulerRules.mockImplementation(() => Promise.resolve(someRulerRules));
-    mocks.api.fetchRules.mockImplementation((dataSourceName: string) => {
-      if (dataSourceName === GRAFANA_RULES_SOURCE_NAME) {
-        return Promise.resolve([
-          mockPromRuleNamespace({
-            name: 'foofolder',
-            dataSourceName: GRAFANA_RULES_SOURCE_NAME,
-            groups: [
-              mockPromRuleGroup({
-                name: 'grafana-group',
-                rules: [
-                  mockPromAlertingRule({
-                    query: '[]',
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ]);
-      } else {
-        return Promise.resolve([]);
-      }
-    });
-
-    renderRuleList();
-
-    const [firstReorderButton] = await screen.findAllByLabelText(/reorder/i);
-
-    const filterInput = ui.rulesFilterInput.get();
-    await user.type(filterInput, 'alert1a{Enter}');
-
-    await user.click(firstReorderButton);
-
-    const reorderDialog = await screen.findByRole('dialog');
-
-    const alertsInReorder = within(reorderDialog).getAllByTestId('reorder-alert-rule');
-
-    // We've filtered down to one rule, but the reorder dialog should still
-    // have everything in the group visible for reordering
-    // If this were not the case, rules could be deleted ⚠️
-    expect(alertsInReorder).toHaveLength(2);
-  });
-
-  describe.skip('pausing rules', () => {
-    beforeEach(() => {
-      grantUserPermissions([
-        AccessControlAction.AlertingRuleRead,
-        AccessControlAction.AlertingRuleUpdate,
-        AccessControlAction.AlertingRuleExternalRead,
-        AccessControlAction.AlertingRuleExternalWrite,
-      ]);
-      mocks.api.fetchRulerRules.mockImplementation(() => Promise.resolve(getPotentiallyPausedRulerRules(true)));
-      mocks.api.fetchRules.mockImplementation((sourceName) =>
-        Promise.resolve(sourceName === 'grafana' ? pausedPromRules('grafana') : [])
-      );
-      mocks.api.rulerBuilderMock.mockReturnValue({
-        rules: () => ({ path: `api/ruler/${GRAFANA_RULES_SOURCE_NAME}/api/v1/rules` }),
-        namespace: () => ({ path: 'ruler' }),
-        namespaceGroup: () => ({
-          path: `api/ruler/${GRAFANA_RULES_SOURCE_NAME}/api/v1/rules/NAMESPACE_UID/groupPaused`,
-        }),
-      });
-    });
-
-    test('resuming paused alert rule', async () => {
-      const { user } = await renderRuleList();
-
-      // Expand the paused rule group so we can assert the rule state
-      await user.click(await ui.pausedRuleGroup.find());
-
-      expect(await ui.stateTags.paused.find()).toBeInTheDocument();
-
-      // TODO: Migrate all testing logic to MSW and so we aren't manually tweaking the API response behaviour
-      mocks.api.fetchRulerRules.mockImplementationOnce(() => {
-        return Promise.resolve(getPotentiallyPausedRulerRules(false));
-      });
-
-      await user.click(await ui.actionButtons.more.find());
-      await user.click(await ui.moreActionItems.resume.find());
-
-      await waitFor(() => expect(ui.stateTags.paused.query()).not.toBeInTheDocument());
-    });
-  });
-
-  /**
-   * @TODO port these tests to MSW – they rely on mocks a whole lot, and since we're looking to refactor the list view
-   * I imagine we'd need to rewrite these anyway.
-   *
-   * These actions are currently tested in the "useProduceNewRuleGroup" hook(s).
-   */
-  describe.skip('edit lotex groups, namespaces', () => {
-    const testDatasources = {
-      prom: dataSources.prom,
-    };
-
-    function testCase(name: string, fn: () => Promise<void>) {
-      it(name, async () => {
-        mocks.api.discoverFeaturesByUid.mockResolvedValue({
-          application: PromApplication.Cortex,
-          features: {
-            rulerApiEnabled: true,
-          },
-        });
-
-        mocks.api.fetchRules.mockImplementation((sourceName) =>
-          Promise.resolve(sourceName === testDatasources.prom.name ? somePromRules() : [])
-        );
-        mocks.api.fetchRulerRules.mockImplementation(({ dataSourceName }) =>
-          Promise.resolve(dataSourceName === testDatasources.prom.name ? someRulerRules : {})
-        );
-
-        const { user } = await renderRuleList();
-
-        expect(await ui.rulesFilterInput.find()).toHaveValue('');
-
-        await waitFor(() => expect(ui.ruleGroup.queryAll()).toHaveLength(3));
-
-        const groups = await ui.ruleGroup.findAll();
-        expect(groups).toHaveLength(3);
-
-        // open edit dialog
-        await user.click(ui.editCloudGroupIcon.get(groups[0]));
-
-        await waitFor(() => expect(ui.editGroupModal.dialog.get()).toBeInTheDocument());
-
-        expect(ui.editGroupModal.namespaceInput.get()).toHaveDisplayValue('namespace1');
-        expect(ui.editGroupModal.ruleGroupInput.get()).toHaveDisplayValue('group1');
-        await fn();
-      });
-    }
-
-    testCase('rename both lotex namespace and group', async () => {
-      const { user } = await renderRuleList();
-
-      // make changes to form
-      await user.clear(ui.editGroupModal.namespaceInput.get());
-      await user.type(ui.editGroupModal.namespaceInput.get(), 'super namespace');
-
-      await user.clear(ui.editGroupModal.ruleGroupInput.get());
-      await user.type(ui.editGroupModal.ruleGroupInput.get(), 'super group');
-
-      await user.clear(ui.editGroupModal.intervalInput.get());
-      await user.type(ui.editGroupModal.intervalInput.get(), '5m');
-
-      // submit, check that appropriate calls were made
-      await user.click(ui.editGroupModal.saveButton.get());
-
-      await waitFor(() => expect(ui.editGroupModal.namespaceInput.query()).not.toBeInTheDocument());
-
-      expect(mocks.api.fetchRulerRules).toHaveBeenCalledTimes(4);
-    });
-
-    testCase('rename just the lotex group', async () => {
-      const { user } = await renderRuleList();
-
-      // make changes to form
-      await user.clear(ui.editGroupModal.ruleGroupInput.get());
-      await user.type(ui.editGroupModal.ruleGroupInput.get(), 'super group');
-
-      await user.clear(ui.editGroupModal.intervalInput.get());
-      await user.type(ui.editGroupModal.intervalInput.get(), '5m');
-
-      // submit, check that appropriate calls were made
-      await user.click(ui.editGroupModal.saveButton.get());
-
-      await waitFor(() => expect(ui.editGroupModal.namespaceInput.query()).not.toBeInTheDocument());
-
-      expect(mocks.api.fetchRulerRules).toHaveBeenCalledTimes(4);
-    });
-
-    testCase('edit lotex group eval interval, no renaming', async () => {
-      const { user } = await renderRuleList();
-
-      // make changes to form
-      await user.clear(ui.editGroupModal.intervalInput.get());
-      await user.type(ui.editGroupModal.intervalInput.get(), '5m');
-
-      // submit, check that appropriate calls were made
-      await user.click(ui.editGroupModal.saveButton.get());
-
-      await waitFor(() => expect(ui.editGroupModal.namespaceInput.query()).not.toBeInTheDocument());
-
-      expect(mocks.api.fetchRulerRules).toHaveBeenCalledTimes(4);
-    });
-  });
+  // Reorder-after-filter, pause/resume, and lotex group edits used to live here as skipped
+  // jest.fn() tests. Coverage moved with the list-view refactor:
+  // - group reorder: GroupEditPage.test.tsx, useUpdateRuleGroup.test.tsx
+  // - pause/resume: hooks/ruleGroup/usePauseAlertRule.test.tsx
+  // - namespace/group edits: useUpdateRuleGroup / useProduceNewRuleGroup hooks
 
   describe('RBAC Enabled', () => {
     describe('Export button', () => {
