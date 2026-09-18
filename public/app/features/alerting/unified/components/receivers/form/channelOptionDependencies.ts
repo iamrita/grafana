@@ -46,15 +46,18 @@ export function isDependencySatisfied(
   return hasNestedSettingValue(settings, dependsOn);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function hasNestedSettingValue(value: unknown, key: string): boolean {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
-  const record = value as Record<string, unknown>;
-  if (isPresent(record[key])) {
+  if (isPresent(value[key])) {
     return true;
   }
 
-  return Object.values(record).some((nested) => hasNestedSettingValue(nested, key));
+  return Object.values(value).some((nested) => hasNestedSettingValue(nested, key));
 }

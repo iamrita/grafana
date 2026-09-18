@@ -50,8 +50,8 @@ import { Spacer } from '../Spacer';
 import { GrafanaPoliciesExporter } from '../export/GrafanaPoliciesExporter';
 
 import { Matchers } from './Matchers';
-import { PolicyIssue, detectPolicyIssues } from './policyIssues';
 import { useRoutesMatchingFilters } from './RoutesMatchingFiltersContext';
+import { PolicyIssue, detectPolicyIssues } from './policyIssues';
 import { TimingOptions } from './timingOptions';
 
 const POLICIES_PER_PAGE = 20;
@@ -1211,23 +1211,27 @@ const getStyles = (theme: GrafanaTheme2) => ({
     const isError = severity === true || severity === 'error';
     const isWarning = severity === 'warning';
 
+    let color = theme.colors.text.secondary;
+    let background = theme.colors.background.primary;
+    let border = theme.colors.border.weak;
+
+    if (isError) {
+      color = theme.colors.error.text;
+      background = theme.colors.error.transparent;
+      border = theme.colors.error.borderTransparent;
+    } else if (isWarning) {
+      color = theme.colors.warning.text;
+      background = theme.colors.warning.transparent;
+      border = theme.colors.warning.borderTransparent;
+    }
+
     return css({
-      color: isError ? theme.colors.error.text : isWarning ? theme.colors.warning.text : theme.colors.text.secondary,
-      background: isError
-        ? theme.colors.error.transparent
-        : isWarning
-          ? theme.colors.warning.transparent
-          : theme.colors.background.primary,
+      color,
+      background,
       width: '25px',
       height: '25px',
       textAlign: 'center',
-      border: `solid 1px ${
-        isError
-          ? theme.colors.error.borderTransparent
-          : isWarning
-            ? theme.colors.warning.borderTransparent
-            : theme.colors.border.weak
-      }`,
+      border: `solid 1px ${border}`,
       borderRadius: theme.shape.radius.default,
       padding: 0,
     });
