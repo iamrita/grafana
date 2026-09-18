@@ -164,6 +164,7 @@ export const QueryWrapper = ({
       <Stack direction="row" alignItems="center" gap={1}>
         <SelectingDataSourceTooltip />
         <AlertingRuleQueryExtensionPoint query={Object.assign({}, query.model)} extensionsToShow="queryless" />
+        <AlertingRuleQueryExtensionPoint query={Object.assign({}, query.model)} extensionsToShow="basic" />
         <QueryOptions
           onChangeTimeRange={onChangeTimeRange}
           query={query}

@@ -1,11 +1,15 @@
 import { chain, filter } from 'lodash';
 import { PropsWithChildren } from 'react';
 
+import { CombinedRule } from 'app/types/unified-alerting';
+
 import {
   Abilities,
   Action,
+  AlertRuleAction,
   AlertingAction,
   AlertmanagerAction,
+  useAlertRuleAbilities,
   useAlertingAbilities,
   useAllAlertmanagerAbilities,
 } from '../hooks/useAbilities';
@@ -33,7 +37,7 @@ interface ActionsProps<T extends Action> extends PropsWithChildren {
   actions: T[];
 }
 
-const AuthorizeAlertmanager = ({ actions, children }: ActionsProps<AlertmanagerAction>) => {
+export const AuthorizeAlertmanager = ({ actions, children }: ActionsProps<AlertmanagerAction>) => {
   const alertmanagerAbilties = useAllAlertmanagerAbilities();
   const allowed = actionsAllowed(alertmanagerAbilties, actions);
 
@@ -44,7 +48,7 @@ const AuthorizeAlertmanager = ({ actions, children }: ActionsProps<AlertmanagerA
   }
 };
 
-const AuthorizeAlertsource = ({ actions, children }: ActionsProps<AlertingAction>) => {
+export const AuthorizeAlertsource = ({ actions, children }: ActionsProps<AlertingAction>) => {
   const alertSourceAbilities = useAlertingAbilities();
   const allowed = actionsAllowed(alertSourceAbilities, actions);
 
@@ -55,7 +59,17 @@ const AuthorizeAlertsource = ({ actions, children }: ActionsProps<AlertingAction
   }
 };
 
-// TODO add some authorize helper components for alert source and individual alert rules
+interface AuthorizeAlertRuleProps extends PropsWithChildren {
+  rule: CombinedRule;
+  actions: AlertRuleAction[];
+}
+
+export const AuthorizeAlertRule = ({ rule, actions, children }: AuthorizeAlertRuleProps) => {
+  const abilities = useAlertRuleAbilities(rule, actions);
+  const allowed = abilities.some(([_supported, allowed]) => allowed === true);
+
+  return allowed ? <>{children}</> : null;
+};
 
 // check if some action is allowed from the abilities
 function actionsAllowed<T extends Action>(abilities: Abilities<T>, actions: T[]) {

@@ -235,6 +235,32 @@ describe('RuleViewer', () => {
       expect(screen.queryByText(/last evaluation duration/i)).not.toBeInTheDocument();
     });
 
+    it('renders nested folder breadcrumbs', async () => {
+      const nestedRule = getGrafanaRule(
+        {
+          name: 'Nested alert',
+          namespace: {
+            groups: [],
+            name: JSON.stringify(['Team', 'Payments']),
+            rulesSource: 'grafana',
+          },
+          group: {
+            name: 'nested-group',
+            interval: '15m',
+            rules: [],
+            totals: { alerting: 1 },
+          },
+        },
+        { uid: grafanaRulerRule.grafana_alert.uid }
+      );
+      const nestedIdentifier = ruleId.fromCombinedRule('grafana', nestedRule);
+
+      await renderRuleViewer(nestedRule, nestedIdentifier);
+
+      expect(screen.getByText('Team')).toBeInTheDocument();
+      expect(screen.getByText('Payments')).toBeInTheDocument();
+    });
+
     it('renders silencing form correctly and shows alert rule name', async () => {
       await renderRuleViewer(mockRule, mockRuleIdentifier);
       await openSilenceDrawer();

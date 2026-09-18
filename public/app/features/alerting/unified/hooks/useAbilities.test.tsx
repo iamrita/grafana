@@ -218,6 +218,33 @@ describe('AlertRule abilities', () => {
     expect(result.current).toMatchSnapshot();
   });
 
+  it('should not allow editing or deleting federated rules', async () => {
+    const mimirDs = mockDataSource({ uid: 'mimir', name: 'Mimir' });
+    setupDataSources(mimirDs);
+
+    const rule = getCloudRule(
+      {
+        group: {
+          name: 'federated-group',
+          rules: [],
+          totals: {},
+          source_tenants: ['tenant-a', 'tenant-b'],
+        },
+      },
+      { rulesSource: mimirDs }
+    );
+
+    const { result } = renderHook(() => useAllAlertRuleAbilities(rule), { wrapper: wrapper() });
+
+    await waitFor(() => {
+      expect(result.current[AlertRuleAction.View][0]).toBe(true);
+    });
+
+    expect(result.current[AlertRuleAction.Update][0]).toBe(false);
+    expect(result.current[AlertRuleAction.Delete][0]).toBe(false);
+    expect(result.current[AlertRuleAction.Pause][0]).toBe(false);
+  });
+
   it('should allow editing/deleting rules with plugin origin label when plugin is not installed', async () => {
     // Create a rule with a plugin origin label for a plugin that doesn't exist
     const rule = getGrafanaRule({

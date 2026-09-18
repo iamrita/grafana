@@ -5,6 +5,8 @@ import Skeleton from 'react-loading-skeleton';
 import { GrafanaTheme2 } from '@grafana/data';
 import { Stack, Text, useStyles2 } from '@grafana/ui';
 
+import { Spacer } from '../../components/Spacer';
+
 interface ListItemProps extends AriaAttributes {
   icon?: ReactNode;
   title: ReactNode;
@@ -28,32 +30,39 @@ export const ListItem = (props: ListItemProps) => {
       {...ariaAttributes}
     >
       <Stack direction="row" alignItems="start" gap={1} wrap={false}>
-        {/* icon */}
         <span className={styles.statusIcon}>{icon}</span>
 
         <Stack direction="column" gap={0.5} flex="1" minWidth={0}>
-          {/* title */}
-          <Stack direction="column" gap={0}>
-            <div className={styles.textOverflow}>{title}</div>
-            <div className={styles.textOverflow}>{description}</div>
+          <Stack direction="row" alignItems="start" justifyContent="space-between" gap={1} wrap={false}>
+            <Stack direction="column" gap={0} minWidth={0} flex="1">
+              <div className={styles.textOverflow}>{title}</div>
+              <div className={styles.textOverflow}>{description}</div>
+            </Stack>
+            {actions && (
+              <Stack direction="row" alignItems="center" gap={1} wrap={false}>
+                {actions}
+              </Stack>
+            )}
           </Stack>
 
-          {/* metadata */}
-          <Stack direction="row" gap={1} alignItems="center">
-            {meta?.map((item, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <Separator />}
-                {item}
-              </React.Fragment>
-            ))}
-          </Stack>
-        </Stack>
-
-        {/* actions & meta right */}
-        <Stack direction="row" alignItems="center" gap={1} wrap={false}>
-          {/* @TODO move this so the metadata row can extend beyond the width of this column */}
-          {metaRight}
-          {actions}
+          {(meta?.length || metaRight) && (
+            <Stack direction="row" gap={1} alignItems="center" wrap={false} minWidth={0}>
+              {meta?.map((item, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <Separator />}
+                  {item}
+                </React.Fragment>
+              ))}
+              {metaRight && (
+                <>
+                  <Spacer />
+                  <Stack direction="row" alignItems="center" gap={1} wrap={false}>
+                    {metaRight}
+                  </Stack>
+                </>
+              )}
+            </Stack>
+          )}
         </Stack>
       </Stack>
     </li>
