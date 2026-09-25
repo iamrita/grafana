@@ -1,0 +1,14 @@
+{
+  "name": "grafana-dev-skills",
+  "displayName": "Grafana Dev Skills",
+  "version": "0.1.0",
+  "description": "Shared team skills for working on Grafana: Go API handler tests, browser-based frontend verification, post-change lint enforcement for cloud agents, standardized Jira ticket descriptions, and developer onboarding.",
+  "author": {
+    "name": "Amrita"
+  },
+  "repository": "https://github.com/iamrita/grafana",
+  "license": "AGPL-3.0",
+  "keywords": ["grafana", "skills", "testing", "go", "react", "jira", "onboarding", "lint"],
+  "category": "developer-tools",
+  "skills": "./skills/"
+}

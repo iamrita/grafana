@@ -1,0 +1,17 @@
+{
+  "name": "grafana-team-marketplace",
+  "owner": {
+    "name": "Amrita"
+  },
+  "metadata": {
+    "description": "Team plugins for the Grafana codebase.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "grafana-dev-skills",
+      "source": "./cursor-plugins/grafana-dev-skills",
+      "description": "Shared team skills for working on Grafana: Go API handler tests, browser-based frontend verification, post-change lint enforcement, Jira ticket formatting, and developer onboarding."
+    }
+  ]
+}
