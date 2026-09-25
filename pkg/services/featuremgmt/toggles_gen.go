@@ -913,4 +913,8 @@ const (
 	// FlagColorblindThemes
 	// Enables the new colorblind-friendly themes
 	FlagColorblindThemes = "colorblindThemes"
+
+	// FlagExperimentalFeatureTogglesAdmin
+	// Read-only admin API that lists experimental feature toggles
+	FlagExperimentalFeatureTogglesAdmin = "experimentalFeatureTogglesAdmin"
 )
