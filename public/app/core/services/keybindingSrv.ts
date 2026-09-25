@@ -7,6 +7,7 @@ import { toggleMockApiAndReload, togglePseudoLocale } from 'app/dev-utils';
 import { SaveDashboardDrawer } from 'app/features/dashboard/components/SaveDashboard/SaveDashboardDrawer';
 import { ShareModal } from 'app/features/dashboard/components/ShareModal/ShareModal';
 import { DashboardModel } from 'app/features/dashboard/state/DashboardModel';
+import { AccessControlAction } from 'app/types/accessControl';
 
 import { getTimeSrv } from '../../features/dashboard/services/TimeSrv';
 import {
@@ -393,7 +394,9 @@ export class KeybindingSrv {
     });
 
     this.bind('d n', () => {
-      this.locationService.push('/dashboard/new');
+      if (contextSrv.hasPermission(AccessControlAction.DashboardsCreate)) {
+        this.locationService.push('/dashboard/new');
+      }
     });
 
     this.bind('d r', () => {

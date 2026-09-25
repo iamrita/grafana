@@ -7,6 +7,7 @@ import { Button, Drawer, Dropdown, Icon, Menu, MenuItem } from '@grafana/ui';
 import { OwnerReference } from 'app/api/clients/folder/v1beta1';
 import { useCreateFolder } from 'app/api/clients/folder/v1beta1/hooks';
 import { useAppNotification } from 'app/core/copy/appNotification';
+import { contextSrv } from 'app/core/services/context_srv';
 import { CONTENT_KINDS, SOURCE_ENTRY_POINTS } from 'app/features/dashboard/dashgrid/DashboardLibrary/constants';
 import { DashboardLibraryInteractions } from 'app/features/dashboard/dashgrid/DashboardLibrary/interactions';
 import { RepoType } from 'app/features/provisioning/Wizard/types';
@@ -20,6 +21,7 @@ import {
   getNewPhrase,
   getNewTemplateDashboardPhrase,
 } from 'app/features/search/tempI18nPhrases';
+import { AccessControlAction } from 'app/types/accessControl';
 import { FolderDTO } from 'app/types/folders';
 
 import { ManagerKind } from '../../apiserver/types';
@@ -47,6 +49,9 @@ export default function CreateNewButton({
   const [showNewFolderDrawer, setShowNewFolderDrawer] = useState(false);
   const notifyApp = useAppNotification();
   const isProvisionedInstance = useIsProvisionedInstance();
+  // Folder props can be true when the user only has folders:create. The new-dashboard
+  // route still rejects that user, so the menu item follows dashboards:create.
+  const showNewDashboard = canCreateDashboard && contextSrv.hasPermission(AccessControlAction.DashboardsCreate);
 
   const handleVisibleChange = () => {
     if (!isOpen) {
@@ -93,7 +98,7 @@ export default function CreateNewButton({
 
   const newMenu = (
     <Menu>
-      {canCreateDashboard && (
+      {showNewDashboard && (
         <>
           <MenuItem
             label={getNewDashboardPhrase()}
@@ -120,7 +125,7 @@ export default function CreateNewButton({
         </>
       )}
       {canCreateFolder && <MenuItem onClick={() => setShowNewFolderDrawer(true)} label={getNewFolderPhrase()} />}
-      {canCreateDashboard && !isProvisionedInstance && parentFolder?.managedBy !== ManagerKind.Repo && (
+      {showNewDashboard && !isProvisionedInstance && parentFolder?.managedBy !== ManagerKind.Repo && (
         <MenuItem
           label={getImportPhrase()}
           onClick={() =>

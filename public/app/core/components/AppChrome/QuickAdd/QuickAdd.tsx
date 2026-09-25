@@ -3,8 +3,10 @@ import { useMemo, useState } from 'react';
 import { t } from '@grafana/i18n';
 import { getDataSourceSrv, reportInteraction, config } from '@grafana/runtime';
 import { Menu, Dropdown, ToolbarButton } from '@grafana/ui';
+import { contextSrv } from 'app/core/services/context_srv';
 import { CONTENT_KINDS, SOURCE_ENTRY_POINTS } from 'app/features/dashboard/dashgrid/DashboardLibrary/constants';
 import { DashboardLibraryInteractions } from 'app/features/dashboard/dashgrid/DashboardLibrary/interactions';
+import { AccessControlAction } from 'app/types/accessControl';
 import { useSelector } from 'app/types/store';
 
 import { NavToolbarSeparator } from '../NavToolbar/NavToolbarSeparator';
@@ -20,7 +22,7 @@ export const QuickAdd = ({}: Props) => {
   const createActions = useMemo(() => {
     const createActions = findCreateActions(navBarTree);
 
-    if (config.featureToggles.dashboardTemplates) {
+    if (config.featureToggles.dashboardTemplates && contextSrv.hasPermission(AccessControlAction.DashboardsCreate)) {
       const testDataSources = getDataSourceSrv().getList({ type: 'grafana-testdata-datasource' });
       if (testDataSources.length > 0) {
         createActions.splice(1, 0, {

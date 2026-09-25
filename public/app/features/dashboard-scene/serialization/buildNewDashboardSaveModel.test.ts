@@ -1,5 +1,7 @@
 import { DataSourceApi, PluginType, VariableSupportType } from '@grafana/data';
 import { config } from '@grafana/runtime';
+import { contextSrv } from 'app/core/services/context_srv';
+import { AccessControlAction } from 'app/types/accessControl';
 
 import { buildNewDashboardSaveModel, buildNewDashboardSaveModelV2 } from './buildNewDashboardSaveModel';
 
@@ -60,6 +62,24 @@ jest.mock('@grafana/runtime', () => ({
 }));
 
 describe('buildNewDashboardSaveModelV1', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('marks a new dashboard editable only when the user can create dashboards', async () => {
+    jest
+      .spyOn(contextSrv, 'hasPermission')
+      .mockImplementation((action) => action === AccessControlAction.DashboardsCreate);
+    const allowed = await buildNewDashboardSaveModel();
+    expect(allowed.meta.canSave).toBe(true);
+    expect(allowed.meta.canEdit).toBe(true);
+
+    jest.spyOn(contextSrv, 'hasPermission').mockReturnValue(false);
+    const denied = await buildNewDashboardSaveModel();
+    expect(denied.meta.canSave).toBe(false);
+    expect(denied.meta.canEdit).toBe(false);
+  });
+
   it('should not have template variables defined by default', async () => {
     const result = await buildNewDashboardSaveModel();
     expect(result.dashboard.templating).toBeUndefined();
@@ -88,6 +108,24 @@ describe('buildNewDashboardSaveModelV1', () => {
 });
 
 describe('buildNewDashboardSaveModelV2', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('marks a new dashboard editable only when the user can create dashboards', async () => {
+    jest
+      .spyOn(contextSrv, 'hasPermission')
+      .mockImplementation((action) => action === AccessControlAction.DashboardsCreate);
+    const allowed = await buildNewDashboardSaveModelV2();
+    expect(allowed.access.canSave).toBe(true);
+    expect(allowed.access.canEdit).toBe(true);
+
+    jest.spyOn(contextSrv, 'hasPermission').mockReturnValue(false);
+    const denied = await buildNewDashboardSaveModelV2();
+    expect(denied.access.canSave).toBe(false);
+    expect(denied.access.canEdit).toBe(false);
+  });
+
   it('should not have template variables defined by default', async () => {
     const result = await buildNewDashboardSaveModelV2();
     expect(result.spec.variables).toEqual([]);

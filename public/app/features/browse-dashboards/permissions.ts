@@ -13,7 +13,13 @@ function checkCanCreateFolders(folderDTO?: FolderDTO) {
 }
 
 export function getFolderPermissions(folderDTO?: FolderDTO) {
-  const canCreateDashboards = checkFolderPermission(AccessControlAction.DashboardsCreate, folderDTO);
+  // /dashboard/new is allowed only for dashboards:create. Folder metadata can still
+  // report that action for a Folders Creator (folders:create only), and
+  // hasEditPermissionInFolders is true for either action. Require the user action
+  // so the New dashboard item matches the route.
+  const canCreateDashboards =
+    contextSrv.hasPermission(AccessControlAction.DashboardsCreate) &&
+    checkFolderPermission(AccessControlAction.DashboardsCreate, folderDTO);
   const canCreateFolders = checkCanCreateFolders(folderDTO);
   const canDeleteFolders = checkFolderPermission(AccessControlAction.FoldersDelete, folderDTO);
   const canDeleteDashboards = checkFolderPermission(AccessControlAction.DashboardsDelete, folderDTO);
