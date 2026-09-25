@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/grafana/pkg/infra/db/dbtest"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
 	"github.com/grafana/grafana/pkg/services/anonymous/anontest"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/stats"
 	"github.com/grafana/grafana/pkg/services/stats/statstest"
 	"github.com/grafana/grafana/pkg/setting"
@@ -148,6 +149,26 @@ func TestAdmin_AccessControl(t *testing.T) {
 				},
 			},
 		},
+		{
+			expectedCode: http.StatusOK,
+			desc:         "GetExperimentalFeatureToggles should return 200 for user with featuremgmt.read",
+			url:          "/api/admin/feature-toggles",
+			permissions: []accesscontrol.Permission{
+				{
+					Action: accesscontrol.ActionFeatureManagementRead,
+				},
+			},
+		},
+		{
+			expectedCode: http.StatusForbidden,
+			desc:         "GetExperimentalFeatureToggles should return 403 for user without featuremgmt.read",
+			url:          "/api/admin/feature-toggles",
+			permissions: []accesscontrol.Permission{
+				{
+					Action: "wrong",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -156,8 +177,16 @@ func TestAdmin_AccessControl(t *testing.T) {
 			fakeStatsService.ExpectedAdminStats = &stats.AdminStats{}
 			fakeAnonService := anontest.NewFakeService()
 			fakeAnonService.ExpectedCountDevices = 0
+			cfg := setting.NewCfg()
+			section, err := cfg.Raw.NewSection("feature_toggles")
+			require.NoError(t, err)
+			_, err = section.NewKey("enable", featuremgmt.FlagExperimentalFeatureTogglesAdmin)
+			require.NoError(t, err)
+			features, err := featuremgmt.ProvideManagerService(cfg)
+			require.NoError(t, err)
 			server := SetupAPITestServer(t, func(hs *HTTPServer) {
-				hs.Cfg = setting.NewCfg()
+				hs.Cfg = cfg
+				hs.Features = features
 				hs.SQLStore = dbtest.NewFakeDB()
 				hs.SettingsProvider = &setting.OSSImpl{Cfg: hs.Cfg}
 				hs.statsService = fakeStatsService

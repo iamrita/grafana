@@ -562,6 +562,15 @@ func (hs *HTTPServer) registerRoutes() {
 		adminRoute.Get("/settings-verbose", authorize(ac.EvalPermission(ac.ActionSettingsRead)), routing.Wrap(hs.AdminGetVerboseSettings))
 		adminRoute.Get("/stats", authorize(ac.EvalPermission(ac.ActionServerStatsRead)), routing.Wrap(hs.AdminGetStats))
 
+		// Route registration runs once at startup, so this toggle cannot take effect until restart.
+		if hs.Features.IsEnabledGlobally(featuremgmt.FlagExperimentalFeatureTogglesAdmin) {
+			adminRoute.Get("/feature-toggles",
+				middleware.ReqSignedInNoAnonymous,
+				authorize(ac.EvalPermission(ac.ActionFeatureManagementRead)),
+				routing.Wrap(hs.GetExperimentalFeatureToggles),
+			)
+		}
+
 		adminRoute.Post("/encryption/rotate-data-keys", reqGrafanaAdmin, routing.Wrap(hs.AdminRotateDataEncryptionKeys))
 		adminRoute.Post("/encryption/reencrypt-data-keys", reqGrafanaAdmin, routing.Wrap(hs.AdminReEncryptEncryptionKeys))
 		adminRoute.Post("/encryption/reencrypt-secrets", reqGrafanaAdmin, routing.Wrap(hs.AdminReEncryptSecrets))

@@ -1697,4 +1697,9 @@ export interface FeatureToggles {
   * @default false
   */
   colorblindThemes?: boolean;
+  /**
+  * Read-only admin API that lists experimental feature toggles
+  * @default false
+  */
+  experimentalFeatureTogglesAdmin?: boolean;
 }

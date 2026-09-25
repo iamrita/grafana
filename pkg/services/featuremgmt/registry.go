@@ -2689,6 +2689,14 @@ var (
 			RequiresRestart: true,
 			Expression:      "false",
 		},
+		{
+			Name:            "experimentalFeatureTogglesAdmin",
+			Description:     "Read-only admin API that lists experimental feature toggles",
+			Stage:           FeatureStageExperimental,
+			Owner:           identityAccessTeam,
+			RequiresRestart: true, // route registration reads the toggle once at startup
+			Expression:      "false",
+		},
 	}
 )
 

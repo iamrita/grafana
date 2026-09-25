@@ -1865,6 +1865,20 @@
     },
     {
       "metadata": {
+        "name": "experimentalFeatureTogglesAdmin",
+        "resourceVersion": "1758830400000",
+        "creationTimestamp": "2026-09-25T20:00:00Z"
+      },
+      "spec": {
+        "description": "Read-only admin API that lists experimental feature toggles",
+        "stage": "experimental",
+        "codeowner": "@grafana/identity-access-team",
+        "requiresRestart": true,
+        "expression": "false"
+      }
+    },
+    {
+      "metadata": {
         "name": "exploreLogsAggregatedMetrics",
         "resourceVersion": "1771434338561",
         "creationTimestamp": "2024-08-29T13:55:59Z"
