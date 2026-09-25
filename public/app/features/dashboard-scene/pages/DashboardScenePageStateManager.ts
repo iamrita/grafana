@@ -30,6 +30,7 @@ import { trackDashboardSceneLoaded } from 'app/features/dashboard-scene/utils/tr
 import { playlistSrv } from 'app/features/playlist/PlaylistSrv';
 import { ProvisioningPreview } from 'app/features/provisioning/types';
 import { dispatch } from 'app/store/store';
+import { AccessControlAction } from 'app/types/accessControl';
 import {
   DashboardDataDTO,
   DashboardDTO,
@@ -581,8 +582,8 @@ export class DashboardScenePageStateManager extends DashboardScenePageStateManag
         id: null,
       },
       meta: {
-        canSave: contextSrv.hasEditPermissionInFolders,
-        canEdit: contextSrv.hasEditPermissionInFolders,
+        canSave: contextSrv.hasPermission(AccessControlAction.DashboardsCreate),
+        canEdit: contextSrv.hasPermission(AccessControlAction.DashboardsCreate),
         canStar: false,
         canShare: false,
         canDelete: false,

@@ -4,6 +4,8 @@ import { TestProvider } from 'test/helpers/TestProvider';
 
 import { NavModelItem } from '@grafana/data';
 import { config, reportInteraction } from '@grafana/runtime';
+import { contextSrv } from 'app/core/services/context_srv';
+import { AccessControlAction } from 'app/types/accessControl';
 
 import { QuickAdd } from './QuickAdd';
 
@@ -85,12 +87,26 @@ describe('QuickAdd', () => {
   describe('Dashboard from template button', () => {
     beforeEach(() => {
       config.featureToggles.dashboardTemplates = true;
+      jest
+        .spyOn(contextSrv, 'hasPermission')
+        .mockImplementation((action) => action === AccessControlAction.DashboardsCreate);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
     });
 
     it('shows a `Dashboard from template` button when the feature flag is enabled', async () => {
       setup();
       await userEvent.click(screen.getByRole('button', { name: 'New' }));
       expect(screen.getByRole('menuitem', { name: 'Dashboard from template' })).toBeInTheDocument();
+    });
+
+    it('does not show a `Dashboard from template` button without dashboards:create', async () => {
+      jest.spyOn(contextSrv, 'hasPermission').mockReturnValue(false);
+      setup();
+      await userEvent.click(screen.getByRole('button', { name: 'New' }));
+      expect(screen.queryByRole('menuitem', { name: 'Dashboard from template' })).not.toBeInTheDocument();
     });
 
     it('does not show a `Dashboard from template` button when the feature flag is disabled', async () => {

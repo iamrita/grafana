@@ -2,8 +2,10 @@ import { screen, within } from '@testing-library/react';
 import { render } from 'test/test-utils';
 
 import { config } from '@grafana/runtime';
+import { contextSrv } from 'app/core/services/context_srv';
 import { ManagerKind } from 'app/features/apiserver/types';
 import { useIsProvisionedInstance } from 'app/features/provisioning/hooks/useIsProvisionedInstance';
+import { AccessControlAction } from 'app/types/accessControl';
 import { FolderDTO } from 'app/types/folders';
 
 import { mockFolderDTO } from '../fixtures/folder.fixture';
@@ -42,6 +44,13 @@ async function renderAndOpen(folder?: FolderDTO) {
 describe('NewActionsButton', () => {
   beforeEach(() => {
     mockUseIsProvisionedInstance.mockReturnValue(false);
+    jest
+      .spyOn(contextSrv, 'hasPermission')
+      .mockImplementation((action) => action === AccessControlAction.DashboardsCreate);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
   it('should display the correct urls with a given parent folder', async () => {
     await renderAndOpen(mockParentFolder);
@@ -86,6 +95,15 @@ describe('NewActionsButton', () => {
     expect(screen.getByRole('menuitem', { name: 'New dashboard' })).toBeInTheDocument();
     expect(screen.getByText('Import')).toBeInTheDocument();
     expect(screen.queryByText('New folder')).not.toBeInTheDocument();
+  });
+
+  it('hides New dashboard when the user lacks dashboards:create even if the folder prop is true', async () => {
+    jest.spyOn(contextSrv, 'hasPermission').mockReturnValue(false);
+    const { user } = render(<CreateNewButton canCreateDashboard canCreateFolder={false} isReadOnlyRepo={false} />);
+    await user.click(screen.getByText('New'));
+
+    expect(screen.queryByRole('menuitem', { name: 'New dashboard' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Import')).not.toBeInTheDocument();
   });
 
   it('should only render folder item when dashboard creation is disabled', async () => {

@@ -13,6 +13,7 @@ import {
 import { AnnoKeyFolder } from 'app/features/apiserver/types';
 import { DashboardWithAccessInfo } from 'app/features/dashboard/api/types';
 import { getDatasourceSrv } from 'app/features/plugins/datasource_srv';
+import { AccessControlAction } from 'app/types/accessControl';
 import { DashboardDTO } from 'app/types/dashboard';
 
 import { contextSrv } from '../../../core/services/context_srv';
@@ -51,11 +52,15 @@ export async function buildNewDashboardSaveModel(urlFolderUid?: string): Promise
     }
   }
 
+  const canCreateDashboard = contextSrv.hasPermission(AccessControlAction.DashboardsCreate);
+
   const data: DashboardDTO = {
     meta: {
       canStar: false,
       canShare: false,
       canDelete: false,
+      canSave: canCreateDashboard,
+      canEdit: canCreateDashboard,
       isNew: true,
       folderUid: '',
     },
@@ -125,6 +130,8 @@ export async function buildNewDashboardSaveModelV2(
     }
   }
 
+  const canCreateDashboard = contextSrv.hasPermission(AccessControlAction.DashboardsCreate);
+
   const data: DashboardWithAccessInfo<DashboardV2Spec> = {
     apiVersion: 'v2beta1',
     kind: 'DashboardWithAccessInfo',
@@ -140,6 +147,8 @@ export async function buildNewDashboardSaveModelV2(
       canStar: false,
       canShare: false,
       canDelete: false,
+      canSave: canCreateDashboard,
+      canEdit: canCreateDashboard,
     },
     metadata: {
       name: '',
