@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { Trans } from '@grafana/i18n';
+import { Trans, t } from '@grafana/i18n';
 import { Icon, Stack, Text } from '@grafana/ui';
 
 import { StateDot } from './StateDot';
@@ -36,45 +36,48 @@ export const StateText = ({ state, health, type = 'alerting', isPaused = false }
   switch (state) {
     case 'normal':
       color = 'success';
-      stateLabel = 'Normal';
+      stateLabel = t('alerting.state-text.normal', 'Normal');
       break;
     case 'firing':
       color = 'error';
-      stateLabel = 'Firing';
+      stateLabel = t('alerting.state-text.firing', 'Firing');
       break;
     case 'pending':
       color = 'warning';
-      stateLabel = 'Pending';
+      stateLabel = t('alerting.state-text.pending', 'Pending');
       break;
     case 'recovering':
       color = 'warning';
-      stateLabel = 'Recovering';
+      stateLabel = t('alerting.state-text.recovering', 'Recovering');
       break;
     case 'unknown':
     default:
       color = 'unknown';
-      stateLabel = 'Unknown';
+      stateLabel = t('alerting.state-text.unknown', 'Unknown');
       break;
   }
 
   // if the rule is in "error" health we don't really care about the state
   if (health === 'error') {
     color = 'error';
-    stateLabel = 'Error';
+    stateLabel = t('alerting.state-text.error', 'Error');
   }
 
   if (health === 'nodata') {
     color = 'warning';
-    stateLabel = 'No data';
+    stateLabel = t('alerting.state-text.no-data', 'No data');
   }
 
-  // recording rule badge
-  // @TODO do recording rules support "nodata" state?
   if (type === 'recording') {
-    const text = health === 'error' ? 'Recording error' : 'Recording';
-    const color = health === 'error' ? 'error' : 'success';
+    if (health === 'error') {
+      return <InnerText color="error" text={t('alerting.state-text.recording-error', 'Recording error')} />;
+    }
 
-    return <InnerText color={color} text={text} />;
+    if (health === 'nodata') {
+      return <InnerText color="warning" text={t('alerting.state-text.recording-no-data', 'Recording no data')} />;
+    }
+
+    return <InnerText color="success" text={t('alerting.state-text.recording', 'Recording')} />;
   }
 
   return <InnerText color={color} text={stateLabel} />;

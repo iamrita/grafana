@@ -22,7 +22,7 @@ import { RulePluginOrigin } from '../../utils/rules';
 
 import { ListItem } from './ListItem';
 import { RuleLocation } from './RuleLocation';
-import { calculateNextEvaluationEstimate, normalizeHealth, normalizeState } from './util';
+import { calculateFiringDuration, calculateNextEvaluationEstimate, normalizeHealth, normalizeState } from './util';
 
 export interface AlertRuleListItemProps {
   name: string;
@@ -383,21 +383,14 @@ interface EvaluationMetadataProps {
 
 function EvaluationMetadata({ lastEvaluation, evaluationInterval, state }: EvaluationMetadataProps) {
   const nextEvaluation = calculateNextEvaluationEstimate(lastEvaluation, evaluationInterval);
+  const firingFor = state === PromAlertingRuleState.Firing ? calculateFiringDuration(lastEvaluation) : undefined;
 
-  // @TODO support firing for calculation
-  if (state === PromAlertingRuleState.Firing && nextEvaluation) {
-    const firingFor = '2m 34s';
-
+  if (firingFor && nextEvaluation) {
     return (
       <MetaText icon="clock-nine">
         <Trans i18nKey="alerting.alert-rules.firing-for">Firing for</Trans> <Text color="primary">{firingFor}</Text>
-        {nextEvaluation && (
-          <>
-            {'· '}
-            <Trans i18nKey="alerting.alert-rules.next-evaluation-in">next evaluation in</Trans>{' '}
-            {nextEvaluation.humanized}
-          </>
-        )}
+        {' · '}
+        <Trans i18nKey="alerting.alert-rules.next-evaluation-in">next evaluation in</Trans> {nextEvaluation.humanized}
       </MetaText>
     );
   }
