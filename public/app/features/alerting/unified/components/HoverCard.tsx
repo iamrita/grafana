@@ -1,7 +1,7 @@
 import { css } from '@emotion/css';
 import { Placement } from '@popperjs/core';
 import classnames from 'classnames';
-import { ReactElement, ReactNode, cloneElement, useRef } from 'react';
+import { ReactElement, ReactNode, RefObject, cloneElement, useEffect, useMemo, useRef } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Popover as GrafanaPopover, PopoverController, Stack, useStyles2 } from '@grafana/ui';
@@ -40,6 +40,8 @@ export const PopupCard = ({
   ...rest
 }: PopupCardProps) => {
   const popoverRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const ignoreRefs = useMemo(() => [popoverRef, contentRef], []);
   const styles = useStyles2(getStyles);
 
   if (disabled) {
@@ -50,11 +52,13 @@ export const PopupCard = ({
   const showOnClick = showOn === 'click';
 
   const body = (
-    <Stack direction="column" gap={0} role="tooltip">
-      {header && <div className={styles.card.header}>{header}</div>}
-      <div className={styles.card.body}>{content}</div>
-      {footer && <div className={styles.card.footer}>{footer}</div>}
-    </Stack>
+    <div ref={contentRef}>
+      <Stack direction="column" gap={0} role="tooltip">
+        {header && <div className={styles.card.header}>{header}</div>}
+        <div className={styles.card.body}>{content}</div>
+        {footer && <div className={styles.card.footer}>{footer}</div>}
+      </Stack>
+    </div>
   );
 
   return (
@@ -95,6 +99,9 @@ export const PopupCard = ({
 
         return (
           <>
+            {disableBlur && shouldShow && (
+              <DismissOnOutsideClick enabled onClose={handleClose} ignoreRefs={ignoreRefs} />
+            )}
             {popoverRef.current && (
               <GrafanaPopover
                 {...popperProps}
@@ -103,8 +110,8 @@ export const PopupCard = ({
                 wrapperClassName={classnames(styles.popover, wrapperClassName)}
                 referenceElement={popoverRef.current}
                 renderArrow={arrow}
-                // @TODO
-                // if we want interaction with the content we should not pass blur / focus handlers but then clicking outside doesn't close the popper
+                // Blur closes the card, but it also steals focus from interactive content.
+                // When blur is disabled, clicks outside the card still dismiss it.
                 {...(disableBlur ? {} : blurFocusProps)}
                 // if we want hover interaction we have to make sure we add the leave / enter handlers
                 {...(showOnHover ? onHoverProps : {})}
@@ -128,6 +135,43 @@ export const PopupCard = ({
     </PopoverController>
   );
 };
+
+function DismissOnOutsideClick({
+  enabled,
+  onClose,
+  ignoreRefs,
+}: {
+  enabled: boolean;
+  onClose: () => void;
+  ignoreRefs: Array<RefObject<HTMLElement | null>>;
+}) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (ignoreRefs.some((ref) => ref.current?.contains(target))) {
+        return;
+      }
+
+      onCloseRef.current();
+    };
+
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [enabled, ignoreRefs]);
+
+  return null;
+}
 
 const getStyles = (theme: GrafanaTheme2) => ({
   popover: css({

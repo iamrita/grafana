@@ -1,6 +1,6 @@
 import { css } from '@emotion/css';
-import { type JSX, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { type JSX, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { GrafanaTheme2 } from '@grafana/data';
@@ -44,26 +44,17 @@ export default function AlertmanagerConfig({ alertmanagerName, onDismiss, onSave
     isLoading: isLoadingConfig,
   } = useAlertmanagerConfig(alertmanagerName);
 
-  const defaultValues = {
-    configJSON: config ? JSON.stringify(config, null, 2) : '',
-  };
+  const configJSON = config ? JSON.stringify(config, null, 2) : '';
+  const formValues = useMemo(() => ({ configJSON }), [configJSON]);
 
   const {
-    register,
-    setValue,
+    control,
     setError,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues,
+    values: formValues,
   });
-
-  // make sure we update the configJSON field when we receive a response from the `useAlertmanagerConfig` hook
-  useEffect(() => {
-    if (config) {
-      setValue('configJSON', JSON.stringify(config, null, 2));
-    }
-  }, [config, setValue]);
 
   useEffect(() => {
     if (savingError) {
@@ -77,25 +68,21 @@ export default function AlertmanagerConfig({ alertmanagerName, onDismiss, onSave
     }
   }, [deletingError, setError]);
 
-  // manually register the config field with validation
-  // @TODO sometimes the value doesn't get registered – find out why
-  register('configJSON', {
-    required: {
-      value: true,
-      message: t('alerting.alertmanager-config.message.configuration-cannot-be-empty', 'Configuration cannot be empty'),
-    },
-    validate: (value: string) => {
-      try {
-        JSON.parse(value);
-        return true;
-      } catch (e) {
-        return e instanceof Error ? e.message : 'JSON is invalid';
-      }
-    },
-  });
+  const validateConfigJSON = (value: string) => {
+    if (!value.trim()) {
+      return t('alerting.alertmanager-config.message.configuration-cannot-be-empty', 'Configuration cannot be empty');
+    }
+
+    try {
+      JSON.parse(value);
+      return true;
+    } catch (e) {
+      return e instanceof Error ? e.message : 'JSON is invalid';
+    }
+  };
 
   const handleSave = handleSubmit((values: FormValues) => {
-    onSave(alertmanagerName, defaultValues.configJSON, values.configJSON);
+    onSave(alertmanagerName, configJSON, values.configJSON);
   }, reportFormErrors);
 
   const isOperating = isLoadingConfig || isDeleting || isSaving;
@@ -167,24 +154,32 @@ export default function AlertmanagerConfig({ alertmanagerName, onDismiss, onSave
 
       {isLoadingSuccessful && (
         <div className={styles.content}>
-          <AutoSizer disableWidth>
-            {({ height }) => (
-              <CodeEditor
-                language="json"
-                width="100%"
-                height={height}
-                showLineNumbers={true}
-                monacoOptions={{
-                  scrollBeyondLastLine: false,
-                }}
-                value={defaultValues.configJSON}
-                showMiniMap={false}
-                onSave={(value) => setValue('configJSON', value)}
-                onBlur={(value) => setValue('configJSON', value)}
-                readOnly={isOperating}
-              />
+          <Controller
+            name="configJSON"
+            control={control}
+            rules={{ validate: validateConfigJSON }}
+            render={({ field }) => (
+              <AutoSizer disableWidth>
+                {({ height }) => (
+                  <CodeEditor
+                    language="json"
+                    width="100%"
+                    height={height}
+                    showLineNumbers={true}
+                    monacoOptions={{
+                      scrollBeyondLastLine: false,
+                    }}
+                    value={field.value}
+                    showMiniMap={false}
+                    onChange={field.onChange}
+                    onSave={field.onChange}
+                    onBlur={field.onChange}
+                    readOnly={isOperating}
+                  />
+                )}
+              </AutoSizer>
             )}
-          </AutoSizer>
+          />
         </div>
       )}
 

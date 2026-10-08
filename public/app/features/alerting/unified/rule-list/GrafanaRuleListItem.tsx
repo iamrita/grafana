@@ -4,7 +4,7 @@ import { GrafanaPromRuleDTO, PromRuleType } from 'app/types/unified-alerting-dto
 import { GRAFANA_RULES_SOURCE_NAME, GrafanaRulesSource } from '../utils/datasource';
 import { groups } from '../utils/navigation';
 import { totalFromStats } from '../utils/ruleStats';
-import { getRulePluginOrigin, prometheusRuleType } from '../utils/rules';
+import { getFirstActiveAtFromAlerts, getRulePluginOrigin, prometheusRuleType } from '../utils/rules';
 import { createRelativeUrl } from '../utils/url';
 
 import {
@@ -66,6 +66,8 @@ export function GrafanaRuleListItem({
         summary={rule.annotations?.summary}
         state={promAlertingRule?.state}
         instancesCount={instancesCount}
+        lastEvaluation={promAlertingRule?.lastEvaluation}
+        firingSince={getFirstActiveAtFromAlerts(promAlertingRule?.alerts)?.toISOString()}
         operation={operation}
         showLocation={showLocation}
       />

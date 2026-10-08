@@ -5,7 +5,10 @@ import { usePluginLinks } from '@grafana/runtime';
 import { CombinedRule, Rule, RuleGroupIdentifierV2 } from 'app/types/unified-alerting';
 import { PromRuleType } from 'app/types/unified-alerting-dto';
 
+import { SupportedPlugin } from '../types/pluginBridges';
 import { getRulePluginOrigin } from '../utils/rules';
+
+const INCIDENT_PLUGIN_IDS = new Set<string>([SupportedPlugin.Incident, SupportedPlugin.Irm]);
 
 interface BaseRuleExtensionContext {
   name: string;
@@ -41,6 +44,20 @@ export function useRulePluginLinkExtension(rule: Rule | undefined, groupIdentifi
   const { pluginId } = ruleOrigin;
 
   return links.filter((link) => link.pluginId === pluginId);
+}
+
+/** Plugin-provided "declare incident" action, when the IRM/Incident app registers one. */
+export function useDeclareIncidentExtension(
+  rule: Rule | undefined,
+  groupIdentifier: RuleGroupIdentifierV2
+): PluginExtensionLink | undefined {
+  const extensionPoint = useRuleExtensionPoint(
+    rule?.type === PromRuleType.Alerting ? rule : undefined,
+    groupIdentifier
+  );
+  const { links } = usePluginLinks(extensionPoint);
+
+  return links.find((link) => INCIDENT_PLUGIN_IDS.has(link.pluginId));
 }
 
 export interface PluginRuleExtensionParam {

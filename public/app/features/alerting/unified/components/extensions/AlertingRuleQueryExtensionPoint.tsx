@@ -1,10 +1,12 @@
-import { ReactElement, useState } from 'react';
+import { ReactElement, useMemo, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 
 import { PluginExtensionLink, PluginExtensionPoints } from '@grafana/data';
-// import { Trans, t } from '@grafana/i18n';
+import { Trans, t } from '@grafana/i18n';
 import { usePluginLinks } from '@grafana/runtime';
 import { DataQuery } from '@grafana/schema';
-// import { Button } from '@grafana/ui';
+
+import { RuleFormValues } from '../../types/rule-form';
 
 import { ConfirmNavigationModal } from './ConfirmationNavigationModal';
 import { QuerylessAppsExtensions } from './QuerylessAppExtensions';
@@ -30,18 +32,55 @@ const DATASOURCE_TO_QUERYLESS_APP: Record<string, string[]> = {
   // 'tempo': ['grafana-exploretraces-app'],
 };
 
+/** Values drilldown apps need when they create an alerting rule from the current editor. */
+export type PluginExtensionAlertingRuleFormValues = {
+  name: string;
+  folder?: { title: string; uid: string };
+  labels: Array<{ key: string; value: string }>;
+  annotations: Array<{ key: string; value: string }>;
+  condition: string | null;
+  evaluateEvery?: string;
+  evaluateFor?: string;
+};
+
+function definedPairs(
+  pairs: Array<{ key?: string; value?: string }> | undefined
+): Array<{ key: string; value: string }> {
+  return (pairs ?? []).flatMap((pair) =>
+    pair.key !== undefined && pair.value !== undefined ? [{ key: pair.key, value: pair.value }] : []
+  );
+}
+
 export type PluginExtensionAlertingRuleContext = {
   targets: DataQuery[];
-  // TODO: add rule form values for creating alerting rule from drilldown apps
+  ruleForm?: PluginExtensionAlertingRuleFormValues;
 };
 
 export function AlertingRuleQueryExtensionPoint({ extensionsToShow, query }: Props): ReactElement | null {
   const [selectedExtension, setSelectedExtension] = useState<PluginExtensionLink | undefined>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isBasicMenuOpen, setIsBasicMenuOpen] = useState(false);
+  const { control } = useFormContext<RuleFormValues>();
+  const formValues = useWatch({ control });
 
-  const context: PluginExtensionAlertingRuleContext = {
-    targets: [query],
-  };
+  const context = useMemo<PluginExtensionAlertingRuleContext>(
+    () => ({
+      targets: [query],
+      ruleForm: {
+        name: formValues.name ?? '',
+        folder:
+          formValues.folder?.title && formValues.folder.uid
+            ? { title: formValues.folder.title, uid: formValues.folder.uid }
+            : undefined,
+        labels: definedPairs(formValues.labels),
+        annotations: definedPairs(formValues.annotations),
+        condition: formValues.condition ?? null,
+        evaluateEvery: formValues.evaluateEvery,
+        evaluateFor: formValues.evaluateFor,
+      },
+    }),
+    [formValues, query]
+  );
 
   const { links } = usePluginLinks({
     extensionPointId: PluginExtensionPoints.AlertingRuleQueryEditor,
@@ -52,6 +91,8 @@ export function AlertingRuleQueryExtensionPoint({ extensionsToShow, query }: Pro
   // filter the link so that the query data source matches the queryless app data source
   // we only want one link per query row editor for now
   // but we can show an array of links for more flexibility in the future
+  const basicLinks = links.filter((link) => !QUERYLESS_APPS.includes(link.pluginId));
+
   const querylessLinks = links.filter((link) => {
     if (!QUERYLESS_APPS.includes(link.pluginId)) {
       return false;
@@ -80,7 +121,16 @@ export function AlertingRuleQueryExtensionPoint({ extensionsToShow, query }: Pro
           isModalOpen={isModalOpen}
         />
       )}
-      {/* TODO: add basic extensions */}
+      <QuerylessAppsExtensions
+        links={basicLinks}
+        label={<Trans i18nKey="alerting.rule-query-extensions.extensions">Extensions</Trans>}
+        ariaLabel={t('alerting.rule-query-extensions.aria-label-extensions', 'Query extensions')}
+        setSelectedExtension={(extension) => {
+          setSelectedExtension(extension);
+        }}
+        setIsModalOpen={setIsBasicMenuOpen}
+        isModalOpen={isBasicMenuOpen}
+      />
       {!!selectedExtension && !!selectedExtension.path && (
         <ConfirmNavigationModal
           path={selectedExtension.path}

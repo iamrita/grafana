@@ -19,6 +19,9 @@ export const ListItem = (props: ListItemProps) => {
   const styles = useStyles2(getStyles);
   const { icon = null, title, description, meta, metaRight, actions, 'data-testid': testId, ...ariaAttributes } = props;
 
+  const hasMeta = Boolean(meta?.length);
+  const hasMetaRight = Boolean(metaRight?.length);
+
   return (
     <li
       className={styles.alertListItemContainer}
@@ -27,34 +30,35 @@ export const ListItem = (props: ListItemProps) => {
       data-testid={testId}
       {...ariaAttributes}
     >
-      <Stack direction="row" alignItems="start" gap={1} wrap={false}>
-        {/* icon */}
-        <span className={styles.statusIcon}>{icon}</span>
-
-        <Stack direction="column" gap={0.5} flex="1" minWidth={0}>
-          {/* title */}
-          <Stack direction="column" gap={0}>
+      <Stack direction="column" gap={0.5}>
+        <Stack direction="row" alignItems="start" gap={1} wrap={false}>
+          <span className={styles.statusIcon}>{icon}</span>
+          <Stack direction="column" gap={0} flex="1" minWidth={0}>
             <div className={styles.textOverflow}>{title}</div>
             <div className={styles.textOverflow}>{description}</div>
           </Stack>
-
-          {/* metadata */}
-          <Stack direction="row" gap={1} alignItems="center">
-            {meta?.map((item, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <Separator />}
-                {item}
-              </React.Fragment>
-            ))}
-          </Stack>
-        </Stack>
-
-        {/* actions & meta right */}
-        <Stack direction="row" alignItems="center" gap={1} wrap={false}>
-          {/* @TODO move this so the metadata row can extend beyond the width of this column */}
-          {metaRight}
           {actions}
         </Stack>
+
+        {(hasMeta || hasMetaRight) && (
+          <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between">
+            <div className={styles.metadata}>
+              <Stack direction="row" gap={1} alignItems="center">
+                {meta?.map((item, index) => (
+                  <React.Fragment key={index}>
+                    {index > 0 && <Separator />}
+                    {item}
+                  </React.Fragment>
+                ))}
+              </Stack>
+            </div>
+            {hasMetaRight && (
+              <Stack direction="row" alignItems="center" gap={1} wrap={false}>
+                {metaRight}
+              </Stack>
+            )}
+          </Stack>
+        )}
       </Stack>
     </li>
   );
@@ -95,5 +99,11 @@ const getStyles = (theme: GrafanaTheme2) => ({
   // this will line up the icon with the title of the rule
   statusIcon: css({
     marginTop: theme.spacing(0.5),
+  }),
+  // Align metadata with the title, while letting the row span the full item width.
+  metadata: css({
+    flex: '1 1 auto',
+    minWidth: 0,
+    paddingLeft: `calc(${theme.spacing(2)} + ${theme.spacing(1)})`,
   }),
 });

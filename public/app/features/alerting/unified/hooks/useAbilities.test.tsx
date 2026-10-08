@@ -218,6 +218,26 @@ describe('AlertRule abilities', () => {
     expect(result.current).toMatchSnapshot();
   });
 
+  it('does not allow editing or deleting a rule in a federated group', async () => {
+    const rule = getGrafanaRule({
+      group: {
+        name: 'federated',
+        rules: [],
+        totals: {},
+        source_tenants: ['team-a'],
+      },
+    });
+
+    const { result } = renderHook(() => useAllAlertRuleAbilities(rule), { wrapper: wrapper() });
+
+    await waitFor(() => {
+      expect(result.current[AlertRuleAction.Duplicate][0]).toBe(true);
+    });
+
+    expect(result.current[AlertRuleAction.Update][0]).toBe(false);
+    expect(result.current[AlertRuleAction.Delete][0]).toBe(false);
+  });
+
   it('should allow editing/deleting rules with plugin origin label when plugin is not installed', async () => {
     // Create a rule with a plugin origin label for a plugin that doesn't exist
     const rule = getGrafanaRule({

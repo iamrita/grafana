@@ -21,4 +21,13 @@ describe('AlertLabels', () => {
       expect(screen.getByText('+2 common labels')).toBeInTheDocument();
     });
   });
+
+  it('truncates labels beyond maxLabels', () => {
+    render(<AlertLabels labels={{ a: '1', b: '2', c: '3' }} maxLabels={2} />);
+
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.queryByText('3')).not.toBeInTheDocument();
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
 });

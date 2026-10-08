@@ -53,5 +53,11 @@ describe('StateText', () => {
       render(<StateText type="recording" health="error" />);
       expect(screen.getByText('Recording error')).toBeInTheDocument();
     });
+
+    it('should render "No data" for recording rule type when health is "nodata"', () => {
+      render(<StateText type="recording" health="nodata" />);
+      expect(screen.getByText('No data')).toBeInTheDocument();
+      expect(screen.queryByText('Recording')).not.toBeInTheDocument();
+    });
   });
 });

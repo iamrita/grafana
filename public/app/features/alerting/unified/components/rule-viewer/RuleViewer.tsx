@@ -1,5 +1,5 @@
 import { css } from '@emotion/css';
-import { chain, truncate } from 'lodash';
+import { chain } from 'lodash';
 import { useEffect, useState } from 'react';
 import { useMeasure } from 'react-use';
 
@@ -22,6 +22,7 @@ import { PageInfoItem } from 'app/core/components/Page/types';
 import { useQueryParams } from 'app/core/hooks/useQueryParams';
 import InfoPausedRule from 'app/features/alerting/unified/components/InfoPausedRule';
 import { RuleActionsButtons } from 'app/features/alerting/unified/components/rules/RuleActionsButtons';
+import { FolderDTO } from 'app/types/folders';
 import {
   AlertInstanceTotalState,
   AlertInstanceTotals,
@@ -38,6 +39,7 @@ import { useRuleViewExtensionsNav } from '../../enterprise-components/rule-view-
 import { shouldUseAlertingListViewV2, shouldUsePrometheusRulesPrimary } from '../../featureToggles';
 import { isError, useAsync } from '../../hooks/useAsync';
 import { useRuleLocation } from '../../hooks/useCombinedRule';
+import { useFolder } from '../../hooks/useFolder';
 import { useHasRulerV2 } from '../../hooks/useHasRuler';
 import { useRuleGroupConsistencyCheck } from '../../hooks/usePrometheusConsistencyCheck';
 import { useReturnTo } from '../../hooks/useReturnTo';
@@ -238,14 +240,14 @@ const createMetadata = (rule: CombinedRule, styles: ReturnType<typeof getStyles>
   }
 
   if (runbookUrl) {
-    /* TODO instead of truncating the string, we should use flex and text overflow properly to allow it to take up all of the horizontal space available */
-    const truncatedUrl = truncate(runbookUrl, { length: 42 });
     const valueToAdd = isValidRunbookURL(runbookUrl) ? (
-      <TextLink variant="bodySmall" className={styles.url} href={runbookUrl} external>
-        {truncatedUrl}
+      <TextLink variant="bodySmall" className={styles.url} href={runbookUrl} external title={runbookUrl}>
+        {runbookUrl}
       </TextLink>
     ) : (
-      <Text variant="bodySmall">{truncatedUrl}</Text>
+      <Text variant="bodySmall" title={runbookUrl}>
+        <span className={styles.url}>{runbookUrl}</span>
+      </Text>
     );
     metadata.push({
       label: t('alerting.create-metadata.label.runbook-url', 'Runbook URL'),
@@ -304,8 +306,7 @@ const createMetadata = (rule: CombinedRule, styles: ReturnType<typeof getStyles>
   if (hasLabels) {
     metadata.push({
       label: t('alerting.create-metadata.label.labels', 'Labels'),
-      /* TODO truncate number of labels, maybe build in to component? */
-      value: <AlertLabels labels={labels} size="sm" />,
+      value: <AlertLabels labels={labels} size="sm" maxLabels={8} />,
     });
   }
 
@@ -449,6 +450,8 @@ function usePageNav(rule: CombinedRule) {
   const numberOfInstance = isAlertType ? calculateTotalInstances(rule.instanceTotals) : undefined;
 
   const namespaceName = decodeGrafanaNamespace(rule.namespace).name;
+  const { folder } = useFolder(getGrafanaFolderUid(rule));
+  const namespaceBreadcrumb = buildNamespaceBreadcrumb(namespaceName, folder);
   const groupName = rule.group.name;
 
   const isGrafanaAlertRule = rulerRuleType.grafana.alertingRule(rulerRule);
@@ -519,11 +522,7 @@ function usePageNav(rule: CombinedRule) {
     parentItem: {
       text: groupName,
       url: groupDetailsUrl,
-      // @TODO support nested folders here
-      parentItem: {
-        text: namespaceName,
-        url: createListFilterLink([['namespace', namespaceName]]),
-      },
+      parentItem: namespaceBreadcrumb,
     },
   };
 
@@ -550,7 +549,11 @@ export const calculateTotalInstances = (stats: AlertInstanceTotals) => {
 
 const getStyles = (theme: GrafanaTheme2) => ({
   url: css({
-    wordBreak: 'break-all',
+    display: 'block',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   }),
   layout: css({
     display: 'grid',
@@ -587,6 +590,39 @@ function isValidRunbookURL(url: string) {
   }
 
   return isRelative || isAbsolute;
+}
+
+function getGrafanaFolderUid(rule: CombinedRule): string | undefined {
+  if (rulerRuleType.grafana.rule(rule.rulerRule)) {
+    return rule.rulerRule.grafana_alert.namespace_uid;
+  }
+
+  if (prometheusRuleType.grafana.rule(rule.promRule)) {
+    return rule.promRule.folderUid;
+  }
+
+  return undefined;
+}
+
+/** Breadcrumb for the rule folder, including ancestor folders when the folder API returns them. */
+export function buildNamespaceBreadcrumb(fallbackName: string, folder?: FolderDTO): NavModelItem {
+  const currentName = folder?.title || fallbackName;
+  const leaf: NavModelItem = {
+    text: currentName,
+    url: folder?.url || createListFilterLink([['namespace', currentName]]),
+  };
+
+  // parents are root-first; the nearest ancestor becomes parentItem of the leaf.
+  let ancestor: NavModelItem | undefined;
+  for (const parent of folder?.parents ?? []) {
+    ancestor = {
+      text: parent.title,
+      url: parent.url || createListFilterLink([['namespace', parent.title]]),
+      parentItem: ancestor,
+    };
+  }
+
+  return ancestor ? { ...leaf, parentItem: ancestor } : leaf;
 }
 
 function getNamespaceString(rule: CombinedRule): string {

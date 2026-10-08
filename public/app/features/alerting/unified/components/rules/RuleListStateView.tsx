@@ -14,7 +14,7 @@ import { GRAFANA_RULES_SOURCE_NAME, getRulesDataSources } from '../../utils/data
 import { createViewLink } from '../../utils/misc';
 import { isAsyncRequestStatePending } from '../../utils/redux';
 import { hashRule } from '../../utils/rule-id';
-import { getRulePluginOrigin, isProvisionedRule, prometheusRuleType } from '../../utils/rules';
+import { getFirstActiveAt, getRulePluginOrigin, isProvisionedRule, prometheusRuleType } from '../../utils/rules';
 import { calculateTotalInstances } from '../rule-viewer/RuleViewer';
 
 import { RuleActionsButtons } from './RuleActionsButtons';
@@ -127,6 +127,13 @@ const RulesByState = ({ state, rules }: { state: PromAlertingRuleState; rules: C
             health={rule.promRule?.health}
             error={rule.promRule?.lastError}
             labels={rule.promRule?.labels}
+            lastEvaluation={rule.promRule?.lastEvaluation}
+            evaluationInterval={rule.group.interval}
+            firingSince={
+              prometheusRuleType.alertingRule(rule.promRule)
+                ? getFirstActiveAt(rule.promRule)?.toISOString()
+                : undefined
+            }
             isProvisioned={isProvisioned}
             instancesCount={instancesCount}
             namespace={rule.namespace.name}
