@@ -40,38 +40,50 @@ export function FileExportPreview({ format, textDefinition, downloadFileName, on
     return provider.formatter ? provider.formatter(textDefinition) : textDefinition;
   }, [provider, textDefinition]);
 
+  const isEmpty = formattedTextDefinition.trim().length === 0;
+
   return (
-    // TODO Handle empty content
     <div className={styles.container}>
       <FileExportInlineDocumentation exportProvider={provider} />
-      <div className={styles.content}>
-        <AutoSizer disableWidth>
-          {({ height }) => (
-            <CodeEditor
-              width="100%"
-              height={height}
-              language={format}
-              value={formattedTextDefinition}
-              monacoOptions={{
-                minimap: {
-                  enabled: false,
-                },
-                scrollBeyondLastLine: false,
-                lineNumbers: 'on',
-                readOnly: true,
-              }}
-            />
-          )}
-        </AutoSizer>
-      </div>
+      {isEmpty ? (
+        <Alert
+          severity="info"
+          title={t('alerting.file-export-preview.empty-title', 'Nothing to export')}
+          bottomSpacing={0}
+          topSpacing={0}
+        >
+          <Trans i18nKey="alerting.file-export-preview.empty-body">This export has no content.</Trans>
+        </Alert>
+      ) : (
+        <div className={styles.content}>
+          <AutoSizer disableWidth>
+            {({ height }) => (
+              <CodeEditor
+                width="100%"
+                height={height}
+                language={format}
+                value={formattedTextDefinition}
+                monacoOptions={{
+                  minimap: {
+                    enabled: false,
+                  },
+                  scrollBeyondLastLine: false,
+                  lineNumbers: 'on',
+                  readOnly: true,
+                }}
+              />
+            )}
+          </AutoSizer>
+        </div>
+      )}
       <div className={styles.actions}>
         <Button variant="secondary" onClick={onClose}>
           <Trans i18nKey="alerting.common.cancel">Cancel</Trans>
         </Button>
-        <ClipboardButton icon="copy" getText={() => textDefinition}>
+        <ClipboardButton icon="copy" getText={() => textDefinition} disabled={isEmpty}>
           <Trans i18nKey="alerting.file-export-preview.copy-code">Copy code</Trans>
         </ClipboardButton>
-        <Button icon="download-alt" onClick={onDownload}>
+        <Button icon="download-alt" onClick={onDownload} disabled={isEmpty}>
           <Trans i18nKey="alerting.file-export-preview.download">Download</Trans>
         </Button>
       </div>

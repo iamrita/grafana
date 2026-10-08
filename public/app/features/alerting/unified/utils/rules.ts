@@ -6,7 +6,6 @@ import {
   AlertingRule,
   CloudRuleIdentifier,
   CombinedRule,
-  CombinedRuleGroup,
   CombinedRuleWithLocation,
   EditableRuleIdentifier,
   GrafanaRuleIdentifier,
@@ -345,11 +344,11 @@ const alertStateToStateMap: Record<PromAlertingRuleState | GrafanaAlertState | A
   [AlertState.Unknown]: 'info',
 };
 
-export function getFirstActiveAt(promRule?: AlertingRule) {
-  if (!promRule?.alerts) {
+export function getFirstActiveAtFromAlerts(alerts?: Array<{ activeAt?: string; state: Alert['state'] }>): Date | null {
+  if (!alerts) {
     return null;
   }
-  return promRule.alerts.reduce<Date | null>((prev, alert) => {
+  return alerts.reduce<Date | null>((prev, alert) => {
     const isNotNormal = mapStateWithReasonToBaseState(alert.state) !== GrafanaAlertState.Normal;
     if (alert.activeAt && isNotNormal) {
       const activeAt = new Date(alert.activeAt);
@@ -361,13 +360,17 @@ export function getFirstActiveAt(promRule?: AlertingRule) {
   }, null);
 }
 
+export function getFirstActiveAt(promRule?: AlertingRule) {
+  return getFirstActiveAtFromAlerts(promRule?.alerts);
+}
+
 /**
  * A rule group is "federated" when it has at least one "source_tenants" entry, federated rule groups will evaluate rules in multiple tenants
  * Non-federated rules do not have this property
  *
  * see https://grafana.com/docs/metrics-enterprise/latest/tenant-management/tenant-federation/#cross-tenant-alerting-and-recording-rule-federation
  */
-export function isFederatedRuleGroup(group: CombinedRuleGroup | RulerRuleGroupDTO): boolean {
+export function isFederatedRuleGroup(group: { source_tenants?: string[] }): boolean {
   return Array.isArray(group.source_tenants);
 }
 

@@ -7,7 +7,7 @@ import { createReturnTo } from '../hooks/useReturnTo';
 import { Annotation } from '../utils/constants';
 import { groups } from '../utils/navigation';
 import { fromRule, fromRulerRule, stringifyIdentifier } from '../utils/rule-id';
-import { getRuleName, getRulePluginOrigin, rulerRuleType } from '../utils/rules';
+import { getFirstActiveAtFromAlerts, getRuleName, getRulePluginOrigin, rulerRuleType } from '../utils/rules';
 import { createRelativeUrl } from '../utils/url';
 
 import {
@@ -71,7 +71,14 @@ export function DataSourceRuleListItem({
       const summary = annotations[Annotation.summary];
 
       return (
-        <AlertRuleListItem {...commonProps} summary={summary} state={rule.state} instancesCount={rule.alerts?.length} />
+        <AlertRuleListItem
+          {...commonProps}
+          summary={summary}
+          state={rule.state}
+          instancesCount={rule.alerts?.length}
+          lastEvaluation={rule.lastEvaluation}
+          firingSince={getFirstActiveAtFromAlerts(rule.alerts)?.toISOString()}
+        />
       );
     case PromRuleType.Recording:
       return <RecordingRuleListItem {...commonProps} />;

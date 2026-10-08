@@ -8,8 +8,17 @@ import { Button, ComponentSize, Dropdown, Menu } from '@grafana/ui';
 import { appEvents } from 'app/core/app_events';
 import MenuItemPauseRule from 'app/features/alerting/unified/components/MenuItemPauseRule';
 import MoreButton from 'app/features/alerting/unified/components/MoreButton';
-import { useRulePluginLinkExtension } from 'app/features/alerting/unified/plugins/useRulePluginLinkExtensions';
-import { EditableRuleIdentifier, Rule, RuleGroupIdentifierV2, RuleIdentifier } from 'app/types/unified-alerting';
+import {
+  useDeclareIncidentExtension,
+  useRulePluginLinkExtension,
+} from 'app/features/alerting/unified/plugins/useRulePluginLinkExtensions';
+import {
+  CombinedRuleGroup,
+  EditableRuleIdentifier,
+  Rule,
+  RuleGroupIdentifierV2,
+  RuleIdentifier,
+} from 'app/types/unified-alerting';
 import { PromAlertingRuleState, RulerRuleDTO } from 'app/types/unified-alerting-dto';
 
 import {
@@ -38,6 +47,7 @@ interface Props {
   rulerRule?: RulerRuleDTO;
   identifier: RuleIdentifier;
   groupIdentifier: RuleGroupIdentifierV2;
+  group?: Pick<CombinedRuleGroup, 'source_tenants'>;
   handleSilence: () => void;
   handleManageEnrichments?: () => void;
   handleDelete: (identifier: EditableRuleIdentifier, groupIdentifier: RuleGroupIdentifierV2) => void;
@@ -58,6 +68,7 @@ const AlertRuleMenu = ({
   rulerRule,
   identifier,
   groupIdentifier,
+  group,
   handleSilence,
   handleManageEnrichments,
   handleDelete,
@@ -68,13 +79,18 @@ const AlertRuleMenu = ({
 }: Props) => {
   // check all abilities and permissions using rulerRule
   const [rulerPauseAbility, rulerDeleteAbility, rulerDuplicateAbility, rulerSilenceAbility, rulerExportAbility] =
-    useRulerRuleAbilities(rulerRule, groupIdentifier, [
-      AlertRuleAction.Pause,
-      AlertRuleAction.Delete,
-      AlertRuleAction.Duplicate,
-      AlertRuleAction.Silence,
-      AlertRuleAction.ModifyExport,
-    ]);
+    useRulerRuleAbilities(
+      rulerRule,
+      groupIdentifier,
+      [
+        AlertRuleAction.Pause,
+        AlertRuleAction.Delete,
+        AlertRuleAction.Duplicate,
+        AlertRuleAction.Silence,
+        AlertRuleAction.ModifyExport,
+      ],
+      group
+    );
 
   // check all abilities and permissions using promRule
   const [
@@ -118,12 +134,14 @@ const AlertRuleMenu = ({
 
   const [enrichmentReadSupported, enrichmentReadAllowed] = useEnrichmentAbility(EnrichmentAction.Read);
 
+  const declareIncidentExtension = useDeclareIncidentExtension(promRule, groupIdentifier);
+
   /**
-   * Since Incident isn't available as an open-source product we shouldn't show it for Open-Source licenced editions of Grafana.
-   * We should show it in development mode
+   * Prefer a plugin link from Incident/IRM. The built-in item remains for editions
+   * where Incident is bundled but has not registered an extension yet.
    */
-  // @TODO Migrate "declare incident button" to plugin links extensions
   const shouldShowDeclareIncidentButton =
+    !declareIncidentExtension &&
     (!isOpenSourceEdition() || isLocalDevEnv()) &&
     prometheusRuleType.alertingRule(promRule) &&
     promRule.state === PromAlertingRuleState.Firing;
@@ -134,7 +152,9 @@ const AlertRuleMenu = ({
   const shareUrl = createShareLink(identifier);
 
   const showDivider =
-    [canPause, canSilence, shouldShowDeclareIncidentButton, canDuplicate].some(Boolean) && [canExport].some(Boolean);
+    [canPause, canSilence, shouldShowDeclareIncidentButton, Boolean(declareIncidentExtension), canDuplicate].some(
+      Boolean
+    ) && [canExport].some(Boolean);
 
   // grab the UID from either rulerRule or promRule
   const ruleUid = getRuleUID(rulerRule ?? promRule);
@@ -175,8 +195,15 @@ const AlertRuleMenu = ({
           onClick={handleSilence}
         />
       )}
-      {/* TODO Migrate Declare Incident to plugin links extensions */}
-      {shouldShowDeclareIncidentButton && <DeclareIncidentMenuItem title={promRule.name} url={''} />}
+      {declareIncidentExtension && (
+        <Menu.Item
+          label={declareIncidentExtension.title}
+          icon={declareIncidentExtension.icon || 'fire'}
+          url={declareIncidentExtension.path}
+          onClick={declareIncidentExtension.onClick}
+        />
+      )}
+      {shouldShowDeclareIncidentButton && promRule && <DeclareIncidentMenuItem title={promRule.name} url={''} />}
       {shouldShowAnalyzeRuleButton && <AnalyzeRuleButton rule={promRule} />}
       {canDuplicate && (
         <Menu.Item

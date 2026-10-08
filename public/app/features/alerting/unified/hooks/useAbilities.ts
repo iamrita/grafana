@@ -2,19 +2,10 @@ import { useMemo } from 'react';
 
 import { config } from '@grafana/runtime';
 import { contextSrv as ctx } from 'app/core/services/context_srv';
-import { PERMISSIONS_CONTACT_POINTS_READ } from 'app/features/alerting/unified/components/contact-points/permissions';
-import {
-  PERMISSIONS_TIME_INTERVALS_MODIFY,
-  PERMISSIONS_TIME_INTERVALS_READ,
-} from 'app/features/alerting/unified/components/mute-timings/permissions';
-import {
-  PERMISSIONS_NOTIFICATION_POLICIES_MODIFY,
-  PERMISSIONS_NOTIFICATION_POLICIES_READ,
-} from 'app/features/alerting/unified/components/notification-policies/permissions';
 import { useFolder } from 'app/features/alerting/unified/hooks/useFolder';
 import { AlertmanagerChoice } from 'app/plugins/datasource/alertmanager/types';
 import { AccessControlAction } from 'app/types/accessControl';
-import { CombinedRule, RuleGroupIdentifierV2 } from 'app/types/unified-alerting';
+import { CombinedRule, CombinedRuleGroup, RuleGroupIdentifierV2 } from 'app/types/unified-alerting';
 import { GrafanaPromRuleDTO, RulerRuleDTO } from 'app/types/unified-alerting-dto';
 
 import { alertmanagerApi } from '../api/alertmanagerApi';
@@ -25,6 +16,7 @@ import { getGroupOriginName, groupIdentifier } from '../utils/groupIdentifier';
 import { isAdmin } from '../utils/misc';
 import {
   getRulePluginOrigin,
+  isFederatedRuleGroup,
   isProvisionedPromRule,
   isProvisionedRule,
   prometheusRuleType,
@@ -241,9 +233,10 @@ export function useAlertRuleAbilities(rule: CombinedRule, actions: AlertRuleActi
 export function useRulerRuleAbility(
   rule: RulerRuleDTO | undefined,
   groupIdentifier: RuleGroupIdentifierV2,
-  action: AlertRuleAction
+  action: AlertRuleAction,
+  group?: Pick<CombinedRuleGroup, 'source_tenants'>
 ): Ability {
-  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier);
+  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier, group);
 
   return useMemo(() => {
     return abilities[action];
@@ -253,9 +246,10 @@ export function useRulerRuleAbility(
 export function useRulerRuleAbilities(
   rule: RulerRuleDTO | undefined,
   groupIdentifier: RuleGroupIdentifierV2,
-  actions: AlertRuleAction[]
+  actions: AlertRuleAction[],
+  group?: Pick<CombinedRuleGroup, 'source_tenants'>
 ): Ability[] {
-  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier);
+  const abilities = useAllRulerRuleAbilities(rule, groupIdentifier, group);
 
   return useMemo(() => {
     return actions.map((action) => abilities[action]);
@@ -271,12 +265,13 @@ export function useAllAlertRuleAbilities(rule: CombinedRule): Abilities<AlertRul
   // We need to investigate further if some of these calls are redundant
   // In the meantime, memoizing the result helps
   const groupIdentifierV2 = useMemo(() => groupIdentifier.fromCombinedRule(rule), [rule]);
-  return useAllRulerRuleAbilities(rule.rulerRule, groupIdentifierV2);
+  return useAllRulerRuleAbilities(rule.rulerRule, groupIdentifierV2, rule.group);
 }
 
 export function useAllRulerRuleAbilities(
   rule: RulerRuleDTO | undefined,
-  groupIdentifier: RuleGroupIdentifierV2
+  groupIdentifier: RuleGroupIdentifierV2,
+  group?: Pick<CombinedRuleGroup, 'source_tenants'>
 ): Abilities<AlertRuleAction> {
   const rulesSourceName = getGroupOriginName(groupIdentifier);
 
@@ -296,9 +291,8 @@ export function useAllRulerRuleAbilities(
 
   const abilities = useMemo<Abilities<AlertRuleAction>>(() => {
     const isProvisioned = rule ? isProvisionedRule(rule) : false;
-    // TODO: Add support for federated rules
-    // const isFederated = isFederatedRuleGroup();
-    const isFederated = false;
+    // Federated groups evaluate across tenants and are not editable from this UI.
+    const isFederated = group ? isFederatedRuleGroup(group) : false;
     const isGrafanaManagedAlertRule = rulerRuleType.grafana.rule(rule);
 
     // Treat as plugin-provided only if:
@@ -348,6 +342,7 @@ export function useAllRulerRuleAbilities(
     pluginOrigin,
     pluginCheckLoading,
     isPluginInstalled,
+    group,
   ]);
 
   return abilities;
@@ -379,8 +374,7 @@ export function useAllGrafanaPromRuleAbilities(rule: GrafanaPromRuleDTO | undefi
   const abilities = useMemo<Abilities<AlertRuleAction>>(() => {
     const isProvisioned = rule ? isProvisionedPromRule(rule) : false;
 
-    // Note: Grafana managed rules can't be federated - this is strictly a Mimir feature
-    // See: https://grafana.com/docs/mimir/latest/references/architecture/components/ruler/#federated-rule-groups
+    // Grafana-managed rules cannot belong to a federated group. Federation is a Mimir ruler feature.
     const isFederated = false;
     // All GrafanaPromRuleDTO rules are Grafana-managed by definition
     const isAlertingRule = prometheusRuleType.grafana.alertingRule(rule);
@@ -528,24 +522,23 @@ export function useAllAlertmanagerAbilities(): Abilities<AlertmanagerAction> {
     // -- contact points --
     [AlertmanagerAction.CreateContactPoint]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.create,
-      // TODO: Move this into the permissions config and generalise that code to allow for an array of permissions
-      ...(isGrafanaFlavoredAlertmanager ? [AccessControlAction.AlertingReceiversCreate] : [])
+      ...notificationsPermissions.create,
+      ...notificationsPermissions.grafana.contactPoints.create
     ),
     [AlertmanagerAction.ViewContactPoint]: toAbility(
       AlwaysSupported,
-      notificationsPermissions.read,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_CONTACT_POINTS_READ : [])
+      ...notificationsPermissions.read,
+      ...notificationsPermissions.grafana.contactPoints.read
     ),
     [AlertmanagerAction.UpdateContactPoint]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.update,
-      ...(isGrafanaFlavoredAlertmanager ? [AccessControlAction.AlertingReceiversWrite] : [])
+      ...notificationsPermissions.update,
+      ...notificationsPermissions.grafana.contactPoints.update
     ),
     [AlertmanagerAction.DeleteContactPoint]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.delete,
-      ...(isGrafanaFlavoredAlertmanager ? [AccessControlAction.AlertingReceiversWrite] : [])
+      ...notificationsPermissions.delete,
+      ...notificationsPermissions.grafana.contactPoints.delete
     ),
     // At the time of writing, only Grafana flavored alertmanager supports exporting,
     // and if a user can view the contact point, then they can also export it
@@ -554,44 +547,48 @@ export function useAllAlertmanagerAbilities(): Abilities<AlertmanagerAction> {
     // -- notification templates --
     [AlertmanagerAction.CreateNotificationTemplate]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.create,
-      ...(isGrafanaFlavoredAlertmanager ? [AccessControlAction.AlertingTemplatesWrite] : [])
+      ...notificationsPermissions.create,
+      ...notificationsPermissions.grafana.templates.create
     ),
     [AlertmanagerAction.ViewNotificationTemplate]: toAbility(
       AlwaysSupported,
-      notificationsPermissions.read,
-      ...(isGrafanaFlavoredAlertmanager ? [AccessControlAction.AlertingTemplatesRead] : [])
+      ...notificationsPermissions.read,
+      ...notificationsPermissions.grafana.templates.read
     ),
     [AlertmanagerAction.UpdateNotificationTemplate]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.update,
-      ...(isGrafanaFlavoredAlertmanager ? [AccessControlAction.AlertingTemplatesWrite] : [])
+      ...notificationsPermissions.update,
+      ...notificationsPermissions.grafana.templates.update
     ),
-    [AlertmanagerAction.DeleteNotificationTemplate]: toAbility(hasConfigurationAPI, notificationsPermissions.delete),
+    [AlertmanagerAction.DeleteNotificationTemplate]: toAbility(
+      hasConfigurationAPI,
+      ...notificationsPermissions.delete,
+      ...notificationsPermissions.grafana.templates.delete
+    ),
     // -- notification policies --
     [AlertmanagerAction.CreateNotificationPolicy]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.create,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_NOTIFICATION_POLICIES_MODIFY : [])
+      ...notificationsPermissions.create,
+      ...notificationsPermissions.grafana.policies.create
     ),
     [AlertmanagerAction.ViewNotificationPolicyTree]: toAbility(
       AlwaysSupported,
-      notificationsPermissions.read,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_NOTIFICATION_POLICIES_READ : [])
+      ...notificationsPermissions.read,
+      ...notificationsPermissions.grafana.policies.read
     ),
     [AlertmanagerAction.UpdateNotificationPolicyTree]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.update,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_NOTIFICATION_POLICIES_MODIFY : [])
+      ...notificationsPermissions.update,
+      ...notificationsPermissions.grafana.policies.update
     ),
     [AlertmanagerAction.DeleteNotificationPolicy]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.delete,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_NOTIFICATION_POLICIES_MODIFY : [])
+      ...notificationsPermissions.delete,
+      ...notificationsPermissions.grafana.policies.delete
     ),
     [AlertmanagerAction.ExportNotificationPolicies]: toAbility(
       isGrafanaFlavoredAlertmanager,
-      notificationsPermissions.read
+      ...notificationsPermissions.read
     ),
     [AlertmanagerAction.DecryptSecrets]: toAbility(
       isGrafanaFlavoredAlertmanager,
@@ -607,25 +604,28 @@ export function useAllAlertmanagerAbilities(): Abilities<AlertmanagerAction> {
     // -- time intervals --
     [AlertmanagerAction.CreateTimeInterval]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.create,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_TIME_INTERVALS_MODIFY : [])
+      ...notificationsPermissions.create,
+      ...notificationsPermissions.grafana.timeIntervals.create
     ),
     [AlertmanagerAction.ViewTimeInterval]: toAbility(
       AlwaysSupported,
-      notificationsPermissions.read,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_TIME_INTERVALS_READ : [])
+      ...notificationsPermissions.read,
+      ...notificationsPermissions.grafana.timeIntervals.read
     ),
     [AlertmanagerAction.UpdateTimeInterval]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.update,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_TIME_INTERVALS_MODIFY : [])
+      ...notificationsPermissions.update,
+      ...notificationsPermissions.grafana.timeIntervals.update
     ),
     [AlertmanagerAction.DeleteTimeInterval]: toAbility(
       hasConfigurationAPI,
-      notificationsPermissions.delete,
-      ...(isGrafanaFlavoredAlertmanager ? PERMISSIONS_TIME_INTERVALS_MODIFY : [])
+      ...notificationsPermissions.delete,
+      ...notificationsPermissions.grafana.timeIntervals.delete
     ),
-    [AlertmanagerAction.ExportTimeIntervals]: toAbility(isGrafanaFlavoredAlertmanager, notificationsPermissions.read),
+    [AlertmanagerAction.ExportTimeIntervals]: toAbility(
+      isGrafanaFlavoredAlertmanager,
+      ...notificationsPermissions.read
+    ),
     [AlertmanagerAction.ViewAlertGroups]: toAbility(AlwaysSupported, instancePermissions.read),
   };
 

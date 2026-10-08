@@ -1,4 +1,4 @@
-import { calculateNextEvaluationEstimate } from './util';
+import { calculateNextEvaluationEstimate, formatFiringDuration } from './util';
 
 describe('calculateNextEvaluationEstimate', () => {
   const MOCK_NOW = new Date('2024-05-23T12:00:00');
@@ -23,6 +23,12 @@ describe('calculateNextEvaluationEstimate', () => {
     });
   });
 
+  test('returns undefined when the last evaluation or interval is missing', () => {
+    expect(calculateNextEvaluationEstimate(undefined, '1m')).toBeUndefined();
+    expect(calculateNextEvaluationEstimate(MOCK_NOW.toISOString(), undefined)).toBeUndefined();
+    expect(calculateNextEvaluationEstimate('not-a-date', '1m')).toBeUndefined();
+  });
+
   test('with last evaluation having missed ticks', () => {
     // 6 minutes ago, so we missed a tick
     const lastEvaluation = new Date(MOCK_NOW.valueOf() - 6 * 60 * 1000).toISOString();
@@ -33,5 +39,19 @@ describe('calculateNextEvaluationEstimate', () => {
       humanized: 'within 5m',
       fullDate: 'within 5m',
     });
+  });
+});
+
+describe('formatFiringDuration', () => {
+  const now = new Date('2024-05-23T12:00:00');
+
+  test('formats the elapsed time since the alert became active', () => {
+    const activeAt = new Date(now.valueOf() - (2 * 60 + 34) * 1000).toISOString();
+    expect(formatFiringDuration(activeAt, now)).toBe('2m34s');
+  });
+
+  test('returns undefined for a missing or invalid timestamp', () => {
+    expect(formatFiringDuration(undefined, now)).toBeUndefined();
+    expect(formatFiringDuration('not-a-date', now)).toBeUndefined();
   });
 });

@@ -6,7 +6,7 @@ import { dateTime, dateTimeFormat, isValidDate } from '@grafana/data';
 import { RuleHealth } from 'app/types/unified-alerting';
 import { PromAlertingRuleState } from 'app/types/unified-alerting-dto';
 
-import { isNullDate, parsePrometheusDuration } from '../../utils/time';
+import { formatPrometheusDuration, isNullDate, parsePrometheusDuration } from '../../utils/time';
 
 type NextEvaluation = {
   humanized: string;
@@ -14,9 +14,7 @@ type NextEvaluation = {
 };
 
 /**
- * Best effort estimate for when the next evaluation will occur
- * @TODO write a test for this
- * @TODO move this somewhere else probably
+ * Best effort estimate for when the next evaluation will occur.
  */
 export function calculateNextEvaluationEstimate(
   lastEvaluation?: string,
@@ -60,6 +58,21 @@ export function calculateNextEvaluationEstimate(
     humanized: `in ${dateTime(nextEvaluationDate).locale('en').fromNow(true)}`,
     fullDate: dateTimeFormat(nextEvaluationDate, { format: 'YYYY-MM-DD HH:mm:ss' }),
   };
+}
+
+/** How long the oldest non-normal alert instance has been active, as a Prometheus duration. */
+export function formatFiringDuration(activeAt?: string, now = new Date()): string | undefined {
+  if (!activeAt) {
+    return undefined;
+  }
+
+  const start = Date.parse(activeAt);
+  if (Number.isNaN(start)) {
+    return undefined;
+  }
+
+  const elapsed = Math.max(0, now.getTime() - start);
+  return formatPrometheusDuration(elapsed);
 }
 
 export function getRelativeEvaluationInterval(lastEvaluation?: string) {

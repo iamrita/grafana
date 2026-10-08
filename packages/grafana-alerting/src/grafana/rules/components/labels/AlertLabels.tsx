@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
 import { Trans, t } from '@grafana/i18n';
-import { Button, Stack, Toggletip, useStyles2 } from '@grafana/ui';
+import { Button, Stack, Text, Toggletip, useStyles2 } from '@grafana/ui';
 
 import { findCommonLabels, isPrivateLabel } from '../../utils/labels';
 
@@ -15,6 +15,8 @@ export interface AlertLabelsProps {
   displayCommonLabels?: boolean;
   labelSets?: Array<Record<string, string>>;
   size?: LabelSize;
+  /** When set, only this many labels are rendered and the rest are summarized. */
+  maxLabels?: number;
   onClick?: ([value, key]: [string | undefined, string | undefined]) => void;
   commonLabelsMode?: 'expand' | 'tooltip';
 }
@@ -24,6 +26,7 @@ export const AlertLabels = ({
   displayCommonLabels,
   labelSets,
   size,
+  maxLabels,
   onClick,
   commonLabelsMode = 'expand',
 }: AlertLabelsProps) => {
@@ -35,11 +38,13 @@ export const AlertLabels = ({
     [displayCommonLabels, labelSets]
   );
 
-  const labelsToShow = chain(labels)
+  const allLabels = chain(labels)
     .toPairs()
     .reject(isPrivateLabel)
     .reject(([key]) => (showCommonLabels ? false : key in computedCommonLabels))
     .value();
+  const labelsToShow = typeof maxLabels === 'number' ? allLabels.slice(0, maxLabels) : allLabels;
+  const overflowCount = typeof maxLabels === 'number' ? Math.max(allLabels.length - maxLabels, 0) : 0;
 
   const commonLabelsCount = Object.keys(computedCommonLabels).length;
   const hasCommonLabels = commonLabelsCount > 0;
@@ -71,6 +76,13 @@ export const AlertLabels = ({
           />
         );
       })}
+      {overflowCount > 0 && (
+        <Text variant="bodySmall" color="secondary" element="span" role="listitem">
+          <Trans i18nKey="alerting.alert-labels.truncated-count" count={overflowCount}>
+            +{'{{count}}'}
+          </Trans>
+        </Text>
+      )}
 
       {!showCommonLabels && hasCommonLabels && (
         <div role="listitem">

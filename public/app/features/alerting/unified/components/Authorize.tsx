@@ -1,13 +1,19 @@
 import { chain, filter } from 'lodash';
 import { PropsWithChildren } from 'react';
 
+import { CombinedRule } from 'app/types/unified-alerting';
+import { GrafanaPromRuleDTO } from 'app/types/unified-alerting-dto';
+
 import {
   Abilities,
   Action,
+  AlertRuleAction,
   AlertingAction,
   AlertmanagerAction,
   useAlertingAbilities,
+  useAllAlertRuleAbilities,
   useAllAlertmanagerAbilities,
+  useAllGrafanaPromRuleAbilities,
 } from '../hooks/useAbilities';
 
 interface AuthorizeProps extends PropsWithChildren {
@@ -23,7 +29,7 @@ export const Authorize = ({ actions, children }: AuthorizeProps) => {
   }
 
   if (alertSourceActions.length) {
-    return <AuthorizeAlertsource actions={alertSourceActions}>{children}</AuthorizeAlertsource>;
+    return <AuthorizeAlertSource actions={alertSourceActions}>{children}</AuthorizeAlertSource>;
   }
 
   return null;
@@ -44,7 +50,7 @@ const AuthorizeAlertmanager = ({ actions, children }: ActionsProps<AlertmanagerA
   }
 };
 
-const AuthorizeAlertsource = ({ actions, children }: ActionsProps<AlertingAction>) => {
+export const AuthorizeAlertSource = ({ actions, children }: ActionsProps<AlertingAction>) => {
   const alertSourceAbilities = useAlertingAbilities();
   const allowed = actionsAllowed(alertSourceAbilities, actions);
 
@@ -55,7 +61,37 @@ const AuthorizeAlertsource = ({ actions, children }: ActionsProps<AlertingAction
   }
 };
 
-// TODO add some authorize helper components for alert source and individual alert rules
+interface AuthorizeRuleProps extends PropsWithChildren {
+  rule: CombinedRule;
+  actions: AlertRuleAction[];
+}
+
+/** Renders children when the user can perform any of the actions on this combined rule. */
+export const AuthorizeRule = ({ rule, actions, children }: AuthorizeRuleProps) => {
+  const abilities = useAllAlertRuleAbilities(rule);
+
+  if (actionsAllowed(abilities, actions)) {
+    return <>{children}</>;
+  }
+
+  return null;
+};
+
+interface AuthorizeGrafanaRuleProps extends PropsWithChildren {
+  rule: GrafanaPromRuleDTO;
+  actions: AlertRuleAction[];
+}
+
+/** Renders children when the user can perform any of the actions on a Grafana-managed Prometheus rule. */
+export const AuthorizeGrafanaRule = ({ rule, actions, children }: AuthorizeGrafanaRuleProps) => {
+  const abilities = useAllGrafanaPromRuleAbilities(rule);
+
+  if (actionsAllowed(abilities, actions)) {
+    return <>{children}</>;
+  }
+
+  return null;
+};
 
 // check if some action is allowed from the abilities
 function actionsAllowed<T extends Action>(abilities: Abilities<T>, actions: T[]) {

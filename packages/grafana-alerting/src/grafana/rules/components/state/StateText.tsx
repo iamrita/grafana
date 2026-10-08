@@ -30,51 +30,55 @@ export const StateText = ({ state, health, type = 'alerting', isPaused = false }
     return <PausedText />;
   }
 
-  let stateLabel: string;
+  let stateLabel: ReactNode;
   let color: TextColor;
 
   switch (state) {
     case 'normal':
       color = 'success';
-      stateLabel = 'Normal';
+      stateLabel = <Trans i18nKey="alerting.state-text.normal">Normal</Trans>;
       break;
     case 'firing':
       color = 'error';
-      stateLabel = 'Firing';
+      stateLabel = <Trans i18nKey="alerting.state-text.firing">Firing</Trans>;
       break;
     case 'pending':
       color = 'warning';
-      stateLabel = 'Pending';
+      stateLabel = <Trans i18nKey="alerting.state-text.pending">Pending</Trans>;
       break;
     case 'recovering':
       color = 'warning';
-      stateLabel = 'Recovering';
+      stateLabel = <Trans i18nKey="alerting.state-text.recovering">Recovering</Trans>;
       break;
     case 'unknown':
     default:
       color = 'unknown';
-      stateLabel = 'Unknown';
+      stateLabel = <Trans i18nKey="alerting.state-text.unknown">Unknown</Trans>;
       break;
   }
 
   // if the rule is in "error" health we don't really care about the state
   if (health === 'error') {
     color = 'error';
-    stateLabel = 'Error';
+    stateLabel = <Trans i18nKey="alerting.state-text.error">Error</Trans>;
   }
 
   if (health === 'nodata') {
     color = 'warning';
-    stateLabel = 'No data';
+    stateLabel = <Trans i18nKey="alerting.state-text.no-data">No data</Trans>;
   }
 
-  // recording rule badge
-  // @TODO do recording rules support "nodata" state?
+  // Recording rules report the same health values as alerting rules, including nodata.
   if (type === 'recording') {
-    const text = health === 'error' ? 'Recording error' : 'Recording';
-    const color = health === 'error' ? 'error' : 'success';
-
-    return <InnerText color={color} text={text} />;
+    if (health === 'error') {
+      return (
+        <InnerText color="error" text={<Trans i18nKey="alerting.state-text.recording-error">Recording error</Trans>} />
+      );
+    }
+    if (health === 'nodata') {
+      return <InnerText color="warning" text={<Trans i18nKey="alerting.state-text.no-data">No data</Trans>} />;
+    }
+    return <InnerText color="success" text={<Trans i18nKey="alerting.state-text.recording">Recording</Trans>} />;
   }
 
   return <InnerText color={color} text={stateLabel} />;

@@ -1,8 +1,8 @@
 import { css, keyframes } from '@emotion/css';
-import { upperFirst } from 'lodash';
 import { ComponentProps, memo } from 'react';
 
 import { GrafanaTheme2 } from '@grafana/data';
+import { t } from '@grafana/i18n';
 import { Icon, type IconName, Text, Tooltip, useStyles2, useTheme2 } from '@grafana/ui';
 
 import type { Health, State, Type } from './types';
@@ -46,13 +46,29 @@ const color: Record<State, TextProps['color']> = {
   unknown: 'secondary',
 };
 
-const stateNames: Record<State, string> = {
-  normal: 'Normal',
-  pending: 'Pending',
-  firing: 'Firing',
-  recovering: 'Recovering',
-  unknown: 'Unknown',
-};
+function stateName(state: State): string {
+  switch (state) {
+    case 'normal':
+      return t('alerting.state-icon.normal', 'Normal');
+    case 'pending':
+      return t('alerting.state-icon.pending', 'Pending');
+    case 'firing':
+      return t('alerting.state-icon.firing', 'Firing');
+    case 'recovering':
+      return t('alerting.state-icon.recovering', 'Recovering');
+    case 'unknown':
+      return t('alerting.state-icon.unknown', 'Unknown');
+  }
+}
+
+function operationName(operation: RuleOperation): string {
+  switch (operation) {
+    case 'creating':
+      return t('alerting.state-icon.creating', 'Creating');
+    case 'deleting':
+      return t('alerting.state-icon.deleting', 'Deleting');
+  }
+}
 
 const operationIcons: Record<RuleOperation, IconName> = {
   creating: 'plus-circle',
@@ -66,7 +82,6 @@ const ICON_SIZE = 15;
  * Make sure that the order of importance here matches the one we use in the StateBadge component for the detail view
  * This component is often rendered tens or hundreds of times in a single page, so it's performance is important
  *
- * @TODO support translations
  */
 export const StateIcon = memo(function StateIcon({
   state,
@@ -80,44 +95,44 @@ export const StateIcon = memo(function StateIcon({
 
   let iconName: IconName = state ? icons[state] : 'circle';
   let iconColor: TextProps['color'] = state ? color[state] : 'secondary';
-  let stateName: string = state ? stateNames[state] : 'unknown';
+  let label: string = state ? stateName(state) : t('alerting.state-icon.unknown', 'Unknown');
 
   if (type === 'recording') {
     iconName = 'square-shape';
     iconColor = 'success';
-    stateName = 'Recording';
+    label = t('alerting.state-icon.recording', 'Recording');
   }
 
   if (health === 'nodata') {
     iconName = 'exclamation-triangle';
     iconColor = 'warning';
-    stateName = 'Insufficient data';
+    label = t('alerting.state-icon.insufficient-data', 'Insufficient data');
   }
 
   if (health === 'error') {
     iconName = 'times-circle';
     iconColor = 'error';
-    stateName = 'Failed to evaluate rule';
+    label = t('alerting.state-icon.failed-to-evaluate', 'Failed to evaluate rule');
   }
 
   if (isPaused) {
     iconName = 'pause-circle';
     iconColor = 'warning';
-    stateName = 'Paused';
+    label = t('alerting.state-icon.paused', 'Paused');
   }
 
   if (operation) {
     iconName = operationIcons[operation];
     iconColor = 'secondary';
-    stateName = upperFirst(operation);
+    label = operationName(operation);
   }
 
   return (
-    <Tooltip content={stateName} placement="right">
+    <Tooltip content={label} placement="right">
       <div>
         <Text color={iconColor}>
           <div className={styles.iconsContainer}>
-            <Icon name={iconName} width={ICON_SIZE} height={ICON_SIZE} aria-label={stateName} />
+            <Icon name={iconName} width={ICON_SIZE} height={ICON_SIZE} aria-label={label} />
             {/* this loading spinner works by using an optical illusion;
               the actual icon is static and the "spinning" part is just a semi-transparent darker circle overlayed on top.
               This makes it look like there is a small bright colored spinner rotating.

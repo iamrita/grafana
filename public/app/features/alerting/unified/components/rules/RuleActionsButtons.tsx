@@ -121,6 +121,7 @@ export const RuleActionsButtons = ({ compact, showViewButton, rule, rulesSource 
         promRule={rule.promRule}
         identifier={identifier}
         groupIdentifier={groupId}
+        group={rule.group}
         handleDelete={() => {
           if (rule.rulerRule) {
             const editableRuleIdentifier = ruleId.fromRulerRuleAndGroupIdentifierV2(groupId, rule.rulerRule);
