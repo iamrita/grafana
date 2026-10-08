@@ -243,9 +243,9 @@ const createMetadata = (rule: CombinedRule, styles: ReturnType<typeof getStyles>
         {runbookUrl}
       </TextLink>
     ) : (
-      <Text variant="bodySmall" className={styles.url}>
-        {runbookUrl}
-      </Text>
+      <span className={styles.url}>
+        <Text variant="bodySmall">{runbookUrl}</Text>
+      </span>
     );
     metadata.push({
       label: t('alerting.create-metadata.label.runbook-url', 'Runbook URL'),
