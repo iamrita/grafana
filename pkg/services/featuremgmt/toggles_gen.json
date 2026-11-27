@@ -2451,21 +2451,6 @@
     },
     {
       "metadata": {
-        "name": "kubernetesAuthZHandlerRedirect",
-        "resourceVersion": "1771434338561",
-        "creationTimestamp": "2025-08-29T14:46:39Z",
-        "deletionTimestamp": "2025-09-01T09:33:33Z"
-      },
-      "spec": {
-        "description": "Deprecated: Use kubernetesAuthZResourcePermissionsRedirect and kubernetesAuthZRolesRedirect instead",
-        "stage": "deprecated",
-        "codeowner": "@grafana/identity-access-team",
-        "hideFromDocs": true,
-        "expression": "false"
-      }
-    },
-    {
-      "metadata": {
         "name": "kubernetesAuthZResourcePermissionsRedirect",
         "resourceVersion": "1771434338561",
         "creationTimestamp": "2026-02-18T17:05:38Z"
@@ -2515,20 +2500,6 @@
       "spec": {
         "description": "Enables create, delete, and update mutations for resources owned by IAM identity",
         "stage": "experimental",
-        "codeowner": "@grafana/identity-access-team",
-        "hideFromDocs": true,
-        "expression": "false"
-      }
-    },
-    {
-      "metadata": {
-        "name": "kubernetesAuthzApis",
-        "resourceVersion": "1771434338561",
-        "creationTimestamp": "2025-06-18T07:43:01Z"
-      },
-      "spec": {
-        "description": "Deprecated: Use kubernetesAuthzCoreRolesApi, kubernetesAuthzRolesApi, and kubernetesAuthzRoleBindingsApi instead",
-        "stage": "deprecated",
         "codeowner": "@grafana/identity-access-team",
         "hideFromDocs": true,
         "expression": "false"
